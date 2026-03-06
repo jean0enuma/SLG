@@ -1,7 +1,0 @@
-{"time":"2026-02-10T15:27:23.672513481+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260210_152723-cdtv31fm/logs/debug-core.log"}
-{"time":"2026-02-10T15:27:23.774208736+09:00","level":"INFO","msg":"created new stream","id":"cdtv31fm"}
-{"time":"2026-02-10T15:27:23.774226627+09:00","level":"INFO","msg":"stream: started","id":"cdtv31fm"}
-{"time":"2026-02-10T15:27:23.774271905+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"cdtv31fm"}
-{"time":"2026-02-10T15:27:23.774319949+09:00","level":"INFO","msg":"handler: started","stream_id":"cdtv31fm"}
-{"time":"2026-02-10T15:27:23.774337928+09:00","level":"INFO","msg":"sender: started","stream_id":"cdtv31fm"}
-{"time":"2026-02-10T15:27:24.137140845+09:00","level":"INFO","msg":"Starting system monitor"}

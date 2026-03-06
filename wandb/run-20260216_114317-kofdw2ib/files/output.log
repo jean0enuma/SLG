@@ -1,6 +1,0 @@
-saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0216/1143
-base_lr:[0.0001]
-epoch:0/20
---train--
-Backend tkagg is interactive backend. Turning interactive mode on.
-  0%|          | 0/110 [00:00<?, ?it/s]

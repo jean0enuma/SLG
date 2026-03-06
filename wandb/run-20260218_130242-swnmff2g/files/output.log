@@ -1,9 +1,0 @@
-saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1302
-base_lr:[0.001]
-epoch:0/100
---train--
-  7%|▋         | 8/110 [00:18<03:06,  1.83s/it]
-Avg Loss: 0.8016880750656128
-Avg Pose Loss: 0.7207350134849548
-Avg Stop Loss: 0.9601545333862305
-Avg Joint Loss: 0.80953049659729

@@ -1,7 +1,0 @@
-{"time":"2026-03-06T12:12:03.648439715+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_121203-fpqc8spc/logs/debug-core.log"}
-{"time":"2026-03-06T12:12:03.750045493+09:00","level":"INFO","msg":"created new stream","id":"fpqc8spc"}
-{"time":"2026-03-06T12:12:03.750058542+09:00","level":"INFO","msg":"stream: started","id":"fpqc8spc"}
-{"time":"2026-03-06T12:12:03.750147366+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"fpqc8spc"}
-{"time":"2026-03-06T12:12:03.750210903+09:00","level":"INFO","msg":"sender: started","stream_id":"fpqc8spc"}
-{"time":"2026-03-06T12:12:03.750247012+09:00","level":"INFO","msg":"handler: started","stream_id":"fpqc8spc"}
-{"time":"2026-03-06T12:12:04.654068233+09:00","level":"INFO","msg":"Starting system monitor"}

@@ -1,8 +1,0 @@
-{"time":"2026-03-06T14:54:18.363741952+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_145418-27vtgqrm/logs/debug-core.log"}
-{"time":"2026-03-06T14:54:18.467713423+09:00","level":"INFO","msg":"created new stream","id":"27vtgqrm"}
-{"time":"2026-03-06T14:54:18.467732819+09:00","level":"INFO","msg":"stream: started","id":"27vtgqrm"}
-{"time":"2026-03-06T14:54:18.467751989+09:00","level":"INFO","msg":"handler: started","stream_id":"27vtgqrm"}
-{"time":"2026-03-06T14:54:18.467763913+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"27vtgqrm"}
-{"time":"2026-03-06T14:54:18.467769872+09:00","level":"INFO","msg":"sender: started","stream_id":"27vtgqrm"}
-{"time":"2026-03-06T14:54:20.404402496+09:00","level":"INFO","msg":"Starting system monitor"}
-{"time":"2026-03-06T14:58:21.047403355+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tkeda-jean-tokyo-city-university/SLG_TEXT2POSE/27vtgqrm/file_stream\": dial tcp 35.186.228.49:443: connect: connection timed out"}

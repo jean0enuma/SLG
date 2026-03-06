@@ -1,7 +1,0 @@
-{"time":"2026-02-18T12:57:12.630466462+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_125712-xolgy1u6/logs/debug-core.log"}
-{"time":"2026-02-18T12:57:12.73181971+09:00","level":"INFO","msg":"created new stream","id":"xolgy1u6"}
-{"time":"2026-02-18T12:57:12.731833015+09:00","level":"INFO","msg":"stream: started","id":"xolgy1u6"}
-{"time":"2026-02-18T12:57:12.731906889+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"xolgy1u6"}
-{"time":"2026-02-18T12:57:12.731967756+09:00","level":"INFO","msg":"handler: started","stream_id":"xolgy1u6"}
-{"time":"2026-02-18T12:57:12.731994398+09:00","level":"INFO","msg":"sender: started","stream_id":"xolgy1u6"}
-{"time":"2026-02-18T12:57:13.04615139+09:00","level":"INFO","msg":"Starting system monitor"}

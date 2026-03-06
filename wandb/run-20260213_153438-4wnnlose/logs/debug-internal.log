@@ -1,7 +1,0 @@
-{"time":"2026-02-13T15:34:38.41483394+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260213_153438-4wnnlose/logs/debug-core.log"}
-{"time":"2026-02-13T15:34:38.517178318+09:00","level":"INFO","msg":"created new stream","id":"4wnnlose"}
-{"time":"2026-02-13T15:34:38.517210883+09:00","level":"INFO","msg":"stream: started","id":"4wnnlose"}
-{"time":"2026-02-13T15:34:38.517266893+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"4wnnlose"}
-{"time":"2026-02-13T15:34:38.517276399+09:00","level":"INFO","msg":"sender: started","stream_id":"4wnnlose"}
-{"time":"2026-02-13T15:34:38.51730475+09:00","level":"INFO","msg":"handler: started","stream_id":"4wnnlose"}
-{"time":"2026-02-13T15:34:38.949266468+09:00","level":"INFO","msg":"Starting system monitor"}

@@ -1,7 +1,0 @@
-{"time":"2026-02-25T14:09:52.030993838+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260225_140951-tmzck3tb/logs/debug-core.log"}
-{"time":"2026-02-25T14:09:52.133478467+09:00","level":"INFO","msg":"created new stream","id":"tmzck3tb"}
-{"time":"2026-02-25T14:09:52.133500394+09:00","level":"INFO","msg":"stream: started","id":"tmzck3tb"}
-{"time":"2026-02-25T14:09:52.133546787+09:00","level":"INFO","msg":"handler: started","stream_id":"tmzck3tb"}
-{"time":"2026-02-25T14:09:52.133566699+09:00","level":"INFO","msg":"sender: started","stream_id":"tmzck3tb"}
-{"time":"2026-02-25T14:09:52.133546059+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"tmzck3tb"}
-{"time":"2026-02-25T14:09:52.671974913+09:00","level":"INFO","msg":"Starting system monitor"}

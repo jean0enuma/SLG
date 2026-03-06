@@ -1,7 +1,0 @@
-{"time":"2026-03-02T20:03:40.199055315+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260302_200339-tgtqdao2/logs/debug-core.log"}
-{"time":"2026-03-02T20:03:40.301024642+09:00","level":"INFO","msg":"created new stream","id":"tgtqdao2"}
-{"time":"2026-03-02T20:03:40.301041227+09:00","level":"INFO","msg":"stream: started","id":"tgtqdao2"}
-{"time":"2026-03-02T20:03:40.301048368+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"tgtqdao2"}
-{"time":"2026-03-02T20:03:40.30105666+09:00","level":"INFO","msg":"handler: started","stream_id":"tgtqdao2"}
-{"time":"2026-03-02T20:03:40.301059696+09:00","level":"INFO","msg":"sender: started","stream_id":"tgtqdao2"}
-{"time":"2026-03-02T20:03:40.824200286+09:00","level":"INFO","msg":"Starting system monitor"}

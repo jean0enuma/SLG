@@ -1,8 +1,0 @@
-saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1214
-base_lr:[5e-05]
-epoch:0/100
---train--
-  0%|          | 1/221 [00:33<2:03:20, 33.64s/it]
-Backend tkagg is interactive backend. Turning interactive mode on.
-Avg Loss: 6.653059959411621
-Avg CE Loss: 6.653059959411621

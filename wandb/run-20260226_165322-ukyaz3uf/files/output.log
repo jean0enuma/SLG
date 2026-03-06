@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 271, in <module>
-    main(config, mode, checkpoint=checkpoint)
-  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 233, in main
-    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
-  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 119, in fit
-    if self.config["lr_parameters"]["ema"]:
-KeyError: 'ema'

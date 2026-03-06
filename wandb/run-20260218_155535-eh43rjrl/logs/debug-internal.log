@@ -1,7 +1,0 @@
-{"time":"2026-02-18T15:55:35.347376165+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_155535-eh43rjrl/logs/debug-core.log"}
-{"time":"2026-02-18T15:55:35.449967641+09:00","level":"INFO","msg":"created new stream","id":"eh43rjrl"}
-{"time":"2026-02-18T15:55:35.449986972+09:00","level":"INFO","msg":"stream: started","id":"eh43rjrl"}
-{"time":"2026-02-18T15:55:35.450047768+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"eh43rjrl"}
-{"time":"2026-02-18T15:55:35.450125706+09:00","level":"INFO","msg":"handler: started","stream_id":"eh43rjrl"}
-{"time":"2026-02-18T15:55:35.450124858+09:00","level":"INFO","msg":"sender: started","stream_id":"eh43rjrl"}
-{"time":"2026-02-18T15:55:35.956884643+09:00","level":"INFO","msg":"Starting system monitor"}
