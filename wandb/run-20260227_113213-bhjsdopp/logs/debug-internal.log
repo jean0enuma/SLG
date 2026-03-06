@@ -1,0 +1,15 @@
+{"time":"2026-02-27T11:32:13.360811847+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260227_113213-bhjsdopp/logs/debug-core.log"}
+{"time":"2026-02-27T11:32:13.463856373+09:00","level":"INFO","msg":"created new stream","id":"bhjsdopp"}
+{"time":"2026-02-27T11:32:13.463880994+09:00","level":"INFO","msg":"handler: started","stream_id":"bhjsdopp"}
+{"time":"2026-02-27T11:32:13.463891379+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"bhjsdopp"}
+{"time":"2026-02-27T11:32:13.463919573+09:00","level":"INFO","msg":"sender: started","stream_id":"bhjsdopp"}
+{"time":"2026-02-27T11:32:13.463928937+09:00","level":"INFO","msg":"stream: started","id":"bhjsdopp"}
+{"time":"2026-02-27T11:32:14.031039147+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-27T11:34:05.934260267+09:00","level":"INFO","msg":"stream: closing","id":"bhjsdopp"}
+{"time":"2026-02-27T11:34:05.934269395+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-27T11:34:05.934535595+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-27T11:34:06.714198452+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-27T11:34:07.19463317+09:00","level":"INFO","msg":"handler: closed","stream_id":"bhjsdopp"}
+{"time":"2026-02-27T11:34:07.194650186+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"bhjsdopp"}
+{"time":"2026-02-27T11:34:07.194680459+09:00","level":"INFO","msg":"sender: closed","stream_id":"bhjsdopp"}
+{"time":"2026-02-27T11:34:07.194683508+09:00","level":"INFO","msg":"stream: closed","id":"bhjsdopp"}

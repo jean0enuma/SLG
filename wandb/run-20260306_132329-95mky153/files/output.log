@@ -1,0 +1,76 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1323
+base_lr:[0.0005]
+epoch:0/100
+--train--
+  2%|███▋                                                                                                                                                                                  | 9/443 [00:03<02:47,  2.59it/s]
+Avg Loss: 6.011623382568359
+Avg CE Loss: 6.011623382568359
+Exception ignored in: <function _MultiProcessingDataLoaderIter.__del__ at 0x7dda5eff49d0>
+Traceback (most recent call last):
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1618, in __del__
+    self._shutdown_workers()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1582, in _shutdown_workers
+    w.join(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/popen_fork.py", line 40, in wait
+    if not wait([self.sentinel], timeout):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 931, in wait
+    ready = selector.select(timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/selectors.py", line 416, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt:
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 286, in <module>
+    main(config, mode, checkpoint=checkpoint, vqvae_weights=vqvae_weights)
+  File "/home/caffe/work/SLG/main_text2units.py", line 247, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 194, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 124, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 106, in compute_loss
+    loss = model(sequence,padded_cod_data,input_length_tensor,padded_mask)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 135, in forward
+    encoded_text = self.text_encoder(**text_inputs).last_hidden_state  # (batch_size, seq_len, hidden_size)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/transformers/models/clip/modeling_clip.py", line 1049, in forward
+    return self.text_model(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/transformers/models/clip/modeling_clip.py", line 953, in forward
+    encoder_outputs = self.encoder(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/transformers/models/clip/modeling_clip.py", line 876, in forward
+    layer_outputs = encoder_layer(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/transformers/models/clip/modeling_clip.py", line 617, in forward
+    hidden_states = self.mlp(hidden_states)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/transformers/models/clip/modeling_clip.py", line 574, in forward
+    hidden_states = self.fc2(hidden_states)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/linear.py", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+KeyboardInterrupt

@@ -1,0 +1,15 @@
+{"time":"2026-02-24T15:23:32.205828606+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260224_152331-5fzuairs/logs/debug-core.log"}
+{"time":"2026-02-24T15:23:32.308124444+09:00","level":"INFO","msg":"created new stream","id":"5fzuairs"}
+{"time":"2026-02-24T15:23:32.308138807+09:00","level":"INFO","msg":"stream: started","id":"5fzuairs"}
+{"time":"2026-02-24T15:23:32.30818495+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"5fzuairs"}
+{"time":"2026-02-24T15:23:32.308237181+09:00","level":"INFO","msg":"handler: started","stream_id":"5fzuairs"}
+{"time":"2026-02-24T15:23:32.30824203+09:00","level":"INFO","msg":"sender: started","stream_id":"5fzuairs"}
+{"time":"2026-02-24T15:23:32.689931873+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-24T15:26:52.686382641+09:00","level":"INFO","msg":"stream: closing","id":"5fzuairs"}
+{"time":"2026-02-24T15:26:52.686399303+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-24T15:26:52.68666555+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-24T15:26:53.779617327+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-24T15:26:54.049192976+09:00","level":"INFO","msg":"handler: closed","stream_id":"5fzuairs"}
+{"time":"2026-02-24T15:26:54.049223449+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"5fzuairs"}
+{"time":"2026-02-24T15:26:54.049254195+09:00","level":"INFO","msg":"sender: closed","stream_id":"5fzuairs"}
+{"time":"2026-02-24T15:26:54.049282176+09:00","level":"INFO","msg":"stream: closed","id":"5fzuairs"}

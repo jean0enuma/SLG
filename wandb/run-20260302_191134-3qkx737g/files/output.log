@@ -1,0 +1,28 @@
+Backend tkagg is interactive backend. Turning interactive mode on.
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0302/1911
+base_lr:[0.0001]
+epoch:0/100
+--train--
+  0%|          | 0/221 [00:24<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 59, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 38, in compute_loss
+    loss = model(padded_cod_data,hand_valid_mask=padded_mask,input_length=input_length_tensor)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/module/VQ_VAE.py", line 307, in forward
+    z_e = self.encode(x)
+  File "/home/caffe/work/SLG/models/module/VQ_VAE.py", line 258, in encode
+    h = self.enc_in(x)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 375, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 370, in _conv_forward
+    return F.conv1d(
+RuntimeError: Input type (c10::BFloat16) and bias type (float) should be the same

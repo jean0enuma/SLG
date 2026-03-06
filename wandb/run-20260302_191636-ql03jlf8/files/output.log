@@ -1,0 +1,43 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0302/1916
+base_lr:[0.0001]
+epoch:0/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 221/221 [00:20<00:00, 10.67it/s]
+Avg Loss: 5.3334784507751465
+Avg Recon Pose Loss: 3.401017904281616
+Avg Recon Dir Loss: 1.0335195064544678
+Avg Vel Loss: 16.945627212524414
+Avg VQ Loss: 0.05165964365005493
+Avg Perplexity: 5.618792533874512
+Avg Loss: 6075.005552424062
+Avg Recon Pose Loss: 0.5467371747340306
+Avg Recon Dir Loss: 0.5809664082999276
+Avg Vel Loss: 8.199381065840768
+Avg VQ Loss: 6073.467874315115
+Avg Perplexity: 1.7646419659699544
+Avg Loss: 3825.045528791437
+Avg Recon Pose Loss: 0.34373816862628237
+Avg Recon Dir Loss: 0.5721053157872822
+Avg Vel Loss: 5.806482240335265
+Avg VQ Loss: 3823.839362242032
+Avg Perplexity: 1.731537313010562
+--eval--
+  0%|                                                                                                                                                                                               | 0/16 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 284, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_text2units.py", line 246, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 183, in fit
+    eval_loss = self.eval(model, criterion, eval_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 122, in eval
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 38, in compute_loss
+    loss = model(padded_cod_data,hand_valid_mask=padded_mask,input_length=input_length_tensor)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/module/VQ_VAE.py", line 304, in forward
+    B, T, C = x.shape
+AttributeError: 'list' object has no attribute 'shape'

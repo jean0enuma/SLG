@@ -1,0 +1,7 @@
+{"time":"2026-02-10T17:47:35.707025298+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260210_174735-wij29dir/logs/debug-core.log"}
+{"time":"2026-02-10T17:47:35.809019437+09:00","level":"INFO","msg":"created new stream","id":"wij29dir"}
+{"time":"2026-02-10T17:47:35.809032167+09:00","level":"INFO","msg":"stream: started","id":"wij29dir"}
+{"time":"2026-02-10T17:47:35.809108586+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"wij29dir"}
+{"time":"2026-02-10T17:47:35.809135189+09:00","level":"INFO","msg":"sender: started","stream_id":"wij29dir"}
+{"time":"2026-02-10T17:47:35.809112574+09:00","level":"INFO","msg":"handler: started","stream_id":"wij29dir"}
+{"time":"2026-02-10T17:47:36.259285809+09:00","level":"INFO","msg":"Starting system monitor"}

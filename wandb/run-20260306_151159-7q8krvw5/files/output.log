@@ -1,0 +1,15 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1511
+base_lr:[0.001]
+epoch:0/200
+--train--
+  0%|                                                                                                                                                                                              | 0/221 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_vqvae.py", line 350, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_vqvae.py", line 312, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/VQVAE_separate_trainer.py", line 276, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/VQVAE_separate_trainer.py", line 135, in train
+    pose_vq_loss = loss_dict['pose_loss_vq']
+KeyError: 'pose_loss_vq'

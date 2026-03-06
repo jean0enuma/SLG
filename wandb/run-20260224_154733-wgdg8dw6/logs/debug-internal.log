@@ -1,0 +1,15 @@
+{"time":"2026-02-24T15:47:34.034700139+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260224_154733-wgdg8dw6/logs/debug-core.log"}
+{"time":"2026-02-24T15:47:34.137539068+09:00","level":"INFO","msg":"created new stream","id":"wgdg8dw6"}
+{"time":"2026-02-24T15:47:34.137552041+09:00","level":"INFO","msg":"stream: started","id":"wgdg8dw6"}
+{"time":"2026-02-24T15:47:34.137558506+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"wgdg8dw6"}
+{"time":"2026-02-24T15:47:34.137561936+09:00","level":"INFO","msg":"handler: started","stream_id":"wgdg8dw6"}
+{"time":"2026-02-24T15:47:34.137583357+09:00","level":"INFO","msg":"sender: started","stream_id":"wgdg8dw6"}
+{"time":"2026-02-24T15:47:34.624492238+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-24T15:49:05.850154196+09:00","level":"INFO","msg":"stream: closing","id":"wgdg8dw6"}
+{"time":"2026-02-24T15:49:05.850166006+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-24T15:49:05.850469326+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-24T15:49:06.770907832+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-24T15:49:07.384644631+09:00","level":"INFO","msg":"handler: closed","stream_id":"wgdg8dw6"}
+{"time":"2026-02-24T15:49:07.384661861+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"wgdg8dw6"}
+{"time":"2026-02-24T15:49:07.384685158+09:00","level":"INFO","msg":"sender: closed","stream_id":"wgdg8dw6"}
+{"time":"2026-02-24T15:49:07.384696405+09:00","level":"INFO","msg":"stream: closed","id":"wgdg8dw6"}

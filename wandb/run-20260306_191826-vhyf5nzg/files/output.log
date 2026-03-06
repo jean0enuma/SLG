@@ -1,0 +1,53 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1918
+base_lr:[0.0005]
+epoch:0/100
+--train--
+  0%|          | 0/443 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 286, in <module>
+    main(config, mode, checkpoint=checkpoint, vqvae_weights=vqvae_weights)
+  File "/home/caffe/work/SLG/main_text2units.py", line 247, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 194, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 124, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 106, in compute_loss
+    loss = model(sequence,padded_cod_data,input_length_tensor,padded_mask)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 212, in forward
+    pose_outputs, left_outputs, right_outputs, extra_outputs = self.decoder(encoded_text, unit_tokens, text_mask,
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 70, in forward
+    decoded_output = self.transformer_decoder(decoder_input, encoded_text, tgt_mask=causal_mask,
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/transformer.py", line 613, in forward
+    output = mod(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/transformer.py", line 1098, in forward
+    x = x + self._mha_block(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/transformer.py", line 1148, in _mha_block
+    x = self.multihead_attn(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/activation.py", line 1373, in forward
+    attn_output, attn_output_weights = F.multi_head_attention_forward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/functional.py", line 6230, in multi_head_attention_forward
+    q, k, v = _in_projection_packed(query, key, value, in_proj_weight, in_proj_bias)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/functional.py", line 5632, in _in_projection_packed
+    kv_proj = linear(k, w_kv, b_kv)
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (720x128 and 448x896)

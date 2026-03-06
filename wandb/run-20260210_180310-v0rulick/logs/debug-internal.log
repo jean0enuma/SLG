@@ -1,0 +1,15 @@
+{"time":"2026-02-10T18:03:11.033403422+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260210_180310-v0rulick/logs/debug-core.log"}
+{"time":"2026-02-10T18:03:11.135821878+09:00","level":"INFO","msg":"created new stream","id":"v0rulick"}
+{"time":"2026-02-10T18:03:11.135832799+09:00","level":"INFO","msg":"stream: started","id":"v0rulick"}
+{"time":"2026-02-10T18:03:11.135910794+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"v0rulick"}
+{"time":"2026-02-10T18:03:11.135955837+09:00","level":"INFO","msg":"handler: started","stream_id":"v0rulick"}
+{"time":"2026-02-10T18:03:11.13598399+09:00","level":"INFO","msg":"sender: started","stream_id":"v0rulick"}
+{"time":"2026-02-10T18:03:11.533586654+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-10T18:04:02.841635002+09:00","level":"INFO","msg":"stream: closing","id":"v0rulick"}
+{"time":"2026-02-10T18:04:02.84165207+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-10T18:04:02.841970394+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-10T18:04:03.585483035+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-10T18:04:04.140728541+09:00","level":"INFO","msg":"handler: closed","stream_id":"v0rulick"}
+{"time":"2026-02-10T18:04:04.140750052+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"v0rulick"}
+{"time":"2026-02-10T18:04:04.140768554+09:00","level":"INFO","msg":"sender: closed","stream_id":"v0rulick"}
+{"time":"2026-02-10T18:04:04.140799334+09:00","level":"INFO","msg":"stream: closed","id":"v0rulick"}

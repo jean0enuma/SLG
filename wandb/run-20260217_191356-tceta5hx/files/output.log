@@ -1,0 +1,29 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0217/1913
+base_lr:[0.001]
+epoch:0/500
+--train--
+  0%|                                                                                                                                                                                              | 0/110 [00:02<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 250, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 212, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 146, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 58, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 37, in compute_loss
+    outputs = model(padded_tokens_tensor,id_list,padded_cod_data[0],input_length_tensor)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2pose_diffusion.py", line 348, in forward
+    stop_logits=self.stop_logits(encoded_text.mean(1)).squeeze(-1) #(batch_size,)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/linear.py", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (64x768 and 512x1)

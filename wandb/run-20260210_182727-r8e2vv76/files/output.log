@@ -1,0 +1,42 @@
+ 13%|████████████████████████                                                                                                                                                           | 474/3533 [04:30<29:07,  1.75it/s]
+Avg Loss: 3.4474639892578125
+Avg Pose Loss: 2.599191665649414
+Avg Stop Loss: 0.848272442817688
+Avg Loss: 0.5227090891930136
+Avg Pose Loss: 0.43346628222135036
+Avg Stop Loss: 0.08924280605878275
+Avg Loss: 0.34724921499615286
+Avg Pose Loss: 0.2872228437840049
+Avg Stop Loss: 0.06002637089244021
+Avg Loss: 0.2704127187101152
+Avg Pose Loss: 0.22187318791483723
+Avg Stop Loss: 0.04853953057250311
+Avg Loss: 0.22574888673283514
+Avg Pose Loss: 0.1829943857957003
+Avg Stop Loss: 0.04275450073275483
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 190, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 156, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 99, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 28, in train
+    for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 764, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/caffe/work/SLG/SLG_datasets/SLG_datasets_with_skeleton.py", line 57, in __getitem__
+    cod_data,face_cod_data,hand_cod_data,body_cod_data=coordinate_preprocess(cod_data,face_data,is_face_connect=True)
+  File "/home/caffe/work/SLG/loader/coordinate_preprocess.py", line 91, in coordinate_preprocess
+    new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/numpy/lib/function_base.py", line 5354, in delete
+    keep[obj,] = False
+IndexError: index 17 is out of bounds for axis 0 with size 0

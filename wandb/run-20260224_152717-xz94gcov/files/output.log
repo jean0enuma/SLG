@@ -1,0 +1,126 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0224/1526
+base_lr:[0.0001]
+epoch:0/500
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [00:54<00:00,  2.00it/s]
+Avg Loss: 0.7087970972061157
+Avg Pose Loss: 0.6002835035324097
+Avg Joint Loss: 1.08513605594635
+Avg Loss: 0.09835968092821612
+Avg Pose Loss: 0.08286723951892097
+Avg Joint Loss: 0.1549244165272996
+--eval--
+9it [00:03,  2.95it/s]                                                                                                                                                                                                     
+--test--
+11it [00:03,  3.13it/s]                                                                                                                                                                                                    
+Epoch 1/500)
+Train Loss: 0.0953950509428978,Train Pose Loss: 0.080360047519207, Train Bone Loss: 0.15035000443458557
+Eval Loss: 0.02967420406639576,Eval Pose Loss: 0.025151999667286873,Eval Bone Loss: 0.04522203654050827
+Test Loss: 0.033498503267765045,Test Pose Loss: 0.028316576033830643, Test Bone Loss: 0.05181928351521492
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0224/1526
+base_lr:[0.0001]
+epoch:1/500
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [00:53<00:00,  2.05it/s]
+Avg Loss: 0.0622074194252491
+Avg Pose Loss: 0.052324723452329636
+Avg Joint Loss: 0.09882695227861404
+Avg Loss: 0.05822264808829468
+Avg Pose Loss: 0.04896176650677577
+Avg Joint Loss: 0.09260881360214536
+--eval--
+9it [00:03,  2.94it/s]                                                                                                                                                                                                     
+--test--
+11it [00:03,  3.09it/s]                                                                                                                                                                                                    
+Epoch 2/500)
+Train Loss: 0.057899389415979385,Train Pose Loss: 0.048694685101509094, Train Bone Loss: 0.09204704314470291
+Eval Loss: 0.028307612985372543,Eval Pose Loss: 0.024012422189116478,Eval Bone Loss: 0.04295189678668976
+Test Loss: 0.03203749656677246,Test Pose Loss: 0.02711634524166584, Test Bone Loss: 0.049211494624614716
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0224/1526
+base_lr:[0.0001]
+epoch:2/500
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [00:53<00:00,  2.04it/s]
+Avg Loss: 0.05391654744744301
+Avg Pose Loss: 0.04540715366601944
+Avg Joint Loss: 0.0850939229130745
+Avg Loss: 0.050730358993653024
+Avg Pose Loss: 0.042759439695884686
+Avg Joint Loss: 0.07970918833029152
+--eval--
+9it [00:02,  3.02it/s]                                                                                                                                                                                                     
+--test--
+11it [00:03,  3.14it/s]                                                                                                                                                                                                    
+Epoch 3/500)
+Train Loss: 0.05044516175985336,Train Pose Loss: 0.04252247512340546, Train Bone Loss: 0.07922682911157608
+Eval Loss: 0.027782363817095757,Eval Pose Loss: 0.0235794335603714,Eval Bone Loss: 0.042029306292533875
+Test Loss: 0.03183821588754654,Test Pose Loss: 0.02693103440105915, Test Bone Loss: 0.04907181113958359
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0224/1526
+base_lr:[0.0001]
+epoch:3/500
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [00:54<00:00,  2.03it/s]
+Avg Loss: 0.04364564269781113
+Avg Pose Loss: 0.036761511117219925
+Avg Joint Loss: 0.06884130090475082
+Avg Loss: 0.04131404649798233
+Avg Pose Loss: 0.03491833219581311
+Avg Joint Loss: 0.06395714475524307
+--eval--
+9it [00:02,  3.11it/s]                                                                                                                                                                                                     
+--test--
+11it [00:03,  3.30it/s]                                                                                                                                                                                                    
+Epoch 4/500)
+Train Loss: 0.04093710333108902,Train Pose Loss: 0.03460908308625221, Train Bone Loss: 0.06328022480010986
+Eval Loss: 0.02651125192642212,Eval Pose Loss: 0.02246813103556633,Eval Bone Loss: 0.04043120518326759
+Test Loss: 0.030552241951227188,Test Pose Loss: 0.025780417025089264, Test Bone Loss: 0.04771823063492775
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0224/1526
+base_lr:[0.0001]
+epoch:4/500
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [00:53<00:00,  2.04it/s]
+Avg Loss: 0.03262469545006752
+Avg Pose Loss: 0.02761591598391533
+Avg Joint Loss: 0.05008779838681221
+Avg Loss: 0.030585353972740693
+Avg Pose Loss: 0.025931206079992917
+Avg Joint Loss: 0.046541478337332756
+--eval--
+9it [00:03,  2.98it/s]                                                                                                                                                                                                     
+--test--
+11it [00:03,  3.14it/s]                                                                                                                                                                                                    
+Epoch 5/500)
+Train Loss: 0.030248714610934258,Train Pose Loss: 0.02564374916255474, Train Bone Loss: 0.046049654483795166
+Eval Loss: 0.026219531893730164,Eval Pose Loss: 0.02221864089369774,Eval Bone Loss: 0.040008898824453354
+Test Loss: 0.030092183500528336,Test Pose Loss: 0.02541632018983364, Test Bone Loss: 0.04675862193107605
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0224/1526
+base_lr:[0.0001]
+epoch:5/500
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 110/110 [00:54<00:00,  2.02it/s]
+Avg Loss: 0.02674257382750511
+Avg Pose Loss: 0.02271486073732376
+Avg Joint Loss: 0.04027711972594261
+Avg Loss: 0.025770884357614092
+Avg Pose Loss: 0.021850838814631547
+Avg Joint Loss: 0.039200455651129826
+--eval--
+9it [00:02,  3.12it/s]                                                                                                                                                                                                     
+--test--
+11it [00:03,  3.29it/s]                                                                                                                                                                                                    
+Epoch 6/500)
+Train Loss: 0.025736695155501366,Train Pose Loss: 0.021819422021508217, Train Bone Loss: 0.03917272016406059
+Eval Loss: 0.026070360094308853,Eval Pose Loss: 0.02209077961742878,Eval Bone Loss: 0.03979579731822014
+Test Loss: 0.030017154291272163,Test Pose Loss: 0.025351835414767265, Test Bone Loss: 0.046653181314468384
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 280, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 242, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 163, in fit
+    torch.save({
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 943, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 784, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt

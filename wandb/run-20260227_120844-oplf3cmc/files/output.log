@@ -1,0 +1,83 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0227/1208
+base_lr:[5e-05]
+epoch:0/600
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 221/221 [00:48<00:00,  4.54it/s]
+Avg Loss: 0.6175431609153748
+Avg Pose Loss: 0.6175431609153748
+Avg Joint Loss: 1.091471552848816
+Avg Loss: 0.21590709686279297
+Avg Pose Loss: 0.21590709686279297
+Avg Joint Loss: 0.1727870394392769
+Avg Loss: 0.1586084078941772
+Avg Pose Loss: 0.1586084078941772
+Avg Joint Loss: 0.10312210281949434
+--eval--
+17it [00:03,  5.28it/s]                                                                                                                                                                                                    
+--test--
+21it [00:03,  5.41it/s]                                                                                                                                                                                                    
+Epoch 1/600)
+Train Loss: 0.1515466272830963,Train Pose Loss: 0.1515466272830963, Train Bone Loss: 0.09564165771007538
+Eval Loss: 0.04401953145861626,Eval Pose Loss: 0.04401953145861626,Eval Bone Loss: 0.006152063142508268
+Test Loss: 0.044540807604789734,Test Pose Loss: 0.044540807604789734, Test Bone Loss: 0.006461441516876221
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0227/1208
+base_lr:[4.999965730618567e-05]
+epoch:1/600
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 221/221 [01:14<00:00,  2.95it/s]
+Avg Loss: 0.07877389341592789
+Avg Pose Loss: 0.07877389341592789
+Avg Joint Loss: 0.019201764836907387
+Avg Loss: 0.07173226013927177
+Avg Pose Loss: 0.07173226013927177
+Avg Joint Loss: 0.01617005249798888
+Avg Loss: 0.06681317285592876
+Avg Pose Loss: 0.06681317285592876
+Avg Joint Loss: 0.01396787378343925
+--eval--
+17it [00:03,  5.18it/s]                                                                                                                                                                                                    
+--test--
+21it [00:03,  5.41it/s]                                                                                                                                                                                                    
+Epoch 2/600)
+Train Loss: 0.06598903983831406,Train Pose Loss: 0.06598903983831406, Train Bone Loss: 0.013605463318526745
+Eval Loss: 0.03254718333482742,Eval Pose Loss: 0.03254718333482742,Eval Bone Loss: 0.0029948384035378695
+Test Loss: 0.03293054550886154,Test Pose Loss: 0.03293054550886154, Test Bone Loss: 0.0030472693033516407
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0227/1208
+base_lr:[4.999862923413781e-05]
+epoch:2/600
+--train--
+ 20%|████████████████████████████████████                                                                                                                                                 | 44/221 [00:20<01:24,  2.10it/s]
+Avg Loss: 0.055595166981220245
+Avg Pose Loss: 0.055595166981220245
+Avg Joint Loss: 0.009077338501811028
+Exception ignored in: <function _MultiProcessingDataLoaderIter.__del__ at 0x787e1c9ec9d0>
+Traceback (most recent call last):
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1618, in __del__
+    self._shutdown_workers()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1582, in _shutdown_workers
+    w.join(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/popen_fork.py", line 40, in wait
+    if not wait([self.sentinel], timeout):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 931, in wait
+    ready = selector.select(timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/selectors.py", line 416, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt:
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 274, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 236, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 141, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 62, in train
+    scaler.scale(loss).backward()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/_tensor.py", line 626, in backward
+    torch.autograd.backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt

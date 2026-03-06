@@ -1,0 +1,99 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0216/1905
+base_lr:[0.0001]
+epoch:0/300
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 575/575 [03:39<00:00,  2.62it/s]
+Avg Loss: 0.756583034992218
+Avg Pose Loss: 0.6595363020896912
+Avg Stop Loss: 0.02755979262292385
+Avg Joint Loss: 0.694869339466095
+Avg Loss: 0.2957116332237083
+Avg Pose Loss: 0.16808885557226616
+Avg Stop Loss: 0.1218314678684836
+Avg Joint Loss: 0.0579130861650009
+Avg Loss: 0.20942874845877216
+Avg Pose Loss: 0.14188679278045152
+Avg Stop Loss: 0.06371324252631441
+Avg Joint Loss: 0.038287128141122076
+Avg Loss: 0.17613198031420724
+Avg Pose Loss: 0.1291633483727905
+Avg Stop Loss: 0.04391779575614488
+Avg Joint Loss: 0.03050835813980463
+Avg Loss: 0.1566729064742823
+Avg Pose Loss: 0.12039660151462603
+Avg Stop Loss: 0.03372943947182276
+Avg Joint Loss: 0.025468652736990158
+Avg Loss: 0.14284646286519465
+Avg Pose Loss: 0.11313946830655286
+Avg Stop Loss: 0.027551138033010365
+Avg Joint Loss: 0.021558564116326933
+--eval--
+34it [00:13,  2.61it/s]                                                                                                                                                                                                    
+--test--
+37it [00:14,  2.59it/s]                                                                                                                                                                                                    
+Epoch 1/300)
+Train Loss: 0.1348234862089157,Train Pose Loss: 0.10852716863155365, Train Stop Loss: 0.024366578087210655, Train Bone Loss: 0.019297407940030098
+Eval Loss: 0.06777503341436386,Eval Pose Loss: 0.06530579179525375, Eval Stop Loss: 0.0023761664051562548, Eval Bone Loss: 0.0009307765285484493
+Test Loss: 0.06914923340082169,Test Pose Loss: 0.06648900359869003, Test Stop Loss: 0.002565202070400119, Test Bone Loss: 0.0009502756875008345
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0216/1905
+base_lr:[9.999728588359285e-05]
+epoch:1/300
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 575/575 [03:40<00:00,  2.61it/s]
+Avg Loss: 0.08288563042879105
+Avg Pose Loss: 0.08127518743276596
+Avg Stop Loss: 0.001262226840481162
+Avg Joint Loss: 0.0034821894951164722
+Avg Loss: 0.07775948941707611
+Avg Pose Loss: 0.07473023877580567
+Avg Stop Loss: 0.0027132541780350823
+Avg Joint Loss: 0.0031599636526206637
+Avg Loss: 0.07609562965026542
+Avg Pose Loss: 0.07318515465849668
+Avg Stop Loss: 0.0026237933250116323
+Avg Joint Loss: 0.0028668159713959368
+Avg Loss: 0.07542062115134592
+Avg Pose Loss: 0.07259716639338537
+Avg Stop Loss: 0.0025571214945590824
+Avg Joint Loss: 0.00266333406271283
+Avg Loss: 0.07452873883773561
+Avg Pose Loss: 0.07175307389246555
+Avg Stop Loss: 0.002525427561030349
+Avg Joint Loss: 0.0025023750370331203
+Avg Loss: 0.07385340847536
+Avg Pose Loss: 0.07108846606459922
+Avg Stop Loss: 0.0025278562506774213
+Avg Joint Loss: 0.0023708628321404824
+--eval--
+34it [00:13,  2.61it/s]                                                                                                                                                                                                    
+--test--
+37it [00:14,  2.59it/s]                                                                                                                                                                                                    
+Epoch 2/300)
+Train Loss: 0.07343587279319763,Train Pose Loss: 0.07069078087806702, Train Stop Loss: 0.0025160806253552437, Train Bone Loss: 0.002290111966431141
+Eval Loss: 0.06599891185760498,Eval Pose Loss: 0.06323734670877457, Eval Stop Loss: 0.002684355480596423, Eval Bone Loss: 0.0007720771245658398
+Test Loss: 0.0667445957660675,Test Pose Loss: 0.063493512570858, Test Stop Loss: 0.0031727589666843414, Test Bone Loss: 0.0007832675473764539
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0216/1905
+base_lr:[9.998914383200485e-05]
+epoch:2/300
+--train--
+ 10%|██████████████████▌                                                                                                                                                                  | 59/575 [00:23<03:25,  2.51it/s]
+Avg Loss: 0.0608430877327919
+Avg Pose Loss: 0.05817026272416115
+Avg Stop Loss: 0.002506657037883997
+Avg Joint Loss: 0.0016616696957498789
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 246, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 210, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 146, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 74, in train
+    scaler.scale(loss).backward()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/_tensor.py", line 626, in backward
+    torch.autograd.backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt

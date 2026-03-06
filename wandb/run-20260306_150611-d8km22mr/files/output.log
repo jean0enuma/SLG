@@ -1,0 +1,17 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1504
+base_lr:[0.001]
+epoch:0/200
+--train--
+  0%|          | 0/221 [01:41<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/VQVAE_separate_trainer.py", line 129, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/VQVAE_separate_trainer.py", line 106, in compute_loss
+    loss = model(padded_cod_data,hand_valid_mask=padded_mask,input_length=input_length_tensor)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/module/VQ_VAE_Transformer.py", line 660, in forward
+    pose_recon_loss=(pose_recon_loss*mask).sum()/mask.sum()
+NameError: name 'mask' is not defined

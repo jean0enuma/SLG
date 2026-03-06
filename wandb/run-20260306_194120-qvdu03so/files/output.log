@@ -1,0 +1,426 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.001]
+epoch:0/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 9.122260093688965
+Avg Recon Pose Loss: 2.6974682807922363
+Avg Recon Hand Loss: 2.0335917472839355
+Avg Recon Extra Loss: 1.0984065532684326
+Avg VQ Loss: 1.2962710857391357
+Avg Hand VQ Loss: 1.2078851461410522
+Avg Extra VQ Loss: 0.7886372804641724
+Avg Perplexity: 12.11109447479248
+Avg Loss: 20.204890628852468
+Avg Recon Pose Loss: 0.23135197642120983
+Avg Recon Hand Loss: 0.6078984699036816
+Avg Recon Extra Loss: 0.21381634252496284
+Avg VQ Loss: 0.375963093768252
+Avg Hand VQ Loss: 15.605652009496595
+Avg Extra VQ Loss: 3.170208846283431
+Avg Perplexity: 7.375634599440168
+Avg Loss: 14.561191805559604
+Avg Recon Pose Loss: 0.143574939493961
+Avg Recon Hand Loss: 0.45704307714801523
+Avg Recon Extra Loss: 0.12221840305707941
+Avg VQ Loss: 0.3196352447814016
+Avg Hand VQ Loss: 11.849446815341267
+Avg Extra VQ Loss: 1.6692733726839522
+Avg Perplexity: 7.798451295539515
+Avg Loss: 10.887151688040293
+Avg Recon Pose Loss: 0.10652864704595452
+Avg Recon Hand Loss: 0.39320970972709085
+Avg Recon Extra Loss: 0.08744488319883315
+Avg VQ Loss: 0.25233991324059984
+Avg Hand VQ Loss: 8.920864332751973
+Avg Extra VQ Loss: 1.1267642466741246
+Avg Perplexity: 8.932530853043364
+--eval--
+34it [00:07,  4.77it/s]                                                                                                                                                                                                    
+--test--
+40it [00:09,  4.13it/s]                                                                                                                                                                                                    
+Epoch 1/200)
+Train Loss: 8.7514, Recon Pose Loss: 0.0862, Recon Hand Loss: 0.3557, Recon Extra Loss: 0.0697, VQ Loss: 0.2068, Hand VQ Loss: 7.1714, Extra VQ Loss: 0.8615, Perplexity: 10.0812
+Eval Loss: 2.1444, Recon Pose Loss: 0.0162, Recon Hand Loss: 0.2227, Recon Extra Loss: 0.0105, VQ Loss: 0.0411, Hand VQ Loss: 1.8241, Extra VQ Loss: 0.0298, Perplexity: 10.7264
+Test Loss: 2.1690, Recon Pose Loss: 0.0158, Recon Hand Loss: 0.2209, Recon Extra Loss: 0.0107, VQ Loss: 0.0397, Hand VQ Loss: 1.8527, Extra VQ Loss: 0.0292, Perplexity: 10.4807
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.0009999383162408303]
+epoch:1/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 1.6797055006027222
+Avg Recon Pose Loss: 0.020484864711761475
+Avg Recon Hand Loss: 0.22718220949172974
+Avg Recon Extra Loss: 0.012661296874284744
+Avg VQ Loss: 0.04195812717080116
+Avg Hand VQ Loss: 1.345337152481079
+Avg Extra VQ Loss: 0.03208179026842117
+Avg Perplexity: 14.28278923034668
+Avg Loss: 1.7713884091613317
+Avg Recon Pose Loss: 0.018431790357474054
+Avg Recon Hand Loss: 0.21309939218629706
+Avg Recon Extra Loss: 0.011055095633030823
+Avg VQ Loss: 0.045160310287581815
+Avg Hand VQ Loss: 1.4553950057171359
+Avg Extra VQ Loss: 0.028246816210817583
+Avg Perplexity: 15.430182164258296
+Avg Loss: 1.604790168022042
+Avg Recon Pose Loss: 0.017486816438943592
+Avg Recon Hand Loss: 0.209328874056019
+Avg Recon Extra Loss: 0.010079851038105304
+Avg VQ Loss: 0.04112386929603359
+Avg Hand VQ Loss: 1.3021390298705788
+Avg Extra VQ Loss: 0.02463172507282365
+Avg Perplexity: 15.263003904428055
+Avg Loss: 1.473400262899177
+Avg Recon Pose Loss: 0.01640064775188797
+Avg Recon Hand Loss: 0.20079486651278017
+Avg Recon Extra Loss: 0.009296843126119173
+Avg VQ Loss: 0.038309591949184076
+Avg Hand VQ Loss: 1.1861068683605258
+Avg Extra VQ Loss: 0.022491443329846542
+Avg Perplexity: 15.715756999297792
+--eval--
+34it [00:06,  5.65it/s]                                                                                                                                                                                                    
+--test--
+40it [00:07,  5.35it/s]                                                                                                                                                                                                    
+Epoch 2/200)
+Train Loss: 1.3932, Recon Pose Loss: 0.0157, Recon Hand Loss: 0.1969, Recon Extra Loss: 0.0084, VQ Loss: 0.0365, Hand VQ Loss: 1.1156, Extra VQ Loss: 0.0202, Perplexity: 16.1227
+Eval Loss: 1.0945, Recon Pose Loss: 0.0120, Recon Hand Loss: 0.1682, Recon Extra Loss: 0.0050, VQ Loss: 0.0262, Hand VQ Loss: 0.8745, Extra VQ Loss: 0.0086, Perplexity: 12.6522
+Test Loss: 1.0894, Recon Pose Loss: 0.0115, Recon Hand Loss: 0.1686, Recon Extra Loss: 0.0049, VQ Loss: 0.0247, Hand VQ Loss: 0.8714, Extra VQ Loss: 0.0083, Perplexity: 12.5857
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.0009997532801828658]
+epoch:2/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 1.3616582155227661
+Avg Recon Pose Loss: 0.013228961266577244
+Avg Recon Hand Loss: 0.18687070906162262
+Avg Recon Extra Loss: 0.004582267254590988
+Avg VQ Loss: 0.03370869904756546
+Avg Hand VQ Loss: 1.1128029823303223
+Avg Extra VQ Loss: 0.010464569553732872
+Avg Perplexity: 15.681262016296387
+Avg Loss: 1.0570448271118769
+Avg Recon Pose Loss: 0.012365099973976612
+Avg Recon Hand Loss: 0.17679693409712008
+Avg Recon Extra Loss: 0.004958507508076359
+Avg VQ Loss: 0.028335734039987667
+Avg Hand VQ Loss: 0.8238279919813175
+Avg Extra VQ Loss: 0.010760555772276798
+Avg Perplexity: 18.24939516275236
+Avg Loss: 1.0452340251177699
+Avg Recon Pose Loss: 0.012182925980704935
+Avg Recon Hand Loss: 0.17573199580557905
+Avg Recon Extra Loss: 0.0047895445254404305
+Avg VQ Loss: 0.02814359157647363
+Avg Hand VQ Loss: 0.8139483887164747
+Avg Extra VQ Loss: 0.01043757657052495
+Avg Perplexity: 18.738564804418765
+Avg Loss: 0.9868387173972653
+Avg Recon Pose Loss: 0.011948486808625567
+Avg Recon Hand Loss: 0.16942704486292462
+Avg Recon Extra Loss: 0.004650550557182873
+Avg VQ Loss: 0.027682360348313353
+Avg Hand VQ Loss: 0.7629963385306323
+Avg Extra VQ Loss: 0.01013393518344756
+Avg Perplexity: 18.81340029073316
+--eval--
+34it [00:08,  4.03it/s]                                                                                                                                                                                                    
+--test--
+40it [00:07,  5.59it/s]                                                                                                                                                                                                    
+Epoch 3/200)
+Train Loss: 0.9446, Recon Pose Loss: 0.0118, Recon Hand Loss: 0.1641, Recon Extra Loss: 0.0045, VQ Loss: 0.0273, Hand VQ Loss: 0.7269, Extra VQ Loss: 0.0099, Perplexity: 19.1638
+Eval Loss: 0.7930, Recon Pose Loss: 0.0100, Recon Hand Loss: 0.1418, Recon Extra Loss: 0.0038, VQ Loss: 0.0232, Hand VQ Loss: 0.6067, Extra VQ Loss: 0.0076, Perplexity: 16.2139
+Test Loss: 0.7869, Recon Pose Loss: 0.0098, Recon Hand Loss: 0.1395, Recon Extra Loss: 0.0037, VQ Loss: 0.0223, Hand VQ Loss: 0.6043, Extra VQ Loss: 0.0074, Perplexity: 15.9521
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.0009994449374809851]
+epoch:3/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.748661994934082
+Avg Recon Pose Loss: 0.011477131396532059
+Avg Recon Hand Loss: 0.14640749990940094
+Avg Recon Extra Loss: 0.004200252704322338
+Avg VQ Loss: 0.02459198422729969
+Avg Hand VQ Loss: 0.552682101726532
+Avg Extra VQ Loss: 0.009303033351898193
+Avg Perplexity: 22.480918884277344
+Avg Loss: 0.766135301330302
+Avg Recon Pose Loss: 0.010799575329638354
+Avg Recon Hand Loss: 0.1396242186132044
+Avg Recon Extra Loss: 0.004087042796545395
+Avg VQ Loss: 0.025143701656915173
+Avg Hand VQ Loss: 0.5776466848236499
+Avg Extra VQ Loss: 0.008834078949461184
+Avg Perplexity: 21.535699410013635
+Avg Loss: 0.7459184574843639
+Avg Recon Pose Loss: 0.010687315827281914
+Avg Recon Hand Loss: 0.1380815192389844
+Avg Recon Extra Loss: 0.003967057050562542
+Avg VQ Loss: 0.02493815062873399
+Avg Hand VQ Loss: 0.5596623822527739
+Avg Extra VQ Loss: 0.008582032628505681
+Avg Perplexity: 21.110500402118436
+Avg Loss: 0.7413050926404934
+Avg Recon Pose Loss: 0.010637114792938447
+Avg Recon Hand Loss: 0.13739973465073543
+Avg Recon Extra Loss: 0.003978993379328387
+Avg VQ Loss: 0.024988524838539455
+Avg Hand VQ Loss: 0.555730572669609
+Avg Extra VQ Loss: 0.00857015407993845
+Avg Perplexity: 20.713992191707572
+--eval--
+34it [00:06,  5.46it/s]                                                                                                                                                                                                    
+--test--
+40it [00:06,  5.82it/s]                                                                                                                                                                                                    
+Epoch 4/200)
+Train Loss: 0.7352, Recon Pose Loss: 0.0105, Recon Hand Loss: 0.1359, Recon Extra Loss: 0.0039, VQ Loss: 0.0247, Hand VQ Loss: 0.5518, Extra VQ Loss: 0.0084, Perplexity: 20.4965
+Eval Loss: 0.6646, Recon Pose Loss: 0.0104, Recon Hand Loss: 0.1248, Recon Extra Loss: 0.0039, VQ Loss: 0.0219, Hand VQ Loss: 0.4972, Extra VQ Loss: 0.0065, Perplexity: 15.9832
+Test Loss: 0.6609, Recon Pose Loss: 0.0104, Recon Hand Loss: 0.1256, Recon Extra Loss: 0.0037, VQ Loss: 0.0215, Hand VQ Loss: 0.4934, Extra VQ Loss: 0.0063, Perplexity: 15.9256
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.0009990133642141358]
+epoch:4/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.7364996075630188
+Avg Recon Pose Loss: 0.00906208623200655
+Avg Recon Hand Loss: 0.13917209208011627
+Avg Recon Extra Loss: 0.00428189430385828
+Avg VQ Loss: 0.022133735939860344
+Avg Hand VQ Loss: 0.5521672964096069
+Avg Extra VQ Loss: 0.009682537987828255
+Avg Perplexity: 19.870697021484375
+Avg Loss: 0.6764348391259071
+Avg Recon Pose Loss: 0.009863462815485379
+Avg Recon Hand Loss: 0.12654399466101485
+Avg Recon Extra Loss: 0.0036338960710396565
+Avg VQ Loss: 0.02345299527122833
+Avg Hand VQ Loss: 0.505469690159996
+Avg Extra VQ Loss: 0.007470798254529438
+Avg Perplexity: 20.73670791399361
+Avg Loss: 0.672180128038226
+Avg Recon Pose Loss: 0.00985210421332969
+Avg Recon Hand Loss: 0.12709014681144734
+Avg Recon Extra Loss: 0.0036342635655784933
+Avg VQ Loss: 0.02346218809188895
+Avg Hand VQ Loss: 0.5006919664826559
+Avg Extra VQ Loss: 0.0074494570975576465
+Avg Perplexity: 20.61762737634763
+Avg Loss: 0.6550869354575971
+Avg Recon Pose Loss: 0.0097796367419469
+Avg Recon Hand Loss: 0.1252509564210806
+Avg Recon Extra Loss: 0.003587668668788137
+Avg VQ Loss: 0.023351194361763142
+Avg Hand VQ Loss: 0.4857017078074902
+Avg Extra VQ Loss: 0.007415769544377477
+Avg Perplexity: 20.709660793063648
+--eval--
+34it [00:07,  4.66it/s]                                                                                                                                                                                                    
+--test--
+40it [00:08,  4.88it/s]                                                                                                                                                                                                    
+Epoch 5/200)
+Train Loss: 0.6397, Recon Pose Loss: 0.0097, Recon Hand Loss: 0.1231, Recon Extra Loss: 0.0036, VQ Loss: 0.0232, Hand VQ Loss: 0.4726, Extra VQ Loss: 0.0074, Perplexity: 21.1314
+Eval Loss: 0.5466, Recon Pose Loss: 0.0104, Recon Hand Loss: 0.1110, Recon Extra Loss: 0.0033, VQ Loss: 0.0207, Hand VQ Loss: 0.3953, Extra VQ Loss: 0.0059, Perplexity: 16.5089
+Test Loss: 0.5401, Recon Pose Loss: 0.0103, Recon Hand Loss: 0.1114, Recon Extra Loss: 0.0031, VQ Loss: 0.0203, Hand VQ Loss: 0.3892, Extra VQ Loss: 0.0057, Perplexity: 16.4219
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.000998458666866564]
+epoch:5/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.5868136286735535
+Avg Recon Pose Loss: 0.008432984352111816
+Avg Recon Hand Loss: 0.10889755189418793
+Avg Recon Extra Loss: 0.003758331760764122
+Avg VQ Loss: 0.021949976682662964
+Avg Hand VQ Loss: 0.43552297353744507
+Avg Extra VQ Loss: 0.008251830004155636
+Avg Perplexity: 21.531064987182617
+Avg Loss: 0.5884141390866572
+Avg Recon Pose Loss: 0.009455307617340938
+Avg Recon Hand Loss: 0.11337206409414216
+Avg Recon Extra Loss: 0.0034394036738736797
+Avg VQ Loss: 0.022677608535136326
+Avg Hand VQ Loss: 0.4325295264768128
+Avg Extra VQ Loss: 0.006940228620193677
+Avg Perplexity: 21.05942380546343
+Avg Loss: 0.588783494423871
+Avg Recon Pose Loss: 0.00945004308364581
+Avg Recon Hand Loss: 0.11258369317250465
+Avg Recon Extra Loss: 0.0034196740618689142
+Avg VQ Loss: 0.022800603065991878
+Avg Hand VQ Loss: 0.4337277664473994
+Avg Extra VQ Loss: 0.006801717453613062
+Avg Perplexity: 20.97456206136675
+Avg Loss: 0.5803569168149435
+Avg Recon Pose Loss: 0.009431752255588672
+Avg Recon Hand Loss: 0.1112826307647648
+Avg Recon Extra Loss: 0.003370643957700593
+Avg VQ Loss: 0.022861110049600022
+Avg Hand VQ Loss: 0.4267556851488411
+Avg Extra VQ Loss: 0.006655097580159027
+Avg Perplexity: 21.010382218218325
+--eval--
+34it [00:07,  4.55it/s]                                                                                                                                                                                                    
+--test--
+40it [00:08,  4.83it/s]                                                                                                                                                                                                    
+Epoch 6/200)
+Train Loss: 0.5764, Recon Pose Loss: 0.0094, Recon Hand Loss: 0.1102, Recon Extra Loss: 0.0033, VQ Loss: 0.0227, Hand VQ Loss: 0.4241, Extra VQ Loss: 0.0066, Perplexity: 21.1967
+Eval Loss: 0.5126, Recon Pose Loss: 0.0113, Recon Hand Loss: 0.0992, Recon Extra Loss: 0.0031, VQ Loss: 0.0212, Hand VQ Loss: 0.3720, Extra VQ Loss: 0.0058, Perplexity: 16.0647
+Test Loss: 0.5111, Recon Pose Loss: 0.0111, Recon Hand Loss: 0.1006, Recon Extra Loss: 0.0030, VQ Loss: 0.0211, Hand VQ Loss: 0.3698, Extra VQ Loss: 0.0055, Perplexity: 15.9138
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.00099778098230154]
+epoch:6/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.5839004516601562
+Avg Recon Pose Loss: 0.009596949443221092
+Avg Recon Hand Loss: 0.11281128972768784
+Avg Recon Extra Loss: 0.0028342227451503277
+Avg VQ Loss: 0.024873118847608566
+Avg Hand VQ Loss: 0.4277462363243103
+Avg Extra VQ Loss: 0.00603865273296833
+Avg Perplexity: 20.844907760620117
+Avg Loss: 0.5624739908345855
+Avg Recon Pose Loss: 0.009185830951843521
+Avg Recon Hand Loss: 0.10322151915861828
+Avg Recon Extra Loss: 0.0031639358425273162
+Avg VQ Loss: 0.022435966547172847
+Avg Hand VQ Loss: 0.41827996237443227
+Avg Extra VQ Loss: 0.0061867753560147665
+Avg Perplexity: 21.743778814183603
+Avg Loss: 0.5496506695427111
+Avg Recon Pose Loss: 0.009101010166312479
+Avg Recon Hand Loss: 0.10161134352286656
+Avg Recon Extra Loss: 0.0032095535060585436
+Avg VQ Loss: 0.022595772427038766
+Avg Hand VQ Loss: 0.40696076129502917
+Avg Extra VQ Loss: 0.006172230198460432
+Avg Perplexity: 22.238834741696788
+Avg Loss: 0.5437205786324815
+Avg Recon Pose Loss: 0.009048567595969007
+Avg Recon Hand Loss: 0.10061874297568173
+Avg Recon Extra Loss: 0.003186189065968921
+Avg VQ Loss: 0.022520704077327765
+Avg Hand VQ Loss: 0.40224664210283084
+Avg Extra VQ Loss: 0.006099734042285388
+Avg Perplexity: 22.56931169959794
+--eval--
+34it [00:07,  4.41it/s]                                                                                                                                                                                                    
+--test--
+40it [00:08,  4.85it/s]                                                                                                                                                                                                    
+Epoch 7/200)
+Train Loss: 0.5412, Recon Pose Loss: 0.0090, Recon Hand Loss: 0.1003, Recon Extra Loss: 0.0032, VQ Loss: 0.0225, Hand VQ Loss: 0.4002, Extra VQ Loss: 0.0060, Perplexity: 22.4396
+Eval Loss: 0.5137, Recon Pose Loss: 0.0101, Recon Hand Loss: 0.0940, Recon Extra Loss: 0.0032, VQ Loss: 0.0209, Hand VQ Loss: 0.3801, Extra VQ Loss: 0.0053, Perplexity: 17.5131
+Test Loss: 0.5116, Recon Pose Loss: 0.0101, Recon Hand Loss: 0.0931, Recon Extra Loss: 0.0030, VQ Loss: 0.0204, Hand VQ Loss: 0.3800, Extra VQ Loss: 0.0050, Perplexity: 17.5095
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.0009969804777275899]
+epoch:7/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.4882830083370209
+Avg Recon Pose Loss: 0.009113448671996593
+Avg Recon Hand Loss: 0.08991890400648117
+Avg Recon Extra Loss: 0.0030584880150854588
+Avg VQ Loss: 0.02551436796784401
+Avg Hand VQ Loss: 0.35452699661254883
+Avg Extra VQ Loss: 0.00615080539137125
+Avg Perplexity: 22.825361251831055
+Avg Loss: 0.5432880028049545
+Avg Recon Pose Loss: 0.008838613213288903
+Avg Recon Hand Loss: 0.09746617329592752
+Avg Recon Extra Loss: 0.00311398618660941
+Avg VQ Loss: 0.02261271135936869
+Avg Hand VQ Loss: 0.40554399449046297
+Avg Extra VQ Loss: 0.005712524508264395
+Avg Perplexity: 22.80906080491472
+Avg Loss: 0.5393056429144162
+Avg Recon Pose Loss: 0.008832843874613592
+Avg Recon Hand Loss: 0.09748728343503392
+Avg Recon Extra Loss: 0.0030876108044434096
+Avg VQ Loss: 0.02239869466394334
+Avg Hand VQ Loss: 0.4018252530501257
+Avg Extra VQ Loss: 0.005673956668087796
+Avg Perplexity: 23.300201216740394
+Avg Loss: 0.5263910282687887
+Avg Recon Pose Loss: 0.008802249855934287
+Avg Recon Hand Loss: 0.09640256538244577
+Avg Recon Extra Loss: 0.0030945274790136323
+Avg VQ Loss: 0.022374657969736183
+Avg Hand VQ Loss: 0.39012422113125506
+Avg Extra VQ Loss: 0.005592805642845028
+Avg Perplexity: 23.296344357867575
+--eval--
+34it [00:07,  4.49it/s]                                                                                                                                                                                                    
+--test--
+40it [00:08,  4.79it/s]                                                                                                                                                                                                    
+Epoch 8/200)
+Train Loss: 0.5137, Recon Pose Loss: 0.0088, Recon Hand Loss: 0.0954, Recon Extra Loss: 0.0031, VQ Loss: 0.0224, Hand VQ Loss: 0.3785, Extra VQ Loss: 0.0056, Perplexity: 23.3312
+Eval Loss: 0.4647, Recon Pose Loss: 0.0108, Recon Hand Loss: 0.0874, Recon Extra Loss: 0.0028, VQ Loss: 0.0209, Hand VQ Loss: 0.3376, Extra VQ Loss: 0.0052, Perplexity: 16.6814
+Test Loss: 0.4666, Recon Pose Loss: 0.0108, Recon Hand Loss: 0.0886, Recon Extra Loss: 0.0026, VQ Loss: 0.0208, Hand VQ Loss: 0.3390, Extra VQ Loss: 0.0049, Perplexity: 16.6278
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.000996057350657239]
+epoch:8/200
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.5908789038658142
+Avg Recon Pose Loss: 0.008670460432767868
+Avg Recon Hand Loss: 0.09397195279598236
+Avg Recon Extra Loss: 0.0030591145623475313
+Avg VQ Loss: 0.024811256676912308
+Avg Hand VQ Loss: 0.4540187120437622
+Avg Extra VQ Loss: 0.006347392685711384
+Avg Perplexity: 21.89390754699707
+Avg Loss: 0.4649375789236314
+Avg Recon Pose Loss: 0.008651739239950877
+Avg Recon Hand Loss: 0.09086825794512683
+Avg Recon Extra Loss: 0.0031858846190210323
+Avg VQ Loss: 0.02208916289676534
+Avg Hand VQ Loss: 0.33447415315278684
+Avg Extra VQ Loss: 0.005668381669346501
+Avg Perplexity: 23.253618485856766
+Avg Loss: 0.46158139207469884
+Avg Recon Pose Loss: 0.008634275117360833
+Avg Recon Hand Loss: 0.09063495447238286
+Avg Recon Extra Loss: 0.003074806392081638
+Avg VQ Loss: 0.022283340808912297
+Avg Hand VQ Loss: 0.33150380820184205
+Avg Extra VQ Loss: 0.005450207726168099
+Avg Perplexity: 23.24989202129307
+Avg Loss: 0.457461406226174
+Avg Recon Pose Loss: 0.008613816219570728
+Avg Recon Hand Loss: 0.09015885730617466
+Avg Recon Extra Loss: 0.003022331806314348
+Avg VQ Loss: 0.022299552534357257
+Avg Hand VQ Loss: 0.32798933131354197
+Avg Extra VQ Loss: 0.005377518652050301
+Avg Perplexity: 23.471747559962477
+--eval--
+34it [00:07,  4.70it/s]                                                                                                                                                                                                    
+--test--
+40it [00:08,  4.87it/s]                                                                                                                                                                                                    
+Epoch 9/200)
+Train Loss: 0.4532, Recon Pose Loss: 0.0086, Recon Hand Loss: 0.0892, Recon Extra Loss: 0.0030, VQ Loss: 0.0223, Hand VQ Loss: 0.3247, Extra VQ Loss: 0.0054, Perplexity: 23.8091
+Eval Loss: 0.4092, Recon Pose Loss: 0.0106, Recon Hand Loss: 0.0829, Recon Extra Loss: 0.0027, VQ Loss: 0.0190, Hand VQ Loss: 0.2894, Extra VQ Loss: 0.0047, Perplexity: 18.9318
+Test Loss: 0.4101, Recon Pose Loss: 0.0104, Recon Hand Loss: 0.0833, Recon Extra Loss: 0.0025, VQ Loss: 0.0187, Hand VQ Loss: 0.2908, Extra VQ Loss: 0.0045, Perplexity: 18.8007
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1941
+base_lr:[0.0009950118288582787]
+epoch:9/200
+--train--
+ 44%|███████████████████████████████████████████████████████████████████████████████▌                                                                                                    | 176/398 [01:07<01:26,  2.57it/s]
+Avg Loss: 0.3907333016395569
+Avg Recon Pose Loss: 0.009331366047263145
+Avg Recon Hand Loss: 0.07827699929475784
+Avg Recon Extra Loss: 0.0031740176491439342
+Avg VQ Loss: 0.02307772822678089
+Avg Hand VQ Loss: 0.27136194705963135
+Avg Extra VQ Loss: 0.0055112410336732864
+Avg Perplexity: 25.450265884399414
+Avg Loss: 0.4394000742104974
+Avg Recon Pose Loss: 0.008564118415781178
+Avg Recon Hand Loss: 0.08656135334236788
+Avg Recon Extra Loss: 0.0029681809661485773
+Avg VQ Loss: 0.022543050127454323
+Avg Hand VQ Loss: 0.3134288107699687
+Avg Extra VQ Loss: 0.00533455925172951
+Avg Perplexity: 23.51037913029737

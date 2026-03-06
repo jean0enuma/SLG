@@ -1,0 +1,86 @@
+                                                                                                                                                                                                                           
+Avg Loss: 3.107609272003174
+Avg Pose Loss: 2.357085943222046
+Avg Stop Loss: 0.7505232691764832
+Avg Loss: 0.6790963346415227
+Avg Pose Loss: 0.549632791983019
+Avg Stop Loss: 0.12946353954180043
+Avg Loss: 0.4784467370800711
+Avg Pose Loss: 0.38118852778750273
+Avg Stop Loss: 0.09725820824540966
+Avg Loss: 0.37719821543788595
+Avg Pose Loss: 0.3003700633480699
+Avg Stop Loss: 0.07682815163807813
+Avg Loss: 0.3162314468934352
+Avg Pose Loss: 0.2503630708800884
+Avg Stop Loss: 0.06586837567426171
+Avg Loss: 0.27599650071171705
+Avg Pose Loss: 0.21626236145486852
+Avg Stop Loss: 0.05973413905236655
+Avg Loss: 0.24579704229327884
+Avg Pose Loss: 0.19131559780651639
+Avg Stop Loss: 0.05448144436744158
+Avg Loss: 0.22298548131989854
+Avg Pose Loss: 0.17219036387627712
+Avg Stop Loss: 0.05079511734198636
+Avg Loss: 0.2039003266851777
+Avg Pose Loss: 0.1567493812524052
+Avg Stop Loss: 0.047150945396147455
+Avg Loss: 0.1882752201847575
+Avg Pose Loss: 0.1442476478214071
+Avg Stop Loss: 0.0440275723059826
+Avg Loss: 0.17540011131441915
+Avg Pose Loss: 0.13371328701387036
+Avg Stop Loss: 0.04168682421076592
+Avg Loss: 0.1643414097270513
+Avg Pose Loss: 0.12482880063348202
+Avg Stop Loss: 0.03951260901490171
+Avg Loss: 0.15482860849200936
+Avg Pose Loss: 0.11719743351604818
+Avg Stop Loss: 0.03763117489957876
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 188, in <module>
+    config['save_path'] = save_path
+  File "/home/caffe/work/SLG/main_t2p.py", line 154, in main
+    f.write(id)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 99, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 28, in train
+    for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 764, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/caffe/work/SLG/SLG_datasets/SLG_datasets_with_skeleton.py", line 57, in __getitem__
+    cod_data,face_cod_data,hand_cod_data,body_cod_data=coordinate_preprocess(cod_data,face_data,is_face_connect=True)
+  File "/home/caffe/work/SLG/loader/coordinate_preprocess.py", line 102, in coordinate_preprocess
+    data_face = nan_interpolate(data_face, limit_area="both")
+  File "/home/caffe/work/SLG/loader/coordinate_preprocess.py", line 59, in nan_interpolate
+    df.interpolate(inplace=True)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/generic.py", line 8499, in interpolate
+    new_data = obj._mgr.interpolate(
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/internals/base.py", line 291, in interpolate
+    return self.apply_with_block(
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/internals/managers.py", line 363, in apply
+    applied = getattr(b, f)(**kwargs)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/internals/blocks.py", line 1797, in interpolate
+    new_values = self.array_values.interpolate(
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/arrays/numpy_.py", line 296, in interpolate
+    missing.interpolate_2d_inplace(
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/missing.py", line 410, in interpolate_2d_inplace
+    np.apply_along_axis(func, axis, data)  # type: ignore[arg-type]
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/numpy/lib/shape_base.py", line 402, in apply_along_axis
+    buff[ind] = asanyarray(func1d(inarr_view[ind], *args, **kwargs))
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/missing.py", line 391, in func
+    _interpolate_1d(
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/pandas/core/missing.py", line 524, in _interpolate_1d
+    yvalues[invalid] = np.interp(
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/numpy/lib/function_base.py", line 1457, in _interp_dispatcher
+    def _interp_dispatcher(x, xp, fp, left=None, right=None, period=None):
+KeyboardInterrupt

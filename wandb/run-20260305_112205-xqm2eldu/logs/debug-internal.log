@@ -1,0 +1,15 @@
+{"time":"2026-03-05T11:22:05.660750493+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260305_112205-xqm2eldu/logs/debug-core.log"}
+{"time":"2026-03-05T11:22:05.763721502+09:00","level":"INFO","msg":"created new stream","id":"xqm2eldu"}
+{"time":"2026-03-05T11:22:05.763735605+09:00","level":"INFO","msg":"stream: started","id":"xqm2eldu"}
+{"time":"2026-03-05T11:22:05.763742008+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"xqm2eldu"}
+{"time":"2026-03-05T11:22:05.763752706+09:00","level":"INFO","msg":"handler: started","stream_id":"xqm2eldu"}
+{"time":"2026-03-05T11:22:05.763769674+09:00","level":"INFO","msg":"sender: started","stream_id":"xqm2eldu"}
+{"time":"2026-03-05T11:22:06.094268214+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-05T11:24:45.262196785+09:00","level":"INFO","msg":"stream: closing","id":"xqm2eldu"}
+{"time":"2026-03-05T11:24:45.262207941+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-05T11:24:45.262440402+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-05T11:24:46.282063702+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-05T11:24:47.007158516+09:00","level":"INFO","msg":"handler: closed","stream_id":"xqm2eldu"}
+{"time":"2026-03-05T11:24:47.007180899+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"xqm2eldu"}
+{"time":"2026-03-05T11:24:47.00721545+09:00","level":"INFO","msg":"sender: closed","stream_id":"xqm2eldu"}
+{"time":"2026-03-05T11:24:47.007222744+09:00","level":"INFO","msg":"stream: closed","id":"xqm2eldu"}

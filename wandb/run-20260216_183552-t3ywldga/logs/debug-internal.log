@@ -1,0 +1,15 @@
+{"time":"2026-02-16T18:35:52.789368961+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260216_183552-t3ywldga/logs/debug-core.log"}
+{"time":"2026-02-16T18:35:52.891695482+09:00","level":"INFO","msg":"created new stream","id":"t3ywldga"}
+{"time":"2026-02-16T18:35:52.891707421+09:00","level":"INFO","msg":"stream: started","id":"t3ywldga"}
+{"time":"2026-02-16T18:35:52.891750487+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"t3ywldga"}
+{"time":"2026-02-16T18:35:52.891756168+09:00","level":"INFO","msg":"handler: started","stream_id":"t3ywldga"}
+{"time":"2026-02-16T18:35:52.891792704+09:00","level":"INFO","msg":"sender: started","stream_id":"t3ywldga"}
+{"time":"2026-02-16T18:35:53.467562041+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-16T18:40:44.563287328+09:00","level":"INFO","msg":"stream: closing","id":"t3ywldga"}
+{"time":"2026-02-16T18:40:44.563311012+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-16T18:40:44.563658538+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-16T18:40:45.367295929+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-16T18:40:45.969216188+09:00","level":"INFO","msg":"handler: closed","stream_id":"t3ywldga"}
+{"time":"2026-02-16T18:40:45.969234628+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"t3ywldga"}
+{"time":"2026-02-16T18:40:45.969241954+09:00","level":"INFO","msg":"sender: closed","stream_id":"t3ywldga"}
+{"time":"2026-02-16T18:40:45.969266579+09:00","level":"INFO","msg":"stream: closed","id":"t3ywldga"}

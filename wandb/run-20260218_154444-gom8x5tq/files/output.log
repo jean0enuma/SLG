@@ -1,0 +1,10 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1544
+base_lr:[0.001]
+epoch:0/100
+--train--
+  0%|          | 0/55 [01:05<?, ?it/s]
+Backend tkagg is interactive backend. Turning interactive mode on.
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 83, in train
+    input_cod_data=output["predicted_poses"].detach()[:,:,:,:t]
+IndexError: too many indices for tensor of dimension 3

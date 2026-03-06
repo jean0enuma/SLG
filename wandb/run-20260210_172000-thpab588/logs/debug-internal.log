@@ -1,0 +1,7 @@
+{"time":"2026-02-10T17:20:00.556942506+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260210_172000-thpab588/logs/debug-core.log"}
+{"time":"2026-02-10T17:20:00.659449828+09:00","level":"INFO","msg":"created new stream","id":"thpab588"}
+{"time":"2026-02-10T17:20:00.659462067+09:00","level":"INFO","msg":"stream: started","id":"thpab588"}
+{"time":"2026-02-10T17:20:00.659520425+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"thpab588"}
+{"time":"2026-02-10T17:20:00.659572592+09:00","level":"INFO","msg":"sender: started","stream_id":"thpab588"}
+{"time":"2026-02-10T17:20:00.659610317+09:00","level":"INFO","msg":"handler: started","stream_id":"thpab588"}
+{"time":"2026-02-10T17:20:01.54317848+09:00","level":"INFO","msg":"Starting system monitor"}

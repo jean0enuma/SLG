@@ -1,0 +1,15 @@
+{"time":"2026-02-26T12:21:25.947746404+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260226_122125-unphi8sy/logs/debug-core.log"}
+{"time":"2026-02-26T12:21:26.050444023+09:00","level":"INFO","msg":"created new stream","id":"unphi8sy"}
+{"time":"2026-02-26T12:21:26.050464633+09:00","level":"INFO","msg":"stream: started","id":"unphi8sy"}
+{"time":"2026-02-26T12:21:26.050471319+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"unphi8sy"}
+{"time":"2026-02-26T12:21:26.050481105+09:00","level":"INFO","msg":"sender: started","stream_id":"unphi8sy"}
+{"time":"2026-02-26T12:21:26.050498076+09:00","level":"INFO","msg":"handler: started","stream_id":"unphi8sy"}
+{"time":"2026-02-26T12:21:26.473975834+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-26T12:21:26.742567112+09:00","level":"INFO","msg":"stream: closing","id":"unphi8sy"}
+{"time":"2026-02-26T12:21:26.7425862+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-26T12:21:26.742874411+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-26T12:21:27.994664215+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-26T12:21:28.340527332+09:00","level":"INFO","msg":"handler: closed","stream_id":"unphi8sy"}
+{"time":"2026-02-26T12:21:28.340563238+09:00","level":"INFO","msg":"sender: closed","stream_id":"unphi8sy"}
+{"time":"2026-02-26T12:21:28.340561071+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"unphi8sy"}
+{"time":"2026-02-26T12:21:28.340616583+09:00","level":"INFO","msg":"stream: closed","id":"unphi8sy"}

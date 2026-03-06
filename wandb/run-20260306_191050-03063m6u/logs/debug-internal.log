@@ -1,0 +1,11 @@
+{"time":"2026-03-06T19:10:50.85173977+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_191050-03063m6u/logs/debug-core.log"}
+{"time":"2026-03-06T19:10:50.9549939+09:00","level":"INFO","msg":"created new stream","id":"03063m6u"}
+{"time":"2026-03-06T19:10:50.955014929+09:00","level":"INFO","msg":"stream: started","id":"03063m6u"}
+{"time":"2026-03-06T19:10:50.955031663+09:00","level":"INFO","msg":"sender: started","stream_id":"03063m6u"}
+{"time":"2026-03-06T19:10:50.955035567+09:00","level":"INFO","msg":"handler: started","stream_id":"03063m6u"}
+{"time":"2026-03-06T19:10:50.955042224+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"03063m6u"}
+{"time":"2026-03-06T19:10:52.779047337+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-06T19:11:52.058687792+09:00","level":"INFO","msg":"stream: closing","id":"03063m6u"}
+{"time":"2026-03-06T19:11:52.058706785+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-06T19:11:52.059003641+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-06T19:11:53.147407113+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}

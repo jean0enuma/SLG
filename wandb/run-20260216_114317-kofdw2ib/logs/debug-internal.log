@@ -1,0 +1,7 @@
+{"time":"2026-02-16T11:43:17.670206908+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260216_114317-kofdw2ib/logs/debug-core.log"}
+{"time":"2026-02-16T11:43:17.772818023+09:00","level":"INFO","msg":"created new stream","id":"kofdw2ib"}
+{"time":"2026-02-16T11:43:17.772836807+09:00","level":"INFO","msg":"stream: started","id":"kofdw2ib"}
+{"time":"2026-02-16T11:43:17.772843542+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"kofdw2ib"}
+{"time":"2026-02-16T11:43:17.772905223+09:00","level":"INFO","msg":"handler: started","stream_id":"kofdw2ib"}
+{"time":"2026-02-16T11:43:17.772948827+09:00","level":"INFO","msg":"sender: started","stream_id":"kofdw2ib"}
+{"time":"2026-02-16T11:43:18.316605708+09:00","level":"INFO","msg":"Starting system monitor"}

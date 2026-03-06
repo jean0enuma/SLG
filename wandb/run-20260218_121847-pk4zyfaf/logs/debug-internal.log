@@ -1,0 +1,7 @@
+{"time":"2026-02-18T12:18:47.801477007+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_121847-pk4zyfaf/logs/debug-core.log"}
+{"time":"2026-02-18T12:18:47.904051093+09:00","level":"INFO","msg":"created new stream","id":"pk4zyfaf"}
+{"time":"2026-02-18T12:18:47.904070833+09:00","level":"INFO","msg":"stream: started","id":"pk4zyfaf"}
+{"time":"2026-02-18T12:18:47.904079935+09:00","level":"INFO","msg":"handler: started","stream_id":"pk4zyfaf"}
+{"time":"2026-02-18T12:18:47.904082761+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"pk4zyfaf"}
+{"time":"2026-02-18T12:18:47.904093676+09:00","level":"INFO","msg":"sender: started","stream_id":"pk4zyfaf"}
+{"time":"2026-02-18T12:18:48.262553248+09:00","level":"INFO","msg":"Starting system monitor"}

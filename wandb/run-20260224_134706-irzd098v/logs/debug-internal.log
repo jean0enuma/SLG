@@ -1,0 +1,15 @@
+{"time":"2026-02-24T13:47:06.470174965+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260224_134706-irzd098v/logs/debug-core.log"}
+{"time":"2026-02-24T13:47:06.573365242+09:00","level":"INFO","msg":"created new stream","id":"irzd098v"}
+{"time":"2026-02-24T13:47:06.573393122+09:00","level":"INFO","msg":"stream: started","id":"irzd098v"}
+{"time":"2026-02-24T13:47:06.573431091+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"irzd098v"}
+{"time":"2026-02-24T13:47:06.573439875+09:00","level":"INFO","msg":"handler: started","stream_id":"irzd098v"}
+{"time":"2026-02-24T13:47:06.573475986+09:00","level":"INFO","msg":"sender: started","stream_id":"irzd098v"}
+{"time":"2026-02-24T13:47:07.04278931+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-24T13:47:08.903693743+09:00","level":"INFO","msg":"stream: closing","id":"irzd098v"}
+{"time":"2026-02-24T13:47:08.903706406+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-24T13:47:08.903978395+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-24T13:47:09.639621793+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-24T13:47:09.923096918+09:00","level":"INFO","msg":"handler: closed","stream_id":"irzd098v"}
+{"time":"2026-02-24T13:47:09.923129475+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"irzd098v"}
+{"time":"2026-02-24T13:47:09.923147249+09:00","level":"INFO","msg":"sender: closed","stream_id":"irzd098v"}
+{"time":"2026-02-24T13:47:09.923167661+09:00","level":"INFO","msg":"stream: closed","id":"irzd098v"}

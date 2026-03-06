@@ -1,0 +1,31 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0213/1329
+base_lr:[0.0001]
+epoch:0/40
+--train--
+  0%|                                                                                                                                                                                              | 0/443 [00:02<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 246, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 210, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 115, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 41, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 23, in compute_loss
+    outputs = model(padded_tokens_tensor,id_list,padded_cod_data[0],input_length_tensor)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 149, in forward
+    pose_outputs,stop_logits = self.pose_decoder(encoded_text,pose_input, text_mask,pose_mask,text_lang)  # (batch_size, pose_seq_len, pose_dim)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 40, in forward
+    if self.m_lang_injection:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'PoseDecoder' object has no attribute 'm_lang_injection'

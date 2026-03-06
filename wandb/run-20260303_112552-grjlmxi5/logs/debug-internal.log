@@ -1,0 +1,15 @@
+{"time":"2026-03-03T11:25:52.534649811+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260303_112552-grjlmxi5/logs/debug-core.log"}
+{"time":"2026-03-03T11:25:52.638097531+09:00","level":"INFO","msg":"created new stream","id":"grjlmxi5"}
+{"time":"2026-03-03T11:25:52.638110603+09:00","level":"INFO","msg":"stream: started","id":"grjlmxi5"}
+{"time":"2026-03-03T11:25:52.638124521+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"grjlmxi5"}
+{"time":"2026-03-03T11:25:52.63817816+09:00","level":"INFO","msg":"handler: started","stream_id":"grjlmxi5"}
+{"time":"2026-03-03T11:25:52.638295207+09:00","level":"INFO","msg":"sender: started","stream_id":"grjlmxi5"}
+{"time":"2026-03-03T11:25:53.352957834+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-03T11:35:01.793965916+09:00","level":"INFO","msg":"stream: closing","id":"grjlmxi5"}
+{"time":"2026-03-03T11:35:01.793994211+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-03T11:35:01.794397979+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-03T11:35:02.673309842+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-03T11:35:02.957878472+09:00","level":"INFO","msg":"handler: closed","stream_id":"grjlmxi5"}
+{"time":"2026-03-03T11:35:02.95791226+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"grjlmxi5"}
+{"time":"2026-03-03T11:35:02.957919354+09:00","level":"INFO","msg":"sender: closed","stream_id":"grjlmxi5"}
+{"time":"2026-03-03T11:35:02.95795963+09:00","level":"INFO","msg":"stream: closed","id":"grjlmxi5"}

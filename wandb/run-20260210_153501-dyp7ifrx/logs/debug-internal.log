@@ -1,0 +1,7 @@
+{"time":"2026-02-10T15:35:01.573585651+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260210_153501-dyp7ifrx/logs/debug-core.log"}
+{"time":"2026-02-10T15:35:01.676685878+09:00","level":"INFO","msg":"created new stream","id":"dyp7ifrx"}
+{"time":"2026-02-10T15:35:01.676704355+09:00","level":"INFO","msg":"stream: started","id":"dyp7ifrx"}
+{"time":"2026-02-10T15:35:01.676745029+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"dyp7ifrx"}
+{"time":"2026-02-10T15:35:01.676815545+09:00","level":"INFO","msg":"handler: started","stream_id":"dyp7ifrx"}
+{"time":"2026-02-10T15:35:01.676857485+09:00","level":"INFO","msg":"sender: started","stream_id":"dyp7ifrx"}
+{"time":"2026-02-10T15:35:02.073715133+09:00","level":"INFO","msg":"Starting system monitor"}

@@ -1,0 +1,12 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1537
+base_lr:[0.001]
+epoch:0/100
+--train--
+  0%|          | 0/55 [01:37<?, ?it/s]
+Backend tkagg is interactive backend. Turning interactive mode on.
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 75, in train
+    loss_dict=criterion.generate_forward(output,padded_cod_data[0],input_length_tensor,timestep=t)
+  File "/home/caffe/work/SLG/models/criterion/pose_criterion.py", line 102, in generate_forward
+    pose_loss = (pose_loss.mean(dim=-1) * mask).sum() / mask.sum()
+RuntimeError: The size of tensor a (277) must match the size of tensor b (64) at non-singleton dimension 0

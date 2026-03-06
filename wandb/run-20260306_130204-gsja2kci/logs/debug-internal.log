@@ -1,0 +1,15 @@
+{"time":"2026-03-06T13:02:04.718879776+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_130204-gsja2kci/logs/debug-core.log"}
+{"time":"2026-03-06T13:02:04.823448274+09:00","level":"INFO","msg":"created new stream","id":"gsja2kci"}
+{"time":"2026-03-06T13:02:04.823474635+09:00","level":"INFO","msg":"stream: started","id":"gsja2kci"}
+{"time":"2026-03-06T13:02:04.823486953+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"gsja2kci"}
+{"time":"2026-03-06T13:02:04.823494556+09:00","level":"INFO","msg":"handler: started","stream_id":"gsja2kci"}
+{"time":"2026-03-06T13:02:04.82350816+09:00","level":"INFO","msg":"sender: started","stream_id":"gsja2kci"}
+{"time":"2026-03-06T13:02:05.524297895+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-06T13:09:00.734217126+09:00","level":"INFO","msg":"stream: closing","id":"gsja2kci"}
+{"time":"2026-03-06T13:09:00.734233856+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-06T13:09:00.734596241+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-06T13:09:01.656630941+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-06T13:09:02.298637993+09:00","level":"INFO","msg":"handler: closed","stream_id":"gsja2kci"}
+{"time":"2026-03-06T13:09:02.298659234+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"gsja2kci"}
+{"time":"2026-03-06T13:09:02.298670384+09:00","level":"INFO","msg":"sender: closed","stream_id":"gsja2kci"}
+{"time":"2026-03-06T13:09:02.298694329+09:00","level":"INFO","msg":"stream: closed","id":"gsja2kci"}

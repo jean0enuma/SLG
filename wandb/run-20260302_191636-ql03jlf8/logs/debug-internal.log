@@ -1,0 +1,15 @@
+{"time":"2026-03-02T19:16:37.155938249+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260302_191636-ql03jlf8/logs/debug-core.log"}
+{"time":"2026-03-02T19:16:37.259045601+09:00","level":"INFO","msg":"created new stream","id":"ql03jlf8"}
+{"time":"2026-03-02T19:16:37.259077926+09:00","level":"INFO","msg":"stream: started","id":"ql03jlf8"}
+{"time":"2026-03-02T19:16:37.259134386+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"ql03jlf8"}
+{"time":"2026-03-02T19:16:37.259139559+09:00","level":"INFO","msg":"handler: started","stream_id":"ql03jlf8"}
+{"time":"2026-03-02T19:16:37.259156486+09:00","level":"INFO","msg":"sender: started","stream_id":"ql03jlf8"}
+{"time":"2026-03-02T19:16:37.996896317+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-02T19:16:59.264173724+09:00","level":"INFO","msg":"stream: closing","id":"ql03jlf8"}
+{"time":"2026-03-02T19:16:59.264187198+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-02T19:16:59.264464035+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-02T19:17:00.220376538+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-02T19:17:01.010910372+09:00","level":"INFO","msg":"handler: closed","stream_id":"ql03jlf8"}
+{"time":"2026-03-02T19:17:01.010938718+09:00","level":"INFO","msg":"sender: closed","stream_id":"ql03jlf8"}
+{"time":"2026-03-02T19:17:01.010937735+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ql03jlf8"}
+{"time":"2026-03-02T19:17:01.010998528+09:00","level":"INFO","msg":"stream: closed","id":"ql03jlf8"}

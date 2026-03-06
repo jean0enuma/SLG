@@ -1,0 +1,7 @@
+{"time":"2026-02-18T12:50:12.837940442+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_125012-ecrvycpf/logs/debug-core.log"}
+{"time":"2026-02-18T12:50:12.940328035+09:00","level":"INFO","msg":"created new stream","id":"ecrvycpf"}
+{"time":"2026-02-18T12:50:12.940357411+09:00","level":"INFO","msg":"stream: started","id":"ecrvycpf"}
+{"time":"2026-02-18T12:50:12.940413704+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"ecrvycpf"}
+{"time":"2026-02-18T12:50:12.940421544+09:00","level":"INFO","msg":"handler: started","stream_id":"ecrvycpf"}
+{"time":"2026-02-18T12:50:12.940476591+09:00","level":"INFO","msg":"sender: started","stream_id":"ecrvycpf"}
+{"time":"2026-02-18T12:50:13.288450713+09:00","level":"INFO","msg":"Starting system monitor"}

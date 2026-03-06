@@ -1,0 +1,81 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1259
+base_lr:[0.0001]
+epoch:0/20
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:36<00:00, 12.16it/s]
+Avg Loss: 6.617361068725586
+Avg CE Loss: 6.617361068725586
+Avg Loss: 5.421233602089457
+Avg CE Loss: 5.421233602089457
+Avg Loss: 5.115434746244061
+Avg CE Loss: 5.115434746244061
+Avg Loss: 4.950362771848508
+Avg CE Loss: 4.950362771848508
+Avg Loss: 4.846240234493912
+Avg CE Loss: 4.846240234493912
+--eval--
+33it [00:03, 10.26it/s]                                                                                                                                                                                                    
+--test--
+41it [00:02, 15.69it/s]                                                                                                                                                                                                    
+Epoch 1/20)
+Train Loss: 4.8130, CE Loss: 4.8130
+Eval Loss: 4.3679, CE Loss: 4.3679
+Test Loss: 4.2942, CE Loss: 4.2942
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1259
+base_lr:[9.938441702975689e-05]
+epoch:1/20
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:33<00:00, 13.10it/s]
+Avg Loss: 4.43145751953125
+Avg CE Loss: 4.43145751953125
+Avg Loss: 4.417410345360784
+Avg CE Loss: 4.417410345360784
+Avg Loss: 4.383552157463719
+Avg CE Loss: 4.383552157463719
+Avg Loss: 4.362661928829561
+Avg CE Loss: 4.362661928829561
+Avg Loss: 4.351038014205019
+Avg CE Loss: 4.351038014205019
+--eval--
+33it [00:02, 12.44it/s]                                                                                                                                                                                                    
+--test--
+41it [00:03, 12.08it/s]                                                                                                                                                                                                    
+Epoch 2/20)
+Train Loss: 4.3474, CE Loss: 4.3474
+Eval Loss: 4.2213, CE Loss: 4.2213
+Test Loss: 4.1512, CE Loss: 4.1512
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1259
+base_lr:[9.755282581475769e-05]
+epoch:2/20
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:35<00:00, 12.52it/s]
+Avg Loss: 4.128662109375
+Avg CE Loss: 4.128662109375
+Avg Loss: 4.219293750158631
+Avg CE Loss: 4.219293750158631
+Avg Loss: 4.244545060010692
+Avg CE Loss: 4.244545060010692
+Avg Loss: 4.2358545963946375
+Avg CE Loss: 4.2358545963946375
+Avg Loss: 4.2296363219358675
+Avg CE Loss: 4.2296363219358675
+--eval--
+33it [00:02, 11.36it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 21.66it/s]                                                                                                                                                                                                    
+Epoch 3/20)
+Train Loss: 4.2314, CE Loss: 4.2314
+Eval Loss: 4.1685, CE Loss: 4.1685
+Test Loss: 4.0971, CE Loss: 4.0971
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 286, in <module>
+    main(config, mode, checkpoint=checkpoint, vqvae_weights=vqvae_weights)
+  File "/home/caffe/work/SLG/main_text2units.py", line 247, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 227, in fit
+    torch.save({
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 943, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 784, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt

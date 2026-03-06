@@ -1,0 +1,2441 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[0.0001]
+epoch:0/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 2.865180015563965
+Avg Pose Loss: 2.4256279468536377
+Avg Stop Loss: 0.43955197930336
+Avg Loss: 0.3114479768394244
+Avg Pose Loss: 0.2524393387507684
+Avg Stop Loss: 0.05900863709278626
+Avg Loss: 0.20711268658809995
+Avg Pose Loss: 0.158673687193969
+Avg Stop Loss: 0.04843899875471545
+Avg Loss: 0.16396303603617457
+Avg Pose Loss: 0.12035814062552991
+Avg Stop Loss: 0.04360489500222412
+Avg Loss: 0.13946636850734304
+Avg Pose Loss: 0.09913865798745221
+Avg Stop Loss: 0.04032771020403081
+Avg Loss: 0.12310565790968264
+Avg Pose Loss: 0.08511184422139398
+Avg Stop Loss: 0.037993813435474554
+Avg Loss: 0.11127234404649393
+Avg Pose Loss: 0.07509792879372587
+Avg Stop Loss: 0.03617441506681347
+Avg Loss: 0.10223732324325069
+Avg Pose Loss: 0.06754138925446253
+Avg Stop Loss: 0.03469593380544648
+Avg Loss: 0.09524393862534254
+Avg Pose Loss: 0.06165896370988362
+Avg Stop Loss: 0.033584974778260335
+Avg Loss: 0.08957383701873407
+Avg Pose Loss: 0.056901583561754385
+Avg Stop Loss: 0.032672253326739245
+Avg Loss: 0.08483814278414675
+Avg Pose Loss: 0.052954797747430504
+Avg Stop Loss: 0.03188334493995546
+Avg Loss: 0.08080049202719079
+Avg Pose Loss: 0.049616662222049544
+Avg Stop Loss: 0.031183829710401803
+Avg Loss: 0.07730730059250358
+Avg Pose Loss: 0.04677473211647023
+Avg Stop Loss: 0.030532568382203182
+Avg Loss: 0.07427592223351227
+Avg Pose Loss: 0.04432662382154947
+Avg Stop Loss: 0.029949298314607024
+Avg Loss: 0.07159343635069099
+Avg Pose Loss: 0.04215571628637522
+Avg Stop Loss: 0.029437719975238523
+Avg Loss: 0.0692177031990848
+Avg Pose Loss: 0.04022988918324874
+Avg Stop Loss: 0.028987813940759423
+--eval--
+100it [00:48,  2.05it/s]                                                                                                                                                                                                   
+--test--
+114it [00:59,  1.93it/s]                                                                                                                                                                                                   
+Epoch 1/40)
+Train Loss: 0.06719266623258591,Train Pose Loss: 0.03864144906401634, Train Stop Loss: 0.028551217168569565
+Eval Loss: 0.029435060918331146,Eval Pose Loss: 0.006204154808074236, Eval Stop Loss: 0.023230906575918198
+Test Loss: 0.02993178740143776,Test Pose Loss: 0.00614512013271451, Test Stop Loss: 0.023786667734384537
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.984740801978984e-05]
+epoch:1/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.0320856086909771
+Avg Pose Loss: 0.01162115391343832
+Avg Stop Loss: 0.02046445570886135
+Avg Loss: 0.0347563501926932
+Avg Pose Loss: 0.012662192133467386
+Avg Stop Loss: 0.022094157893247535
+Avg Loss: 0.034240195444270746
+Avg Pose Loss: 0.01233441499409391
+Avg Stop Loss: 0.021905780325073804
+Avg Loss: 0.03430020608057413
+Avg Pose Loss: 0.012188501433280615
+Avg Stop Loss: 0.02211170457922343
+Avg Loss: 0.03411782821384897
+Avg Pose Loss: 0.01198196604597078
+Avg Stop Loss: 0.022135862079623186
+Avg Loss: 0.033818633628343635
+Avg Pose Loss: 0.011755709166447083
+Avg Stop Loss: 0.02206292437824482
+Avg Loss: 0.03347056550275962
+Avg Pose Loss: 0.011536118368340807
+Avg Stop Loss: 0.02193444707243395
+Avg Loss: 0.03318062304557645
+Avg Pose Loss: 0.011368298799479738
+Avg Stop Loss: 0.021812324175682882
+Avg Loss: 0.03288264580526751
+Avg Pose Loss: 0.011191180066557858
+Avg Stop Loss: 0.021691465684062754
+Avg Loss: 0.03278055668629697
+Avg Pose Loss: 0.011074884302632988
+Avg Stop Loss: 0.021705672328880307
+Avg Loss: 0.032518001301186185
+Avg Pose Loss: 0.0109391833937445
+Avg Stop Loss: 0.021578817875808353
+Avg Loss: 0.032283610935838085
+Avg Pose Loss: 0.010792691944053669
+Avg Stop Loss: 0.021490918960486566
+Avg Loss: 0.03209784336940236
+Avg Pose Loss: 0.010654481733489245
+Avg Stop Loss: 0.021443361607221243
+Avg Loss: 0.03187267531817643
+Avg Pose Loss: 0.010526498377346058
+Avg Stop Loss: 0.021346176911480465
+Avg Loss: 0.031671420053487845
+Avg Pose Loss: 0.01040566972836448
+Avg Stop Loss: 0.021265750303518807
+Avg Loss: 0.03145238205909649
+Avg Pose Loss: 0.010300249179923221
+Avg Stop Loss: 0.021152132864592277
+--eval--
+100it [00:56,  1.78it/s]                                                                                                                                                                                                   
+--test--
+114it [00:53,  2.14it/s]                                                                                                                                                                                                   
+Epoch 2/40)
+Train Loss: 0.031254108995199203,Train Pose Loss: 0.010204600170254707, Train Stop Loss: 0.021049508824944496
+Eval Loss: 0.027145136147737503,Eval Pose Loss: 0.005582313984632492, Eval Stop Loss: 0.02156282216310501
+Test Loss: 0.027675876393914223,Test Pose Loss: 0.005517447367310524, Test Stop Loss: 0.0221584290266037
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.939057285945931e-05]
+epoch:2/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.032493554055690765
+Avg Pose Loss: 0.007840908132493496
+Avg Stop Loss: 0.024652646854519844
+Avg Loss: 0.02759491572949556
+Avg Pose Loss: 0.008664050651253155
+Avg Stop Loss: 0.018930865211947128
+Avg Loss: 0.027787663783896622
+Avg Pose Loss: 0.008540924207599306
+Avg Stop Loss: 0.01924673965969934
+Avg Loss: 0.02781410844520081
+Avg Pose Loss: 0.008490269934059278
+Avg Stop Loss: 0.019323838571476383
+Avg Loss: 0.0280767073134829
+Avg Pose Loss: 0.008450242208823228
+Avg Stop Loss: 0.019626465142980925
+Avg Loss: 0.02782543266411432
+Avg Pose Loss: 0.008378872850504582
+Avg Stop Loss: 0.019446559837775792
+Avg Loss: 0.027771545778619074
+Avg Pose Loss: 0.008327281842482418
+Avg Stop Loss: 0.019444263975652007
+Avg Loss: 0.027772411029153475
+Avg Pose Loss: 0.00827293499730283
+Avg Stop Loss: 0.019499476045136275
+Avg Loss: 0.027654953352111704
+Avg Pose Loss: 0.008225128817931283
+Avg Stop Loss: 0.01942982454406337
+Avg Loss: 0.027627809618193486
+Avg Pose Loss: 0.008180966032265823
+Avg Stop Loss: 0.019446843595230554
+Avg Loss: 0.02767686075442559
+Avg Pose Loss: 0.008161329984810058
+Avg Stop Loss: 0.01951553078310622
+Avg Loss: 0.027549709211172134
+Avg Pose Loss: 0.008122676769466047
+Avg Stop Loss: 0.019427032450164968
+Avg Loss: 0.027511154589158707
+Avg Pose Loss: 0.00809054890939102
+Avg Stop Loss: 0.0194206056910118
+Avg Loss: 0.027435084956653023
+Avg Pose Loss: 0.008048125624665267
+Avg Stop Loss: 0.0193869593423676
+Avg Loss: 0.027395837874464868
+Avg Pose Loss: 0.00801132342776152
+Avg Stop Loss: 0.019384514450691878
+Avg Loss: 0.027360133948344377
+Avg Pose Loss: 0.007975399013308387
+Avg Stop Loss: 0.019384734937517863
+--eval--
+100it [00:58,  1.70it/s]                                                                                                                                                                                                   
+--test--
+114it [00:55,  2.05it/s]                                                                                                                                                                                                   
+Epoch 3/40)
+Train Loss: 0.027267923578619957,Train Pose Loss: 0.007943496108055115, Train Stop Loss: 0.019324425607919693
+Eval Loss: 0.02618979476392269,Eval Pose Loss: 0.005571323446929455, Eval Stop Loss: 0.02061847224831581
+Test Loss: 0.02701698988676071,Test Pose Loss: 0.005517052486538887, Test Stop Loss: 0.021499937400221825
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.863231105968498e-05]
+epoch:3/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.02941596694290638
+Avg Pose Loss: 0.007335945963859558
+Avg Stop Loss: 0.02208002097904682
+Avg Loss: 0.026114285729899264
+Avg Pose Loss: 0.0074756272957835455
+Avg Stop Loss: 0.01863865839262115
+Avg Loss: 0.026051982616384823
+Avg Pose Loss: 0.007401310048756463
+Avg Stop Loss: 0.01865067251897718
+Avg Loss: 0.025691166025063526
+Avg Pose Loss: 0.007364819192968036
+Avg Stop Loss: 0.0183263467934193
+Avg Loss: 0.025618571402537555
+Avg Pose Loss: 0.007375023294091596
+Avg Stop Loss: 0.01824354812354221
+Avg Loss: 0.025621490898781907
+Avg Pose Loss: 0.007336061805702314
+Avg Stop Loss: 0.01828542911259833
+Avg Loss: 0.02555587966794678
+Avg Pose Loss: 0.007313726759653619
+Avg Stop Loss: 0.01824215293308711
+Avg Loss: 0.02560779018946704
+Avg Pose Loss: 0.007301800186810922
+Avg Stop Loss: 0.01830599001195606
+Avg Loss: 0.025675049846929112
+Avg Pose Loss: 0.00728641382445315
+Avg Stop Loss: 0.018388636047474007
+Avg Loss: 0.025638108136552023
+Avg Pose Loss: 0.007266949804873928
+Avg Stop Loss: 0.018371158353901663
+Avg Loss: 0.02555270878771147
+Avg Pose Loss: 0.007247539700942112
+Avg Stop Loss: 0.018305169098864454
+Avg Loss: 0.025586525105163252
+Avg Pose Loss: 0.007235287932288257
+Avg Stop Loss: 0.018351237176681492
+Avg Loss: 0.02551629240907648
+Avg Pose Loss: 0.00720969654176133
+Avg Stop Loss: 0.018306595873518797
+Avg Loss: 0.025486092881330337
+Avg Pose Loss: 0.007189683631194224
+Avg Stop Loss: 0.018296409250136113
+Avg Loss: 0.025421663723901967
+Avg Pose Loss: 0.007171228565581457
+Avg Stop Loss: 0.01825043516131191
+Avg Loss: 0.025344142828044855
+Avg Pose Loss: 0.007147801683832215
+Avg Stop Loss: 0.018196341147935446
+--eval--
+100it [00:53,  1.86it/s]                                                                                                                                                                                                   
+--test--
+114it [00:53,  2.13it/s]                                                                                                                                                                                                   
+Epoch 4/40)
+Train Loss: 0.025277920067310333,Train Pose Loss: 0.007131846155971289, Train Stop Loss: 0.018146073445677757
+Eval Loss: 0.025350600481033325,Eval Pose Loss: 0.0053671072237193584, Eval Stop Loss: 0.01998349279165268
+Test Loss: 0.026022186502814293,Test Pose Loss: 0.00530072208493948, Test Stop Loss: 0.020721465349197388
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.75772975566101e-05]
+epoch:4/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.021421387791633606
+Avg Pose Loss: 0.008267028257250786
+Avg Stop Loss: 0.013154360465705395
+Avg Loss: 0.025209832161960034
+Avg Pose Loss: 0.006870648039892169
+Avg Stop Loss: 0.01833918415895193
+Avg Loss: 0.025114271572017254
+Avg Pose Loss: 0.006884762797208123
+Avg Stop Loss: 0.01822950876554224
+Avg Loss: 0.024892383787248815
+Avg Pose Loss: 0.006881058884419476
+Avg Stop Loss: 0.018011324892000007
+Avg Loss: 0.024739300216689818
+Avg Pose Loss: 0.006850823769322655
+Avg Stop Loss: 0.01788847642065841
+Avg Loss: 0.024686897733061017
+Avg Pose Loss: 0.006824359369321081
+Avg Stop Loss: 0.017862538348868518
+Avg Loss: 0.024610798255836407
+Avg Pose Loss: 0.006817763608519279
+Avg Stop Loss: 0.017793034639569022
+Avg Loss: 0.024579201803706086
+Avg Pose Loss: 0.006792523983876605
+Avg Stop Loss: 0.017786677815843793
+Avg Loss: 0.024479395675050857
+Avg Pose Loss: 0.006762985223799609
+Avg Stop Loss: 0.017716410444856397
+Avg Loss: 0.02430412262682281
+Avg Pose Loss: 0.006743828306588593
+Avg Stop Loss: 0.017560294302145264
+Avg Loss: 0.024260332672991654
+Avg Pose Loss: 0.006723486646250649
+Avg Stop Loss: 0.017536846012319928
+Avg Loss: 0.024168569414447536
+Avg Pose Loss: 0.0067013687065901485
+Avg Stop Loss: 0.01746720068459547
+Avg Loss: 0.02416764988605054
+Avg Pose Loss: 0.006693834055069335
+Avg Stop Loss: 0.017473815804615704
+Avg Loss: 0.02418868334177913
+Avg Pose Loss: 0.006682841458732261
+Avg Stop Loss: 0.017505841871593247
+Avg Loss: 0.024222366360257472
+Avg Pose Loss: 0.006681853621801911
+Avg Stop Loss: 0.017540512726157583
+Avg Loss: 0.024224117208398795
+Avg Pose Loss: 0.006673275692876103
+Avg Stop Loss: 0.017550841501872392
+--eval--
+100it [00:42,  2.38it/s]                                                                                                                                                                                                   
+--test--
+114it [00:45,  2.48it/s]                                                                                                                                                                                                   
+Epoch 5/40)
+Train Loss: 0.02419198863208294,Train Pose Loss: 0.006661225110292435, Train Stop Loss: 0.017530763521790504
+Eval Loss: 0.02548370696604252,Eval Pose Loss: 0.00532071478664875, Eval Stop Loss: 0.02016299217939377
+Test Loss: 0.026700150221586227,Test Pose Loss: 0.005258988123387098, Test Stop Loss: 0.021441161632537842
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.623203685930868e-05]
+epoch:5/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.029749253764748573
+Avg Pose Loss: 0.007177967112511396
+Avg Stop Loss: 0.02257128618657589
+Avg Loss: 0.023448581650558086
+Avg Pose Loss: 0.0064918430669620485
+Avg Stop Loss: 0.016956738454501817
+Avg Loss: 0.023415237725411184
+Avg Pose Loss: 0.006428216516841852
+Avg Stop Loss: 0.016987021118217142
+Avg Loss: 0.023554087093601194
+Avg Pose Loss: 0.006434800804119272
+Avg Stop Loss: 0.017119286213676598
+Avg Loss: 0.023404610097092434
+Avg Pose Loss: 0.00644054738433098
+Avg Stop Loss: 0.016964062663988953
+Avg Loss: 0.02349122897898425
+Avg Pose Loss: 0.0064247153641771295
+Avg Stop Loss: 0.017066513549744665
+Avg Loss: 0.023554250340716613
+Avg Pose Loss: 0.00643194343944308
+Avg Stop Loss: 0.01712230686950629
+Avg Loss: 0.023514089474823863
+Avg Pose Loss: 0.0064183090416217664
+Avg Stop Loss: 0.01709578039865946
+Avg Loss: 0.023511588995515854
+Avg Pose Loss: 0.006411068710020642
+Avg Stop Loss: 0.017100520250614218
+Avg Loss: 0.02355504081740595
+Avg Pose Loss: 0.006406662622352981
+Avg Stop Loss: 0.0171483781728294
+Avg Loss: 0.02347713244890982
+Avg Pose Loss: 0.006389301654498477
+Avg Stop Loss: 0.01708783077673389
+Avg Loss: 0.023391089435128815
+Avg Pose Loss: 0.006378084732867527
+Avg Stop Loss: 0.01701300468745825
+Avg Loss: 0.023398758828032027
+Avg Pose Loss: 0.006361092246144538
+Avg Stop Loss: 0.01703766657180656
+Avg Loss: 0.023427201106394145
+Avg Pose Loss: 0.006350647515297326
+Avg Stop Loss: 0.01707655358501208
+Avg Loss: 0.023409055973363936
+Avg Pose Loss: 0.006339550118023884
+Avg Stop Loss: 0.017069505850022006
+Avg Loss: 0.023329436566201667
+Avg Pose Loss: 0.006323807640776763
+Avg Stop Loss: 0.017005628913325778
+--eval--
+100it [00:26,  3.73it/s]                                                                                                                                                                                                   
+--test--
+114it [00:29,  3.81it/s]                                                                                                                                                                                                   
+Epoch 6/40)
+Train Loss: 0.02334512397646904,Train Pose Loss: 0.006313901394605637, Train Stop Loss: 0.017031222581863403
+Eval Loss: 0.023575659841299057,Eval Pose Loss: 0.005061013624072075, Eval Stop Loss: 0.018514646217226982
+Test Loss: 0.024331316351890564,Test Pose Loss: 0.004999084863811731, Test Stop Loss: 0.01933223009109497
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.46048229473242e-05]
+epoch:6/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.018931670114398003
+Avg Pose Loss: 0.005674952175468206
+Avg Stop Loss: 0.013256718404591084
+Avg Loss: 0.023450812859700458
+Avg Pose Loss: 0.006109856765274659
+Avg Stop Loss: 0.017340956080594275
+Avg Loss: 0.023213234391823337
+Avg Pose Loss: 0.006137203890830278
+Avg Stop Loss: 0.017076030480142553
+Avg Loss: 0.022995508746228542
+Avg Pose Loss: 0.0061224187520082015
+Avg Stop Loss: 0.016873089974108725
+Avg Loss: 0.022830110472949812
+Avg Pose Loss: 0.006125337787975843
+Avg Stop Loss: 0.016704772675683967
+Avg Loss: 0.022990743354513142
+Avg Pose Loss: 0.00613538840108973
+Avg Stop Loss: 0.016855354946917166
+Avg Loss: 0.022878922340762296
+Avg Pose Loss: 0.00613792181656558
+Avg Stop Loss: 0.016741000520322662
+Avg Loss: 0.02287294509981396
+Avg Pose Loss: 0.006130736280689693
+Avg Stop Loss: 0.01674220880517436
+Avg Loss: 0.022910411405689855
+Avg Pose Loss: 0.006116156273297082
+Avg Stop Loss: 0.016794255130067375
+Avg Loss: 0.022831133248431237
+Avg Pose Loss: 0.006105461177497804
+Avg Stop Loss: 0.016725672068866125
+Avg Loss: 0.02289539644146686
+Avg Pose Loss: 0.006105628196749237
+Avg Stop Loss: 0.016789768243322036
+Avg Loss: 0.022850311384092235
+Avg Pose Loss: 0.0060934057864415496
+Avg Stop Loss: 0.01675690559257536
+Avg Loss: 0.022794348914346826
+Avg Pose Loss: 0.00608719480755141
+Avg Stop Loss: 0.01670715410253041
+Avg Loss: 0.022739414146440613
+Avg Pose Loss: 0.00607651211378622
+Avg Stop Loss: 0.016662902035517797
+Avg Loss: 0.02263958048710944
+Avg Pose Loss: 0.0060671612482084535
+Avg Stop Loss: 0.016572419236906718
+Avg Loss: 0.022604033427262093
+Avg Pose Loss: 0.006056977009684899
+Avg Stop Loss: 0.016547056413854382
+--eval--
+100it [00:46,  2.13it/s]                                                                                                                                                                                                   
+--test--
+114it [00:48,  2.34it/s]                                                                                                                                                                                                   
+Epoch 7/40)
+Train Loss: 0.022605210542678833,Train Pose Loss: 0.006052947137504816, Train Stop Loss: 0.016552262008190155
+Eval Loss: 0.023595573380589485,Eval Pose Loss: 0.005217843223363161, Eval Stop Loss: 0.01837773062288761
+Test Loss: 0.024221941828727722,Test Pose Loss: 0.005153878591954708, Test Stop Loss: 0.01906806230545044
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.270568813552755e-05]
+epoch:7/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.02035551331937313
+Avg Pose Loss: 0.0068357340060174465
+Avg Stop Loss: 0.013519778847694397
+Avg Loss: 0.022878649008303584
+Avg Pose Loss: 0.006042548759591462
+Avg Stop Loss: 0.016836100248712123
+Avg Loss: 0.022123472144206364
+Avg Pose Loss: 0.005965699138240286
+Avg Stop Loss: 0.016157773010599525
+Avg Loss: 0.022062353356633077
+Avg Pose Loss: 0.005970459306098991
+Avg Stop Loss: 0.016091894048987036
+Avg Loss: 0.02215029004301662
+Avg Pose Loss: 0.005964630099937803
+Avg Stop Loss: 0.01618565994424007
+Avg Loss: 0.022186786724540764
+Avg Pose Loss: 0.005956771319728352
+Avg Stop Loss: 0.01623001540388295
+Avg Loss: 0.02211424945458497
+Avg Pose Loss: 0.005938552313030213
+Avg Stop Loss: 0.01617569714310438
+Avg Loss: 0.02219092980898736
+Avg Pose Loss: 0.005929184710864674
+Avg Stop Loss: 0.016261745105429784
+Avg Loss: 0.0221307881992687
+Avg Pose Loss: 0.005924700853529941
+Avg Stop Loss: 0.01620608733818121
+Avg Loss: 0.02217690370352598
+Avg Pose Loss: 0.005933469966091174
+Avg Stop Loss: 0.016243433723997294
+Avg Loss: 0.02214246256450018
+Avg Pose Loss: 0.005923751386703102
+Avg Stop Loss: 0.01621871117035394
+Avg Loss: 0.022039822712168436
+Avg Pose Loss: 0.005913568494399903
+Avg Stop Loss: 0.01612625421396204
+Avg Loss: 0.022108745077263556
+Avg Pose Loss: 0.00590428418645032
+Avg Stop Loss: 0.016204460881507763
+Avg Loss: 0.02213554739376543
+Avg Pose Loss: 0.005894090874345371
+Avg Stop Loss: 0.016241456507966438
+Avg Loss: 0.022119389570382644
+Avg Pose Loss: 0.005889433081780988
+Avg Stop Loss: 0.016229956474641788
+Avg Loss: 0.022025088033205187
+Avg Pose Loss: 0.005879167455877069
+Avg Stop Loss: 0.016145920567090397
+--eval--
+100it [00:26,  3.77it/s]                                                                                                                                                                                                   
+--test--
+114it [00:28,  4.03it/s]                                                                                                                                                                                                   
+Epoch 8/40)
+Train Loss: 0.022027553990483284,Train Pose Loss: 0.005872825160622597, Train Stop Loss: 0.016154728829860687
+Eval Loss: 0.02353387139737606,Eval Pose Loss: 0.00495349895209074, Eval Stop Loss: 0.018580371513962746
+Test Loss: 0.02417789213359356,Test Pose Loss: 0.004887610673904419, Test Stop Loss: 0.01929028332233429
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[9.054634122155989e-05]
+epoch:8/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.019500035792589188
+Avg Pose Loss: 0.005754321813583374
+Avg Stop Loss: 0.013745713047683239
+Avg Loss: 0.021843157007847683
+Avg Pose Loss: 0.0058006286750187964
+Avg Stop Loss: 0.016042528231397714
+Avg Loss: 0.02160394738025185
+Avg Pose Loss: 0.005762659935327015
+Avg Stop Loss: 0.01584128734298903
+Avg Loss: 0.02148270382363337
+Avg Pose Loss: 0.00574839217247955
+Avg Stop Loss: 0.01573431156606621
+Avg Loss: 0.021822892891201297
+Avg Pose Loss: 0.005750462492960424
+Avg Stop Loss: 0.016072430337855867
+Avg Loss: 0.021931303129670864
+Avg Pose Loss: 0.005766173731721566
+Avg Stop Loss: 0.016165129341252013
+Avg Loss: 0.021837325865858407
+Avg Pose Loss: 0.005768348206417285
+Avg Stop Loss: 0.016068977622250204
+Avg Loss: 0.02183657420796479
+Avg Pose Loss: 0.005753337648749011
+Avg Stop Loss: 0.0160832365226803
+Avg Loss: 0.02175241085199567
+Avg Pose Loss: 0.005747436624852831
+Avg Stop Loss: 0.016004974202726143
+Avg Loss: 0.02174394806489332
+Avg Pose Loss: 0.005755385278014014
+Avg Stop Loss: 0.015988562758970638
+Avg Loss: 0.021730993025853382
+Avg Pose Loss: 0.005757192123242162
+Avg Stop Loss: 0.015973800867721513
+Avg Loss: 0.021821741740490824
+Avg Pose Loss: 0.005754748105133235
+Avg Stop Loss: 0.01606699360871212
+Avg Loss: 0.021814960797940017
+Avg Pose Loss: 0.005747489606361405
+Avg Stop Loss: 0.016067471171804487
+Avg Loss: 0.021771996806044244
+Avg Pose Loss: 0.005741754412897315
+Avg Stop Loss: 0.016030242374534792
+Avg Loss: 0.02172987605129328
+Avg Pose Loss: 0.005731068002119884
+Avg Stop Loss: 0.015998808034881153
+Avg Loss: 0.021743996508126653
+Avg Pose Loss: 0.005731562237819281
+Avg Stop Loss: 0.016012434256967308
+--eval--
+100it [00:27,  3.63it/s]                                                                                                                                                                                                   
+--test--
+114it [00:31,  3.59it/s]                                                                                                                                                                                                   
+Epoch 9/40)
+Train Loss: 0.02169841155409813,Train Pose Loss: 0.005728559568524361, Train Stop Loss: 0.01596985198557377
+Eval Loss: 0.023113157600164413,Eval Pose Loss: 0.004934241995215416, Eval Stop Loss: 0.018178915604948997
+Test Loss: 0.023814257234334946,Test Pose Loss: 0.004889151081442833, Test Stop Loss: 0.018925106152892113
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[8.814009529720152e-05]
+epoch:9/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.019860288128256798
+Avg Pose Loss: 0.005616010632365942
+Avg Stop Loss: 0.014244277961552143
+Avg Loss: 0.020549786028147925
+Avg Pose Loss: 0.005624282519600474
+Avg Stop Loss: 0.014925503513157959
+Avg Loss: 0.02107496969679843
+Avg Pose Loss: 0.005655868143417794
+Avg Stop Loss: 0.015419101583498034
+Avg Loss: 0.021289056631120733
+Avg Pose Loss: 0.00563545279093458
+Avg Stop Loss: 0.015653603877315292
+Avg Loss: 0.021183348304947416
+Avg Pose Loss: 0.005668823099799659
+Avg Stop Loss: 0.015514525222566508
+Avg Loss: 0.020985404243265202
+Avg Pose Loss: 0.005631841231182128
+Avg Stop Loss: 0.015353563026025028
+Avg Loss: 0.020959896246240957
+Avg Pose Loss: 0.005635059986437071
+Avg Stop Loss: 0.015324836273750479
+Avg Loss: 0.021055505863429393
+Avg Pose Loss: 0.005625503905617051
+Avg Stop Loss: 0.015430001947848118
+Avg Loss: 0.02097952582718765
+Avg Pose Loss: 0.005620016281570909
+Avg Stop Loss: 0.015359509533408392
+Avg Loss: 0.020983413180189578
+Avg Pose Loss: 0.005614322379436117
+Avg Stop Loss: 0.015369090788608023
+Avg Loss: 0.020952040256074556
+Avg Pose Loss: 0.005601830259253914
+Avg Stop Loss: 0.015350209996588045
+Avg Loss: 0.020970289741763737
+Avg Pose Loss: 0.005594010787764793
+Avg Stop Loss: 0.015376278947866256
+Avg Loss: 0.020979945259409136
+Avg Pose Loss: 0.005594818155900835
+Avg Stop Loss: 0.015385127094396694
+Avg Loss: 0.021000985668214765
+Avg Pose Loss: 0.005599470542268477
+Avg Stop Loss: 0.015401515122545993
+Avg Loss: 0.021034721108279766
+Avg Pose Loss: 0.0055920301637759195
+Avg Stop Loss: 0.015442690937025346
+Avg Loss: 0.02098588418242814
+Avg Pose Loss: 0.005587272095505761
+Avg Stop Loss: 0.015398612079631877
+--eval--
+100it [00:24,  4.05it/s]                                                                                                                                                                                                   
+--test--
+114it [00:28,  3.97it/s]                                                                                                                                                                                                   
+Epoch 10/40)
+Train Loss: 0.020998837426304817,Train Pose Loss: 0.0055802930146455765, Train Stop Loss: 0.015418543480336666
+Eval Loss: 0.024187399074435234,Eval Pose Loss: 0.004898239392787218, Eval Stop Loss: 0.019289160147309303
+Test Loss: 0.02485378459095955,Test Pose Loss: 0.004837101325392723, Test Stop Loss: 0.020016683265566826
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[8.550178566873408e-05]
+epoch:10/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.02103189378976822
+Avg Pose Loss: 0.005305352155119181
+Avg Stop Loss: 0.015726542100310326
+Avg Loss: 0.020375046205918977
+Avg Pose Loss: 0.0055661905040540315
+Avg Stop Loss: 0.014808855697254437
+Avg Loss: 0.02087126184829432
+Avg Pose Loss: 0.005594158565986957
+Avg Stop Loss: 0.015277103286940808
+Avg Loss: 0.02101092535593977
+Avg Pose Loss: 0.0055960644101507445
+Avg Stop Loss: 0.015414860976729975
+Avg Loss: 0.021114533706719143
+Avg Pose Loss: 0.005550795885039833
+Avg Stop Loss: 0.015563737873935566
+Avg Loss: 0.02110026045116836
+Avg Pose Loss: 0.005547381947727915
+Avg Stop Loss: 0.01555287855363148
+Avg Loss: 0.020959339245608364
+Avg Pose Loss: 0.005550630873351199
+Avg Stop Loss: 0.015408708428818354
+Avg Loss: 0.020903660812164084
+Avg Pose Loss: 0.005531235117087946
+Avg Stop Loss: 0.015372425743568683
+Avg Loss: 0.020864809623753162
+Avg Pose Loss: 0.005529423237902655
+Avg Stop Loss: 0.0153353864311958
+Avg Loss: 0.020910614444052473
+Avg Pose Loss: 0.005524223456913802
+Avg Stop Loss: 0.015386391019181956
+Avg Loss: 0.020874933563879917
+Avg Pose Loss: 0.005512721806794375
+Avg Stop Loss: 0.01536221178685809
+Avg Loss: 0.02087046722919561
+Avg Pose Loss: 0.005513527826046559
+Avg Stop Loss: 0.015356939434869847
+Avg Loss: 0.02086148075805938
+Avg Pose Loss: 0.005507476791447892
+Avg Stop Loss: 0.015354003995303359
+Avg Loss: 0.02085738435178583
+Avg Pose Loss: 0.005498768299672005
+Avg Stop Loss: 0.015358616081105801
+Avg Loss: 0.020822968153810816
+Avg Pose Loss: 0.005495932367666864
+Avg Stop Loss: 0.015327035808080886
+Avg Loss: 0.020779685857522733
+Avg Pose Loss: 0.005490884272013105
+Avg Stop Loss: 0.015288801605674841
+--eval--
+100it [00:34,  2.92it/s]                                                                                                                                                                                                   
+--test--
+114it [00:36,  3.13it/s]                                                                                                                                                                                                   
+Epoch 11/40)
+Train Loss: 0.020750895142555237,Train Pose Loss: 0.005491274408996105, Train Stop Loss: 0.015259620733559132
+Eval Loss: 0.0231661107391119,Eval Pose Loss: 0.004847685340791941, Eval Stop Loss: 0.018318425863981247
+Test Loss: 0.024144267663359642,Test Pose Loss: 0.004804451949894428, Test Stop Loss: 0.01933981664478779
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[8.264767839234409e-05]
+epoch:11/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.0225459486246109
+Avg Pose Loss: 0.005982296075671911
+Avg Stop Loss: 0.016563652083277702
+Avg Loss: 0.020825220244281954
+Avg Pose Loss: 0.005609303307120163
+Avg Stop Loss: 0.015215916946382807
+Avg Loss: 0.020362710890670616
+Avg Pose Loss: 0.00555171703095015
+Avg Stop Loss: 0.014810993834236516
+Avg Loss: 0.020210231295430977
+Avg Pose Loss: 0.005498066234349759
+Avg Stop Loss: 0.014712165054119505
+Avg Loss: 0.020350657663589105
+Avg Pose Loss: 0.005448520180660107
+Avg Stop Loss: 0.014902137492799625
+Avg Loss: 0.020277571931347518
+Avg Pose Loss: 0.005428573576279892
+Avg Stop Loss: 0.014848998356461822
+Avg Loss: 0.02029294063478163
+Avg Pose Loss: 0.005437686159577649
+Avg Stop Loss: 0.01485525446086998
+Avg Loss: 0.020349728287637404
+Avg Pose Loss: 0.005431569838024857
+Avg Stop Loss: 0.014918158426030555
+Avg Loss: 0.02037276936399654
+Avg Pose Loss: 0.0054334070020182045
+Avg Stop Loss: 0.014939362330294765
+Avg Loss: 0.020326808050531196
+Avg Pose Loss: 0.005428757050542883
+Avg Stop Loss: 0.01489805095579959
+Avg Loss: 0.02028991364418984
+Avg Pose Loss: 0.005423204003638782
+Avg Stop Loss: 0.014866709604963555
+Avg Loss: 0.020284649010893163
+Avg Pose Loss: 0.005431083343765757
+Avg Stop Loss: 0.014853565634772196
+Avg Loss: 0.020358423260408924
+Avg Pose Loss: 0.005414637360104563
+Avg Stop Loss: 0.014943785870837034
+Avg Loss: 0.02032188501790292
+Avg Pose Loss: 0.005403691829024004
+Avg Stop Loss: 0.01491819316453997
+Avg Loss: 0.020291035222441363
+Avg Pose Loss: 0.005389893558281849
+Avg Stop Loss: 0.014901141642388767
+Avg Loss: 0.02026536171606864
+Avg Pose Loss: 0.005384640641129519
+Avg Stop Loss: 0.014880721054929026
+--eval--
+100it [00:19,  5.13it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.06it/s]                                                                                                                                                                                                   
+Epoch 12/40)
+Train Loss: 0.020302001386880875,Train Pose Loss: 0.005386725999414921, Train Stop Loss: 0.014915275387465954
+Eval Loss: 0.02217595838010311,Eval Pose Loss: 0.004704365041106939, Eval Stop Loss: 0.017471592873334885
+Test Loss: 0.023171840235590935,Test Pose Loss: 0.004647456109523773, Test Stop Loss: 0.018524382263422012
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[7.959536998847741e-05]
+epoch:12/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.020397484302520752
+Avg Pose Loss: 0.005285406485199928
+Avg Stop Loss: 0.015112076885998249
+Avg Loss: 0.01990963049269844
+Avg Pose Loss: 0.005402201643711565
+Avg Stop Loss: 0.014507428853597381
+Avg Loss: 0.020075994478862973
+Avg Pose Loss: 0.005364613095530082
+Avg Stop Loss: 0.014711381401866674
+Avg Loss: 0.019876473651351128
+Avg Pose Loss: 0.005337489400665427
+Avg Stop Loss: 0.01453898428162665
+Avg Loss: 0.019752732266734664
+Avg Pose Loss: 0.0053000721646161595
+Avg Stop Loss: 0.014452660132311005
+Avg Loss: 0.01971927858301682
+Avg Pose Loss: 0.005295081425666393
+Avg Stop Loss: 0.014424197192670045
+Avg Loss: 0.01971125452408874
+Avg Pose Loss: 0.005284114740788937
+Avg Stop Loss: 0.014427139820878126
+Avg Loss: 0.019780782460581812
+Avg Pose Loss: 0.005299672647811122
+Avg Stop Loss: 0.014481109846981187
+Avg Loss: 0.019861596523692248
+Avg Pose Loss: 0.00529977207487163
+Avg Stop Loss: 0.014561824477016089
+Avg Loss: 0.019824165576959357
+Avg Pose Loss: 0.0052869718735799875
+Avg Stop Loss: 0.014537193734647414
+Avg Loss: 0.019834017227557333
+Avg Pose Loss: 0.005290712660446495
+Avg Stop Loss: 0.014543304597348585
+Avg Loss: 0.01989324229915747
+Avg Pose Loss: 0.0052841877686172775
+Avg Stop Loss: 0.014609054558031551
+Avg Loss: 0.01987324318120397
+Avg Pose Loss: 0.0052739064316563835
+Avg Stop Loss: 0.014599336774749906
+Avg Loss: 0.019855919513825634
+Avg Pose Loss: 0.005266716005638539
+Avg Stop Loss: 0.014589203527873006
+Avg Loss: 0.019833812230186196
+Avg Pose Loss: 0.005258549122621094
+Avg Stop Loss: 0.014575263122522102
+Avg Loss: 0.019874860208077005
+Avg Pose Loss: 0.0052532889909091725
+Avg Stop Loss: 0.014621571232989768
+--eval--
+100it [00:19,  5.13it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.10it/s]                                                                                                                                                                                                   
+Epoch 13/40)
+Train Loss: 0.019898174330592155,Train Pose Loss: 0.005252176430076361, Train Stop Loss: 0.014645997434854507
+Eval Loss: 0.024218475446105003,Eval Pose Loss: 0.004718584008514881, Eval Stop Loss: 0.019499892368912697
+Test Loss: 0.02503659948706627,Test Pose Loss: 0.0046656252816319466, Test Stop Loss: 0.020370975136756897
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[7.636367895343945e-05]
+epoch:13/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.018728405237197876
+Avg Pose Loss: 0.005182436667382717
+Avg Stop Loss: 0.013545968569815159
+Avg Loss: 0.019708305228464673
+Avg Pose Loss: 0.005175938698380153
+Avg Stop Loss: 0.014532366652262978
+Avg Loss: 0.019488606606586953
+Avg Pose Loss: 0.005143157029246438
+Avg Stop Loss: 0.01434544961556644
+Avg Loss: 0.019583940577145627
+Avg Pose Loss: 0.005153239317133132
+Avg Stop Loss: 0.014430701236033261
+Avg Loss: 0.019604934414295932
+Avg Pose Loss: 0.005158830472985817
+Avg Stop Loss: 0.014446103910536986
+Avg Loss: 0.019605155827890255
+Avg Pose Loss: 0.005133292986314275
+Avg Stop Loss: 0.014471862830422417
+Avg Loss: 0.01951361403563455
+Avg Pose Loss: 0.005132991953841264
+Avg Stop Loss: 0.014380622077144422
+Avg Loss: 0.01951188066929111
+Avg Pose Loss: 0.005129181228567462
+Avg Stop Loss: 0.014382699432087991
+Avg Loss: 0.019590414139661897
+Avg Pose Loss: 0.005136066515780009
+Avg Stop Loss: 0.01445434760179059
+Avg Loss: 0.019570153891899675
+Avg Pose Loss: 0.005130650257003327
+Avg Stop Loss: 0.014439503601302582
+Avg Loss: 0.019543512448013483
+Avg Pose Loss: 0.005117929362404448
+Avg Stop Loss: 0.014425583056766878
+Avg Loss: 0.01957524769586747
+Avg Pose Loss: 0.005116412184327218
+Avg Stop Loss: 0.014458835481511232
+Avg Loss: 0.019581303782109715
+Avg Pose Loss: 0.005116302587113635
+Avg Stop Loss: 0.01446500116785512
+Avg Loss: 0.019557178780711403
+Avg Pose Loss: 0.005119945633108459
+Avg Stop Loss: 0.014437233121832295
+Avg Loss: 0.019588218690783615
+Avg Pose Loss: 0.005113259298550091
+Avg Stop Loss: 0.014474959361654766
+Avg Loss: 0.019565992288137577
+Avg Pose Loss: 0.005107256100835064
+Avg Stop Loss: 0.014458736159071218
+--eval--
+100it [00:19,  5.12it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.10it/s]                                                                                                                                                                                                   
+Epoch 14/40)
+Train Loss: 0.019581671804189682,Train Pose Loss: 0.005099151283502579, Train Stop Loss: 0.014482520520687103
+Eval Loss: 0.02136061154305935,Eval Pose Loss: 0.00448079826310277, Eval Stop Loss: 0.016879813745617867
+Test Loss: 0.022310495376586914,Test Pose Loss: 0.004443726968020201, Test Stop Loss: 0.017866767942905426
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[7.297252973710755e-05]
+epoch:14/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.016926724463701248
+Avg Pose Loss: 0.004085352644324303
+Avg Stop Loss: 0.012841371819376945
+Avg Loss: 0.0187192476714159
+Avg Pose Loss: 0.00511621577794304
+Avg Stop Loss: 0.013603031865809814
+Avg Loss: 0.018915662129608848
+Avg Pose Loss: 0.005104723366774359
+Avg Stop Loss: 0.013810938789476803
+Avg Loss: 0.018860234956309646
+Avg Pose Loss: 0.005073183752206522
+Avg Stop Loss: 0.013787051209517788
+Avg Loss: 0.01874387415214221
+Avg Pose Loss: 0.005038551846867487
+Avg Stop Loss: 0.013705322318048474
+Avg Loss: 0.018790518519228805
+Avg Pose Loss: 0.005033321329624859
+Avg Stop Loss: 0.013757197192857068
+Avg Loss: 0.01878083090510176
+Avg Pose Loss: 0.005026862225549516
+Avg Stop Loss: 0.013753968688462568
+Avg Loss: 0.018821834035207135
+Avg Pose Loss: 0.005021286367062751
+Avg Stop Loss: 0.013800547670137227
+Avg Loss: 0.018846094154853946
+Avg Pose Loss: 0.00501866675343611
+Avg Stop Loss: 0.013827427396767037
+Avg Loss: 0.01881184705432823
+Avg Pose Loss: 0.005014200440580057
+Avg Stop Loss: 0.013797646604445282
+Avg Loss: 0.018916622028461883
+Avg Pose Loss: 0.005008811815423178
+Avg Stop Loss: 0.013907810212108311
+Avg Loss: 0.01892273181323622
+Avg Pose Loss: 0.005003283227278727
+Avg Stop Loss: 0.013919448583208356
+Avg Loss: 0.018969214234429783
+Avg Pose Loss: 0.00500252760976218
+Avg Stop Loss: 0.013966686610321667
+Avg Loss: 0.019044205296546976
+Avg Pose Loss: 0.005001481744510155
+Avg Stop Loss: 0.014042723536288092
+Avg Loss: 0.01905919020619246
+Avg Pose Loss: 0.005000373811595977
+Avg Stop Loss: 0.014058816381966127
+Avg Loss: 0.019066138969216842
+Avg Pose Loss: 0.005001058600046271
+Avg Stop Loss: 0.014065080353658867
+--eval--
+100it [00:19,  5.09it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.09it/s]                                                                                                                                                                                                   
+Epoch 15/40)
+Train Loss: 0.01906406134366989,Train Pose Loss: 0.0050027999095618725, Train Stop Loss: 0.014061261899769306
+Eval Loss: 0.021432306617498398,Eval Pose Loss: 0.004626796580851078, Eval Stop Loss: 0.016805509105324745
+Test Loss: 0.022468924522399902,Test Pose Loss: 0.004568483680486679, Test Stop Loss: 0.017900440841913223
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[6.944282990207194e-05]
+epoch:15/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.01437234878540039
+Avg Pose Loss: 0.003847243497148156
+Avg Stop Loss: 0.010525105521082878
+Avg Loss: 0.018167403323741834
+Avg Pose Loss: 0.00486813214755073
+Avg Stop Loss: 0.01329927112778077
+Avg Loss: 0.01856447757217125
+Avg Pose Loss: 0.004898351688975866
+Avg Stop Loss: 0.013666125836860925
+Avg Loss: 0.01867477722664014
+Avg Pose Loss: 0.004935738680098342
+Avg Stop Loss: 0.013739038510959707
+Avg Loss: 0.018673286527079388
+Avg Pose Loss: 0.004936110596996999
+Avg Stop Loss: 0.013737175915566764
+Avg Loss: 0.01875007097719018
+Avg Pose Loss: 0.004937882942264666
+Avg Stop Loss: 0.013812188007041603
+Avg Loss: 0.018693064085321003
+Avg Pose Loss: 0.004956936352915702
+Avg Stop Loss: 0.013736127689790706
+Avg Loss: 0.018751631229159325
+Avg Pose Loss: 0.0049516398628400415
+Avg Stop Loss: 0.01379999132314099
+Avg Loss: 0.018741532449800053
+Avg Pose Loss: 0.004948019251208776
+Avg Stop Loss: 0.01379351316545433
+Avg Loss: 0.018854945365724036
+Avg Pose Loss: 0.004948571928261007
+Avg Stop Loss: 0.01390637339715051
+Avg Loss: 0.018844410415169422
+Avg Pose Loss: 0.004948375136503107
+Avg Stop Loss: 0.013896035244241803
+Avg Loss: 0.018808952959036146
+Avg Pose Loss: 0.0049440228861573066
+Avg Stop Loss: 0.01386493003671713
+Avg Loss: 0.018834692660213558
+Avg Pose Loss: 0.004945495705214096
+Avg Stop Loss: 0.013889196921460994
+Avg Loss: 0.018838407597765842
+Avg Pose Loss: 0.004945981843492945
+Avg Stop Loss: 0.013892425728144323
+Avg Loss: 0.018829776089157188
+Avg Pose Loss: 0.004948617055544165
+Avg Stop Loss: 0.0138811590070228
+Avg Loss: 0.018817078521342415
+Avg Pose Loss: 0.004951128461115871
+Avg Stop Loss: 0.013865950034322002
+--eval--
+100it [00:19,  5.13it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.11it/s]                                                                                                                                                                                                   
+Epoch 16/40)
+Train Loss: 0.018868111073970795,Train Pose Loss: 0.004944248124957085, Train Stop Loss: 0.01392386294901371
+Eval Loss: 0.021162617951631546,Eval Pose Loss: 0.0044461400248110294, Eval Stop Loss: 0.016716478392481804
+Test Loss: 0.021996986120939255,Test Pose Loss: 0.004408550914376974, Test Stop Loss: 0.017588434740900993
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[6.57963412215599e-05]
+epoch:16/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.010756012052297592
+Avg Pose Loss: 0.004284447059035301
+Avg Stop Loss: 0.006471565458923578
+Avg Loss: 0.018175290620858126
+Avg Pose Loss: 0.004966497282949414
+Avg Stop Loss: 0.01320879336096125
+Avg Loss: 0.01822087674665807
+Avg Pose Loss: 0.004931972549755627
+Avg Stop Loss: 0.013288904224703116
+Avg Loss: 0.018175510327607097
+Avg Pose Loss: 0.004867166515124151
+Avg Stop Loss: 0.013308343805521232
+Avg Loss: 0.018273132681344957
+Avg Pose Loss: 0.004890949145410015
+Avg Stop Loss: 0.013382183535354319
+Avg Loss: 0.018229255274295093
+Avg Pose Loss: 0.0048915183040575535
+Avg Stop Loss: 0.013337736973490662
+Avg Loss: 0.018270243551216387
+Avg Pose Loss: 0.0049023898120833164
+Avg Stop Loss: 0.01336785375269226
+Avg Loss: 0.01825598790210681
+Avg Pose Loss: 0.004900654636724678
+Avg Stop Loss: 0.01335533328298559
+Avg Loss: 0.01820787399793311
+Avg Pose Loss: 0.004895842207721278
+Avg Stop Loss: 0.013312031807943006
+Avg Loss: 0.01821784747167016
+Avg Pose Loss: 0.004889997686223271
+Avg Stop Loss: 0.013327849804569495
+Avg Loss: 0.018324963572610924
+Avg Pose Loss: 0.004891061715988236
+Avg Stop Loss: 0.013433901871276367
+Avg Loss: 0.018317041933015463
+Avg Pose Loss: 0.004878440621451937
+Avg Stop Loss: 0.013438601317484741
+Avg Loss: 0.018336276923904164
+Avg Pose Loss: 0.004869475524925272
+Avg Stop Loss: 0.013466801402468443
+Avg Loss: 0.01836545945794467
+Avg Pose Loss: 0.004859788248460056
+Avg Stop Loss: 0.013505671210200465
+Avg Loss: 0.01837593234136839
+Avg Pose Loss: 0.004860818650816792
+Avg Stop Loss: 0.013515113696700585
+Avg Loss: 0.018406382076278437
+Avg Pose Loss: 0.004864271751745821
+Avg Stop Loss: 0.013542110331512883
+--eval--
+100it [00:19,  5.09it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.05it/s]                                                                                                                                                                                                   
+Epoch 17/40)
+Train Loss: 0.018450777977705002,Train Pose Loss: 0.004858693573623896, Train Stop Loss: 0.013592083938419819
+Eval Loss: 0.022229744121432304,Eval Pose Loss: 0.004560820758342743, Eval Stop Loss: 0.01766892522573471
+Test Loss: 0.02301987260580063,Test Pose Loss: 0.004504176788032055, Test Stop Loss: 0.01851569674909115
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[6.205554551086731e-05]
+epoch:17/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.01669009029865265
+Avg Pose Loss: 0.004543011076748371
+Avg Stop Loss: 0.012147079221904278
+Avg Loss: 0.018115435865255866
+Avg Pose Loss: 0.004741277345133447
+Avg Stop Loss: 0.01337415848554361
+Avg Loss: 0.017641688381965778
+Avg Pose Loss: 0.00481767883287993
+Avg Stop Loss: 0.012824009513176644
+Avg Loss: 0.017646862967465805
+Avg Pose Loss: 0.004827982722858951
+Avg Stop Loss: 0.012818880201289523
+Avg Loss: 0.017792638574733847
+Avg Pose Loss: 0.004853895453136981
+Avg Stop Loss: 0.012938743093726864
+Avg Loss: 0.017832201037429527
+Avg Pose Loss: 0.004848154555418772
+Avg Stop Loss: 0.012984046436467035
+Avg Loss: 0.01786470644721473
+Avg Pose Loss: 0.004842622784786112
+Avg Stop Loss: 0.013022083618651809
+Avg Loss: 0.01801735206976129
+Avg Pose Loss: 0.004844859336767234
+Avg Stop Loss: 0.013172492703101392
+Avg Loss: 0.01801961867345704
+Avg Pose Loss: 0.004839068009795972
+Avg Stop Loss: 0.013180550647673945
+Avg Loss: 0.01808568352645265
+Avg Pose Loss: 0.0048367757490783364
+Avg Stop Loss: 0.013248907768071425
+Avg Loss: 0.018095660780730483
+Avg Pose Loss: 0.004835615022718296
+Avg Stop Loss: 0.013260045752197237
+Avg Loss: 0.018085414080201333
+Avg Pose Loss: 0.004826565327242923
+Avg Stop Loss: 0.013258848748728971
+Avg Loss: 0.018061687565756827
+Avg Pose Loss: 0.0048211085428635
+Avg Stop Loss: 0.013240579020566958
+Avg Loss: 0.018083064182647872
+Avg Pose Loss: 0.004817980642807738
+Avg Stop Loss: 0.013265083537871543
+Avg Loss: 0.018079045571673988
+Avg Pose Loss: 0.004817488578365561
+Avg Stop Loss: 0.013261556991646538
+Avg Loss: 0.01813490636991728
+Avg Pose Loss: 0.0048157187783066865
+Avg Stop Loss: 0.013319187591300357
+--eval--
+100it [00:19,  5.11it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.09it/s]                                                                                                                                                                                                   
+Epoch 18/40)
+Train Loss: 0.01809500902891159,Train Pose Loss: 0.004815176595002413, Train Stop Loss: 0.01327983196824789
+Eval Loss: 0.021339109167456627,Eval Pose Loss: 0.004425995051860809, Eval Stop Loss: 0.016913114115595818
+Test Loss: 0.022229241207242012,Test Pose Loss: 0.004407635889947414, Test Stop Loss: 0.017821604385972023
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[5.824350601949142e-05]
+epoch:18/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.014048527926206589
+Avg Pose Loss: 0.004296636674553156
+Avg Stop Loss: 0.009751890785992146
+Avg Loss: 0.01803649904778098
+Avg Pose Loss: 0.004853851281770385
+Avg Stop Loss: 0.01318264782133669
+Avg Loss: 0.017903983620787736
+Avg Pose Loss: 0.004831467794523162
+Avg Stop Loss: 0.013072515888816088
+Avg Loss: 0.01771418223052326
+Avg Pose Loss: 0.0048145946150837445
+Avg Stop Loss: 0.012899587676547888
+Avg Loss: 0.01746633858826392
+Avg Pose Loss: 0.0048000014124628615
+Avg Stop Loss: 0.012666337210638565
+Avg Loss: 0.017678949383353283
+Avg Pose Loss: 0.004808936890367114
+Avg Stop Loss: 0.012870012524123202
+Avg Loss: 0.01762170617169578
+Avg Pose Loss: 0.004819557661525347
+Avg Stop Loss: 0.01280214853070292
+Avg Loss: 0.017639173218680176
+Avg Pose Loss: 0.004812280527221706
+Avg Stop Loss: 0.012826892708729788
+Avg Loss: 0.017621795289897442
+Avg Pose Loss: 0.004791613117955653
+Avg Stop Loss: 0.012830182180952714
+Avg Loss: 0.017676017039375883
+Avg Pose Loss: 0.004792303846969158
+Avg Stop Loss: 0.012883713204293748
+Avg Loss: 0.0177040615572141
+Avg Pose Loss: 0.0047934165789181
+Avg Stop Loss: 0.012910644983878354
+Avg Loss: 0.017753198471336502
+Avg Pose Loss: 0.004798044997659071
+Avg Stop Loss: 0.012955153475157733
+Avg Loss: 0.01775221351292186
+Avg Pose Loss: 0.00479286302231581
+Avg Stop Loss: 0.01295935048672877
+Avg Loss: 0.017786340163784428
+Avg Pose Loss: 0.004793193843788385
+Avg Stop Loss: 0.012993146316774711
+Avg Loss: 0.017773190537184413
+Avg Pose Loss: 0.004788142392314774
+Avg Stop Loss: 0.012985048140881106
+Avg Loss: 0.01778713771471534
+Avg Pose Loss: 0.004788957198065452
+Avg Stop Loss: 0.012998180511996379
+--eval--
+100it [00:19,  5.11it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.08it/s]                                                                                                                                                                                                   
+Epoch 19/40)
+Train Loss: 0.017809288576245308,Train Pose Loss: 0.004785529803484678, Train Stop Loss: 0.013023759238421917
+Eval Loss: 0.021064393222332,Eval Pose Loss: 0.004349407274276018, Eval Stop Loss: 0.01671498641371727
+Test Loss: 0.02175395004451275,Test Pose Loss: 0.0043104346841573715, Test Stop Loss: 0.017443515360355377
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[5.438372523852832e-05]
+epoch:19/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.015805743634700775
+Avg Pose Loss: 0.004609744530171156
+Avg Stop Loss: 0.011195999570190907
+Avg Loss: 0.01675144237198747
+Avg Pose Loss: 0.0048335078356806
+Avg Stop Loss: 0.011917934531696362
+Avg Loss: 0.017187574201851935
+Avg Pose Loss: 0.00477448244699606
+Avg Stop Loss: 0.01241309178381491
+Avg Loss: 0.01707930708508258
+Avg Pose Loss: 0.004750318631090446
+Avg Stop Loss: 0.012328988508912318
+Avg Loss: 0.017321341928847114
+Avg Pose Loss: 0.0047730354347180325
+Avg Stop Loss: 0.012548306534192212
+Avg Loss: 0.017227551805045076
+Avg Pose Loss: 0.004777144394376261
+Avg Stop Loss: 0.012450407439482189
+Avg Loss: 0.017198089815477862
+Avg Pose Loss: 0.004758180237643284
+Avg Stop Loss: 0.012439909608827009
+Avg Loss: 0.017317124896187246
+Avg Pose Loss: 0.004746653678987744
+Avg Stop Loss: 0.012570471237792225
+Avg Loss: 0.017323288029424854
+Avg Pose Loss: 0.004749717115576887
+Avg Stop Loss: 0.01257357093971804
+Avg Loss: 0.017363140837069226
+Avg Pose Loss: 0.004745816692015307
+Avg Stop Loss: 0.012617324178130856
+Avg Loss: 0.017333427358504298
+Avg Pose Loss: 0.004740663019560657
+Avg Stop Loss: 0.012592764361970848
+Avg Loss: 0.017373530651788673
+Avg Pose Loss: 0.004747502095735108
+Avg Stop Loss: 0.012626028574874573
+Avg Loss: 0.017329516534466332
+Avg Pose Loss: 0.004738258146529678
+Avg Stop Loss: 0.01259125840092554
+Avg Loss: 0.017338340386152725
+Avg Pose Loss: 0.004746303098851802
+Avg Stop Loss: 0.012592037303586542
+Avg Loss: 0.01732387755007658
+Avg Pose Loss: 0.00474273994532437
+Avg Stop Loss: 0.012581137615886865
+Avg Loss: 0.017353651091471304
+Avg Pose Loss: 0.004740421692974155
+Avg Stop Loss: 0.012613229411371862
+--eval--
+100it [00:19,  5.09it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.08it/s]                                                                                                                                                                                                   
+Epoch 20/40)
+Train Loss: 0.017380546778440475,Train Pose Loss: 0.0047382391057908535, Train Stop Loss: 0.01264230813831091
+Eval Loss: 0.022253626957535744,Eval Pose Loss: 0.004410565830767155, Eval Stop Loss: 0.017843062058091164
+Test Loss: 0.022811707109212875,Test Pose Loss: 0.0043725986033678055, Test Stop Loss: 0.01843910850584507
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[5.0499999999999994e-05]
+epoch:20/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.015123710036277771
+Avg Pose Loss: 0.0054627954959869385
+Avg Stop Loss: 0.009660914540290833
+Avg Loss: 0.017394261342464107
+Avg Pose Loss: 0.004665751890786509
+Avg Stop Loss: 0.012728509419404043
+Avg Loss: 0.017350536620531657
+Avg Pose Loss: 0.004655115178957656
+Avg Stop Loss: 0.012695421483275012
+Avg Loss: 0.01703510603765366
+Avg Pose Loss: 0.0046614169528355134
+Avg Stop Loss: 0.012373689102609194
+Avg Loss: 0.01704680062296273
+Avg Pose Loss: 0.004687771732986271
+Avg Stop Loss: 0.012359028899266461
+Avg Loss: 0.016992443242108454
+Avg Pose Loss: 0.004693506682429188
+Avg Stop Loss: 0.012298936582915856
+Avg Loss: 0.016944512372337493
+Avg Pose Loss: 0.0046725160505827175
+Avg Stop Loss: 0.012271996349647964
+Avg Loss: 0.016940535467978933
+Avg Pose Loss: 0.004658302549636802
+Avg Stop Loss: 0.012282232941924123
+Avg Loss: 0.016945961114605158
+Avg Pose Loss: 0.004671325753634789
+Avg Stop Loss: 0.012274635390037864
+Avg Loss: 0.0169720369810807
+Avg Pose Loss: 0.004665030865515525
+Avg Stop Loss: 0.012307006143215428
+Avg Loss: 0.017004359554923645
+Avg Pose Loss: 0.004656701180553594
+Avg Stop Loss: 0.01234765840204922
+Avg Loss: 0.01706087554328746
+Avg Pose Loss: 0.004660907709424626
+Avg Stop Loss: 0.012399967857547694
+Avg Loss: 0.017089700228616063
+Avg Pose Loss: 0.004667095674805151
+Avg Stop Loss: 0.012422604577850044
+Avg Loss: 0.01704257851800123
+Avg Pose Loss: 0.004666602785923131
+Avg Stop Loss: 0.012375975758564601
+Avg Loss: 0.01705299817467059
+Avg Pose Loss: 0.004673887475451546
+Avg Stop Loss: 0.01237911073328777
+Avg Loss: 0.017018552859010376
+Avg Pose Loss: 0.004676001022342124
+Avg Stop Loss: 0.012342551873586105
+--eval--
+100it [00:19,  5.10it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.06it/s]                                                                                                                                                                                                   
+Epoch 21/40)
+Train Loss: 0.017075834795832634,Train Pose Loss: 0.004682047758251429, Train Stop Loss: 0.012393786571919918
+Eval Loss: 0.021031226962804794,Eval Pose Loss: 0.004390171729028225, Eval Stop Loss: 0.016641056165099144
+Test Loss: 0.022037308663129807,Test Pose Loss: 0.004355484154075384, Test Stop Loss: 0.017681824043393135
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[4.6616274761471674e-05]
+epoch:21/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.014319118112325668
+Avg Pose Loss: 0.0048417383804917336
+Avg Stop Loss: 0.009477379731833935
+Avg Loss: 0.01673523727620002
+Avg Pose Loss: 0.00471392554221767
+Avg Stop Loss: 0.012021311724761336
+Avg Loss: 0.01632767665519643
+Avg Pose Loss: 0.004667339443382042
+Avg Stop Loss: 0.011660337172430101
+Avg Loss: 0.016438102371297603
+Avg Pose Loss: 0.00465797298925115
+Avg Stop Loss: 0.011780129409119783
+Avg Loss: 0.01647434814919037
+Avg Pose Loss: 0.004652887275047656
+Avg Stop Loss: 0.011821460864272089
+Avg Loss: 0.016446915261834085
+Avg Pose Loss: 0.004655785592804531
+Avg Stop Loss: 0.011791129648116624
+Avg Loss: 0.016419693229475157
+Avg Pose Loss: 0.0046511564005519606
+Avg Stop Loss: 0.011768536826598763
+Avg Loss: 0.016532585824628528
+Avg Pose Loss: 0.004660002755389128
+Avg Stop Loss: 0.01187258307355723
+Avg Loss: 0.016577242368997335
+Avg Pose Loss: 0.004643952122281367
+Avg Stop Loss: 0.011933290244390568
+Avg Loss: 0.016552750844008122
+Avg Pose Loss: 0.004641453636299558
+Avg Stop Loss: 0.011911297205124427
+Avg Loss: 0.01658628880698513
+Avg Pose Loss: 0.004650838883150812
+Avg Stop Loss: 0.011935449916158582
+Avg Loss: 0.016593714779264867
+Avg Pose Loss: 0.00465528929409834
+Avg Stop Loss: 0.011938425469940544
+Avg Loss: 0.016580287436121062
+Avg Pose Loss: 0.004647903487692702
+Avg Stop Loss: 0.011932383934664016
+Avg Loss: 0.0165879295424463
+Avg Pose Loss: 0.004651209164652787
+Avg Stop Loss: 0.011936720359718269
+Avg Loss: 0.016576953360586188
+Avg Pose Loss: 0.0046503760803392495
+Avg Stop Loss: 0.01192657726495756
+Avg Loss: 0.016616666441327886
+Avg Pose Loss: 0.004655206954940597
+Avg Stop Loss: 0.011961459470720468
+--eval--
+100it [00:19,  5.08it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.05it/s]                                                                                                                                                                                                   
+Epoch 22/40)
+Train Loss: 0.016618452966213226,Train Pose Loss: 0.0046506719663739204, Train Stop Loss: 0.011967780068516731
+Eval Loss: 0.021506434306502342,Eval Pose Loss: 0.004317085724323988, Eval Stop Loss: 0.017189348116517067
+Test Loss: 0.022323958575725555,Test Pose Loss: 0.004304972942918539, Test Stop Loss: 0.01801898516714573
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[4.275649398050858e-05]
+epoch:22/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.023248445242643356
+Avg Pose Loss: 0.004827606957405806
+Avg Stop Loss: 0.018420837819576263
+Avg Loss: 0.016059495287366433
+Avg Pose Loss: 0.004554335182385132
+Avg Stop Loss: 0.011505160107286555
+Avg Loss: 0.015895772076661315
+Avg Pose Loss: 0.004587673135009126
+Avg Stop Loss: 0.011308098948602355
+Avg Loss: 0.015991671434742866
+Avg Pose Loss: 0.004566099536465945
+Avg Stop Loss: 0.011425571906785682
+Avg Loss: 0.01608661849265384
+Avg Pose Loss: 0.004577803533487115
+Avg Stop Loss: 0.0115088149469736
+Avg Loss: 0.01614329459967311
+Avg Pose Loss: 0.004595515659328052
+Avg Stop Loss: 0.011547778937556668
+Avg Loss: 0.016133524970261506
+Avg Pose Loss: 0.004599278884941399
+Avg Stop Loss: 0.011534246078734217
+Avg Loss: 0.016273986884311756
+Avg Pose Loss: 0.0046064784616157515
+Avg Stop Loss: 0.011667508427678115
+Avg Loss: 0.016264160958987275
+Avg Pose Loss: 0.004600061168231433
+Avg Stop Loss: 0.011664099793953265
+Avg Loss: 0.01625584715152455
+Avg Pose Loss: 0.004600851904325906
+Avg Stop Loss: 0.011654995243580853
+Avg Loss: 0.016274581091119334
+Avg Pose Loss: 0.004611168598679902
+Avg Stop Loss: 0.011663412494532815
+Avg Loss: 0.016330094959800024
+Avg Pose Loss: 0.004607747678562904
+Avg Stop Loss: 0.011722347278065039
+Avg Loss: 0.01639975124906491
+Avg Pose Loss: 0.004612974150588645
+Avg Stop Loss: 0.01178677710448605
+Avg Loss: 0.016377109877813857
+Avg Pose Loss: 0.0046182554524798495
+Avg Stop Loss: 0.011758854422470603
+Avg Loss: 0.016356103218291528
+Avg Pose Loss: 0.004613833199305025
+Avg Stop Loss: 0.011742270017989368
+Avg Loss: 0.01633170771590626
+Avg Pose Loss: 0.004609897164385927
+Avg Stop Loss: 0.011721810556484075
+--eval--
+100it [00:19,  5.10it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.04it/s]                                                                                                                                                                                                   
+Epoch 23/40)
+Train Loss: 0.01632915437221527,Train Pose Loss: 0.004613964352756739, Train Stop Loss: 0.011715189553797245
+Eval Loss: 0.021465759724378586,Eval Pose Loss: 0.004281042143702507, Eval Stop Loss: 0.01718471758067608
+Test Loss: 0.02263048104941845,Test Pose Loss: 0.00426475377753377, Test Stop Loss: 0.018365727737545967
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[3.894445448913268e-05]
+epoch:23/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.016569864004850388
+Avg Pose Loss: 0.003613965818658471
+Avg Stop Loss: 0.012955897487699986
+Avg Loss: 0.015635442357547213
+Avg Pose Loss: 0.004660500858974929
+Avg Stop Loss: 0.010974941422498904
+Avg Loss: 0.015504799118330378
+Avg Pose Loss: 0.0046079192977787845
+Avg Stop Loss: 0.010896879804334533
+Avg Loss: 0.015550670871492537
+Avg Pose Loss: 0.004614569393738461
+Avg Stop Loss: 0.010936101443719032
+Avg Loss: 0.01578523077772108
+Avg Pose Loss: 0.004621226934511726
+Avg Stop Loss: 0.011164003812436228
+Avg Loss: 0.0158284700479351
+Avg Pose Loss: 0.004607772343548502
+Avg Stop Loss: 0.01122069769230357
+Avg Loss: 0.01583677126069905
+Avg Pose Loss: 0.004604413463484601
+Avg Stop Loss: 0.011232357797601854
+Avg Loss: 0.01585002829082916
+Avg Pose Loss: 0.004604611921452315
+Avg Stop Loss: 0.011245416369708985
+Avg Loss: 0.01586476917879728
+Avg Pose Loss: 0.004595234523877297
+Avg Stop Loss: 0.011269534654338633
+Avg Loss: 0.015854971350525215
+Avg Pose Loss: 0.00460018575259719
+Avg Stop Loss: 0.011254785603613125
+Avg Loss: 0.01583457696246919
+Avg Pose Loss: 0.004598627388188904
+Avg Stop Loss: 0.01123594957776926
+Avg Loss: 0.01587336813712951
+Avg Pose Loss: 0.004605457805042967
+Avg Stop Loss: 0.011267910341391312
+Avg Loss: 0.015893688343223387
+Avg Pose Loss: 0.004601704691273845
+Avg Stop Loss: 0.011291983658928645
+Avg Loss: 0.015926558331090336
+Avg Pose Loss: 0.004601978895710431
+Avg Stop Loss: 0.011324579440927752
+Avg Loss: 0.01593047148514164
+Avg Pose Loss: 0.004604461230603522
+Avg Stop Loss: 0.011326010260853296
+Avg Loss: 0.015913557647159703
+Avg Pose Loss: 0.0045951743438643845
+Avg Stop Loss: 0.011318383309655115
+--eval--
+100it [00:19,  5.06it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.07it/s]                                                                                                                                                                                                   
+Epoch 24/40)
+Train Loss: 0.015887010842561722,Train Pose Loss: 0.004591101780533791, Train Stop Loss: 0.011295909062027931
+Eval Loss: 0.02192278392612934,Eval Pose Loss: 0.0042458646930754185, Eval Stop Loss: 0.01767691969871521
+Test Loss: 0.02289670705795288,Test Pose Loss: 0.004224709235131741, Test Stop Loss: 0.018671996891498566
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[3.52036587784401e-05]
+epoch:24/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.02192879281938076
+Avg Pose Loss: 0.005286079365760088
+Avg Stop Loss: 0.01664271391928196
+Avg Loss: 0.015717921972201013
+Avg Pose Loss: 0.0046251956258190445
+Avg Stop Loss: 0.011092726270308589
+Avg Loss: 0.015542378315507477
+Avg Pose Loss: 0.004597419732718251
+Avg Stop Loss: 0.010944958602481368
+Avg Loss: 0.0155294119006029
+Avg Pose Loss: 0.004603928644241041
+Avg Stop Loss: 0.01092548325249424
+Avg Loss: 0.01561884755533458
+Avg Pose Loss: 0.004616104754412598
+Avg Stop Loss: 0.011002742794535107
+Avg Loss: 0.015520563455086626
+Avg Pose Loss: 0.00460568170282551
+Avg Stop Loss: 0.010914881746219601
+Avg Loss: 0.015580037018336889
+Avg Pose Loss: 0.004610414363787867
+Avg Stop Loss: 0.01096962264796313
+Avg Loss: 0.015662463678156
+Avg Pose Loss: 0.004601078927676365
+Avg Stop Loss: 0.011061384745165386
+Avg Loss: 0.015563737946363647
+Avg Pose Loss: 0.004581695839648743
+Avg Stop Loss: 0.010982042090146431
+Avg Loss: 0.015527342738672577
+Avg Pose Loss: 0.004585797607756068
+Avg Stop Loss: 0.010941545116703763
+Avg Loss: 0.015552829443984157
+Avg Pose Loss: 0.004582876623557001
+Avg Stop Loss: 0.010969952812286226
+Avg Loss: 0.015537716649628356
+Avg Pose Loss: 0.004571422391683608
+Avg Stop Loss: 0.010966294249697342
+Avg Loss: 0.015534358661308525
+Avg Pose Loss: 0.004569679343193571
+Avg Stop Loss: 0.010964679316564042
+Avg Loss: 0.015528859229877214
+Avg Pose Loss: 0.004570872716886277
+Avg Stop Loss: 0.01095798651889671
+Avg Loss: 0.015513686944519852
+Avg Pose Loss: 0.004565666175761833
+Avg Stop Loss: 0.010948020777067463
+Avg Loss: 0.015522100072326777
+Avg Pose Loss: 0.004564853429764529
+Avg Stop Loss: 0.01095724664814646
+--eval--
+100it [00:19,  5.07it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.06it/s]                                                                                                                                                                                                   
+Epoch 25/40)
+Train Loss: 0.015528402291238308,Train Pose Loss: 0.004562572110444307, Train Stop Loss: 0.010965829715132713
+Eval Loss: 0.022533902898430824,Eval Pose Loss: 0.004254942759871483, Eval Stop Loss: 0.01827896013855934
+Test Loss: 0.023370394483208656,Test Pose Loss: 0.0042429533787071705, Test Stop Loss: 0.019127441570162773
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[3.155717009792805e-05]
+epoch:25/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.016901107504963875
+Avg Pose Loss: 0.004528798628598452
+Avg Stop Loss: 0.012372308410704136
+Avg Loss: 0.014525642904388432
+Avg Pose Loss: 0.004529164145045941
+Avg Stop Loss: 0.009996478784700284
+Avg Loss: 0.014769860413574164
+Avg Pose Loss: 0.004498003014775725
+Avg Stop Loss: 0.010271857425440751
+Avg Loss: 0.014610566511329425
+Avg Pose Loss: 0.0045120719181330395
+Avg Stop Loss: 0.01009849460479924
+Avg Loss: 0.014795424873032549
+Avg Pose Loss: 0.004526781423964963
+Avg Stop Loss: 0.010268643442100087
+Avg Loss: 0.014684016358092458
+Avg Pose Loss: 0.004516481532029317
+Avg Stop Loss: 0.010167534821415821
+Avg Loss: 0.014758965097361566
+Avg Pose Loss: 0.004520446253853685
+Avg Stop Loss: 0.010238518838084205
+Avg Loss: 0.014875481063938472
+Avg Pose Loss: 0.004527384847383973
+Avg Stop Loss: 0.010348096217550921
+Avg Loss: 0.014900491993232502
+Avg Pose Loss: 0.004519343102925205
+Avg Stop Loss: 0.010381148910654543
+Avg Loss: 0.014908669775374622
+Avg Pose Loss: 0.004527053235772662
+Avg Stop Loss: 0.010381616558466152
+Avg Loss: 0.014918376051994798
+Avg Pose Loss: 0.004519894338593438
+Avg Stop Loss: 0.010398481734102587
+Avg Loss: 0.014895177394283646
+Avg Pose Loss: 0.004522718644390504
+Avg Stop Loss: 0.010372458768079733
+Avg Loss: 0.014884111454026412
+Avg Pose Loss: 0.004521947052813663
+Avg Stop Loss: 0.010362164416140275
+Avg Loss: 0.014900472344791976
+Avg Pose Loss: 0.004532896116487596
+Avg Stop Loss: 0.010367576242084519
+Avg Loss: 0.014958303459294454
+Avg Pose Loss: 0.004529429354514131
+Avg Stop Loss: 0.010428874121066835
+Avg Loss: 0.014967726752953697
+Avg Pose Loss: 0.004538386159090649
+Avg Stop Loss: 0.010429340608133813
+--eval--
+100it [00:19,  5.11it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.10it/s]                                                                                                                                                                                                   
+Epoch 26/40)
+Train Loss: 0.014975227415561676,Train Pose Loss: 0.004541780333966017, Train Stop Loss: 0.010433446615934372
+Eval Loss: 0.022153301164507866,Eval Pose Loss: 0.00429425947368145, Eval Stop Loss: 0.017859041690826416
+Test Loss: 0.023167449980974197,Test Pose Loss: 0.004251303616911173, Test Stop Loss: 0.018916146829724312
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[2.802747026289243e-05]
+epoch:26/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.016437098383903503
+Avg Pose Loss: 0.004082741215825081
+Avg Stop Loss: 0.012354358099400997
+Avg Loss: 0.01428209731613498
+Avg Pose Loss: 0.0045078913335421
+Avg Stop Loss: 0.009774205987203386
+Avg Loss: 0.014267498502201999
+Avg Pose Loss: 0.004606877272920822
+Avg Stop Loss: 0.0096606212315979
+Avg Loss: 0.014002658805788257
+Avg Pose Loss: 0.0045738256454430646
+Avg Stop Loss: 0.009428833188192046
+Avg Loss: 0.014176931613104005
+Avg Pose Loss: 0.004593731186345703
+Avg Stop Loss: 0.009583200440983616
+Avg Loss: 0.014195865475593095
+Avg Pose Loss: 0.004569376112443364
+Avg Stop Loss: 0.009626489360128974
+Avg Loss: 0.014170519992114106
+Avg Pose Loss: 0.0045591310625849365
+Avg Stop Loss: 0.009611388920812546
+Avg Loss: 0.014231794160364273
+Avg Pose Loss: 0.004553777840953007
+Avg Stop Loss: 0.009678016304298863
+Avg Loss: 0.014269562627650454
+Avg Pose Loss: 0.004543876696608207
+Avg Stop Loss: 0.009725685916072485
+Avg Loss: 0.014275673235230123
+Avg Pose Loss: 0.004529658311432213
+Avg Stop Loss: 0.009746014904804512
+Avg Loss: 0.014337728792740093
+Avg Pose Loss: 0.004523495860913253
+Avg Stop Loss: 0.009814232908683334
+Avg Loss: 0.014371332503537174
+Avg Pose Loss: 0.004526950162010678
+Avg Stop Loss: 0.009844382319956355
+Avg Loss: 0.014363487554306194
+Avg Pose Loss: 0.004523231098498159
+Avg Stop Loss: 0.009840256433901405
+Avg Loss: 0.014457192206089538
+Avg Pose Loss: 0.004516445616078345
+Avg Stop Loss: 0.009940746567640841
+Avg Loss: 0.01454800006991344
+Avg Pose Loss: 0.0045140721701580145
+Avg Stop Loss: 0.010033927874494714
+Avg Loss: 0.014538526186951593
+Avg Pose Loss: 0.0045115032574865495
+Avg Stop Loss: 0.010027022909454947
+--eval--
+100it [00:19,  5.13it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.04it/s]                                                                                                                                                                                                   
+Epoch 27/40)
+Train Loss: 0.014527680352330208,Train Pose Loss: 0.004511707928031683, Train Stop Loss: 0.010015972889959812
+Eval Loss: 0.023070817813277245,Eval Pose Loss: 0.004233337007462978, Eval Stop Loss: 0.01883747987449169
+Test Loss: 0.023962026461958885,Test Pose Loss: 0.004214775748550892, Test Stop Loss: 0.01974724978208542
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[2.463632104656053e-05]
+epoch:27/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.02233058027923107
+Avg Pose Loss: 0.005344434175640345
+Avg Stop Loss: 0.016986146569252014
+Avg Loss: 0.01437897738161506
+Avg Pose Loss: 0.004481895066023168
+Avg Stop Loss: 0.009897082287928845
+Avg Loss: 0.014163574613908778
+Avg Pose Loss: 0.004484763373597641
+Avg Stop Loss: 0.00967881120903538
+Avg Loss: 0.01399946397640727
+Avg Pose Loss: 0.004479609493265219
+Avg Stop Loss: 0.009519854478114145
+Avg Loss: 0.01400366410534095
+Avg Pose Loss: 0.004467047296901073
+Avg Stop Loss: 0.009536616819762065
+Avg Loss: 0.013993313781426339
+Avg Pose Loss: 0.00446697721023581
+Avg Stop Loss: 0.009526336584435385
+Avg Loss: 0.014037022188913307
+Avg Pose Loss: 0.0044718672491969565
+Avg Stop Loss: 0.009565154944946324
+Avg Loss: 0.014114131391069689
+Avg Pose Loss: 0.0044808942464561585
+Avg Stop Loss: 0.009633237155408102
+Avg Loss: 0.014152257910205258
+Avg Pose Loss: 0.004491914937461025
+Avg Stop Loss: 0.009660342978993744
+Avg Loss: 0.014147977181891192
+Avg Pose Loss: 0.004495981617362448
+Avg Stop Loss: 0.00965199557279798
+Avg Loss: 0.014156069668413667
+Avg Pose Loss: 0.004492398265834812
+Avg Stop Loss: 0.009663671398159492
+Avg Loss: 0.01413808708594305
+Avg Pose Loss: 0.004496502195595747
+Avg Stop Loss: 0.009641584885906392
+Avg Loss: 0.014098865868326751
+Avg Pose Loss: 0.004490454117267344
+Avg Stop Loss: 0.009608411749896224
+Avg Loss: 0.014091904755455544
+Avg Pose Loss: 0.0044876377237495395
+Avg Stop Loss: 0.0096042670288426
+Avg Loss: 0.014165301757368081
+Avg Pose Loss: 0.004490179266995996
+Avg Stop Loss: 0.009675122483225964
+Avg Loss: 0.014164254190319582
+Avg Pose Loss: 0.004488558318127172
+Avg Stop Loss: 0.009675695865522378
+--eval--
+100it [00:19,  5.12it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.05it/s]                                                                                                                                                                                                   
+Epoch 28/40)
+Train Loss: 0.014173997566103935,Train Pose Loss: 0.004492139909416437, Train Stop Loss: 0.00968185719102621
+Eval Loss: 0.02324487641453743,Eval Pose Loss: 0.004247097298502922, Eval Stop Loss: 0.018997779116034508
+Test Loss: 0.023925304412841797,Test Pose Loss: 0.004219782073050737, Test Stop Loss: 0.019705522805452347
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[2.1404630011522583e-05]
+epoch:28/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.012022409588098526
+Avg Pose Loss: 0.00402593519538641
+Avg Stop Loss: 0.007996474392712116
+Avg Loss: 0.013457842125087091
+Avg Pose Loss: 0.00445075647324545
+Avg Stop Loss: 0.009007085626483849
+Avg Loss: 0.013660035293030353
+Avg Pose Loss: 0.004458176397222711
+Avg Stop Loss: 0.00920185887727386
+Avg Loss: 0.013446994415140924
+Avg Pose Loss: 0.004450871789382393
+Avg Stop Loss: 0.008996122610288057
+Avg Loss: 0.013443399923261339
+Avg Pose Loss: 0.004440398069279747
+Avg Stop Loss: 0.009003001844110965
+Avg Loss: 0.01351175972998529
+Avg Pose Loss: 0.004427235537281115
+Avg Stop Loss: 0.009084524196422028
+Avg Loss: 0.013518831228524347
+Avg Pose Loss: 0.004424836804637819
+Avg Stop Loss: 0.009093994424080232
+Avg Loss: 0.013597168193760722
+Avg Pose Loss: 0.004430355043808123
+Avg Stop Loss: 0.009166813150450811
+Avg Loss: 0.013576508776985862
+Avg Pose Loss: 0.004439005189308997
+Avg Stop Loss: 0.009137503589420915
+Avg Loss: 0.013580206948560927
+Avg Pose Loss: 0.00444536899928661
+Avg Stop Loss: 0.009134837957285138
+Avg Loss: 0.0136164697543062
+Avg Pose Loss: 0.004459493439067732
+Avg Stop Loss: 0.009156976319425232
+Avg Loss: 0.01356916020131187
+Avg Pose Loss: 0.004464124441891232
+Avg Stop Loss: 0.009105035764918909
+Avg Loss: 0.013598366687035532
+Avg Pose Loss: 0.004465975037750343
+Avg Stop Loss: 0.009132391653162467
+Avg Loss: 0.013602643674289625
+Avg Pose Loss: 0.004465569419532922
+Avg Stop Loss: 0.009137074262273143
+Avg Loss: 0.013622175120043274
+Avg Pose Loss: 0.004465924062234995
+Avg Stop Loss: 0.00915625106212919
+Avg Loss: 0.013668811312634038
+Avg Pose Loss: 0.004471944889201373
+Avg Stop Loss: 0.009196866423277548
+--eval--
+100it [00:19,  5.09it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.08it/s]                                                                                                                                                                                                   
+Epoch 29/40)
+Train Loss: 0.013679958879947662,Train Pose Loss: 0.004470422863960266, Train Stop Loss: 0.009209536015987396
+Eval Loss: 0.023104172199964523,Eval Pose Loss: 0.0042147706262767315, Eval Stop Loss: 0.018889402970671654
+Test Loss: 0.02417132444679737,Test Pose Loss: 0.004189455881714821, Test Stop Loss: 0.01998186856508255
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[1.835232160765591e-05]
+epoch:29/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.01094602607190609
+Avg Pose Loss: 0.004896446596831083
+Avg Stop Loss: 0.0060495794750750065
+Avg Loss: 0.013580936302274171
+Avg Pose Loss: 0.0044796983388685945
+Avg Stop Loss: 0.009101237887332197
+Avg Loss: 0.01363875592748324
+Avg Pose Loss: 0.004464073791238132
+Avg Stop Loss: 0.009174682100335904
+Avg Loss: 0.013475203980998047
+Avg Pose Loss: 0.004446629297910289
+Avg Stop Loss: 0.009028574672258425
+Avg Loss: 0.013340750809043572
+Avg Pose Loss: 0.004440170388780256
+Avg Stop Loss: 0.008900580409812064
+Avg Loss: 0.013278343549329125
+Avg Pose Loss: 0.0044383099874269645
+Avg Stop Loss: 0.008840033559578502
+Avg Loss: 0.013180789976270743
+Avg Pose Loss: 0.004453528160306806
+Avg Stop Loss: 0.008727261812864692
+Avg Loss: 0.01317629296021714
+Avg Pose Loss: 0.0044466912013727015
+Avg Stop Loss: 0.008729601757848017
+Avg Loss: 0.013178384411131287
+Avg Pose Loss: 0.004434497906627615
+Avg Stop Loss: 0.008743886502468948
+Avg Loss: 0.013125935112013503
+Avg Pose Loss: 0.004429478684107419
+Avg Stop Loss: 0.008696456419120023
+Avg Loss: 0.013171258229449704
+Avg Pose Loss: 0.004427909314005331
+Avg Stop Loss: 0.00874334891102501
+Avg Loss: 0.013160467491257634
+Avg Pose Loss: 0.0044416667363580175
+Avg Stop Loss: 0.00871880075088165
+Avg Loss: 0.01317210516525583
+Avg Pose Loss: 0.004448317234240764
+Avg Stop Loss: 0.008723787918801634
+Avg Loss: 0.013164956253637587
+Avg Pose Loss: 0.0044438756315494325
+Avg Stop Loss: 0.00872108060973972
+Avg Loss: 0.013184564050185966
+Avg Pose Loss: 0.004444590709713965
+Avg Stop Loss: 0.008739973330500667
+Avg Loss: 0.013180963354722549
+Avg Pose Loss: 0.004443771194518953
+Avg Stop Loss: 0.00873719215167216
+--eval--
+100it [00:19,  5.10it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.09it/s]                                                                                                                                                                                                   
+Epoch 30/40)
+Train Loss: 0.01317545771598816,Train Pose Loss: 0.004444848280400038, Train Stop Loss: 0.008730609901249409
+Eval Loss: 0.02468368411064148,Eval Pose Loss: 0.004188725724816322, Eval Stop Loss: 0.020494958385825157
+Test Loss: 0.02508866973221302,Test Pose Loss: 0.004166203550994396, Test Stop Loss: 0.0209224671125412
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[1.5498214331265897e-05]
+epoch:30/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.014548653736710548
+Avg Pose Loss: 0.004240741487592459
+Avg Stop Loss: 0.010307911783456802
+Avg Loss: 0.012826635396237126
+Avg Pose Loss: 0.004352997333770341
+Avg Stop Loss: 0.008473638020972214
+Avg Loss: 0.012896712195239406
+Avg Pose Loss: 0.00439889142312925
+Avg Stop Loss: 0.00849782076747671
+Avg Loss: 0.012709757477119317
+Avg Pose Loss: 0.004425291801211842
+Avg Stop Loss: 0.008284465673586905
+Avg Loss: 0.01280566530552997
+Avg Pose Loss: 0.004428392960144174
+Avg Stop Loss: 0.008377272350030796
+Avg Loss: 0.01281603617489546
+Avg Pose Loss: 0.004450415098898396
+Avg Stop Loss: 0.00836562107971492
+Avg Loss: 0.012799985526275268
+Avg Pose Loss: 0.00445405214857589
+Avg Stop Loss: 0.008345933390290054
+Avg Loss: 0.012795980114319738
+Avg Pose Loss: 0.004457767303839071
+Avg Stop Loss: 0.008338212817953832
+Avg Loss: 0.012881516146423591
+Avg Pose Loss: 0.004451512715450201
+Avg Stop Loss: 0.008430003440420325
+Avg Loss: 0.012907744950711
+Avg Pose Loss: 0.004442929655373444
+Avg Stop Loss: 0.008464815305028066
+Avg Loss: 0.012852113517643243
+Avg Pose Loss: 0.004448631673457695
+Avg Stop Loss: 0.008403481856862141
+Avg Loss: 0.012869103984242401
+Avg Pose Loss: 0.0044438527919416345
+Avg Stop Loss: 0.00842525120594071
+Avg Loss: 0.01282476932725417
+Avg Pose Loss: 0.004445505223014422
+Avg Stop Loss: 0.008379264119070343
+Avg Loss: 0.012801986869902771
+Avg Pose Loss: 0.0044424445568787925
+Avg Stop Loss: 0.008359542325014487
+Avg Loss: 0.012828239133059022
+Avg Pose Loss: 0.004438165685615312
+Avg Stop Loss: 0.008390073454589832
+Avg Loss: 0.012834719476537615
+Avg Pose Loss: 0.00443449986556906
+Avg Stop Loss: 0.008400219614691362
+--eval--
+100it [00:19,  5.11it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.04it/s]                                                                                                                                                                                                   
+Epoch 31/40)
+Train Loss: 0.012815318070352077,Train Pose Loss: 0.004430446773767471, Train Stop Loss: 0.008384871296584606
+Eval Loss: 0.02484748698771,Eval Pose Loss: 0.004186301026493311, Eval Stop Loss: 0.020661184564232826
+Test Loss: 0.025566264986991882,Test Pose Loss: 0.004158735275268555, Test Stop Loss: 0.021407529711723328
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[1.2859904702798466e-05]
+epoch:31/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.015026770532131195
+Avg Pose Loss: 0.005150388460606337
+Avg Stop Loss: 0.009876382537186146
+Avg Loss: 0.012562936407025202
+Avg Pose Loss: 0.004500929192446246
+Avg Stop Loss: 0.008062007226105226
+Avg Loss: 0.012524614409446272
+Avg Pose Loss: 0.004490085846202365
+Avg Stop Loss: 0.008034528593361304
+Avg Loss: 0.012400353635255977
+Avg Pose Loss: 0.004464565756950416
+Avg Stop Loss: 0.007935787894936321
+Avg Loss: 0.012453674662746769
+Avg Pose Loss: 0.004454480727409893
+Avg Stop Loss: 0.00799919394869125
+Avg Loss: 0.01247487118943574
+Avg Pose Loss: 0.0044559071666771125
+Avg Stop Loss: 0.00801896403391219
+Avg Loss: 0.012451120697972233
+Avg Pose Loss: 0.004446314709778633
+Avg Stop Loss: 0.008004806002140194
+Avg Loss: 0.01243096171544809
+Avg Pose Loss: 0.0044284835786621134
+Avg Stop Loss: 0.008002478150735888
+Avg Loss: 0.012368592853947414
+Avg Pose Loss: 0.004435335869346274
+Avg Stop Loss: 0.007933257000878937
+Avg Loss: 0.01232046999045535
+Avg Pose Loss: 0.004435665371076315
+Avg Stop Loss: 0.00788480464056895
+Avg Loss: 0.012373718425638966
+Avg Pose Loss: 0.0044323233180455154
+Avg Stop Loss: 0.007941395134574824
+Avg Loss: 0.012393776608629323
+Avg Pose Loss: 0.004418937204537624
+Avg Stop Loss: 0.007974839431583055
+Avg Loss: 0.012427881648135896
+Avg Pose Loss: 0.004416757851232659
+Avg Stop Loss: 0.008011123821523962
+Avg Loss: 0.012419828166863054
+Avg Pose Loss: 0.004411916400797716
+Avg Stop Loss: 0.008007911785572286
+Avg Loss: 0.012419327203421019
+Avg Pose Loss: 0.004414872587761502
+Avg Stop Loss: 0.008004454635934563
+Avg Loss: 0.012398093202952383
+Avg Pose Loss: 0.004418936917008578
+Avg Stop Loss: 0.00797915630494564
+--eval--
+100it [00:19,  5.04it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  4.99it/s]                                                                                                                                                                                                   
+Epoch 32/40)
+Train Loss: 0.012376026250422001,Train Pose Loss: 0.004411827772855759, Train Stop Loss: 0.007964198477566242
+Eval Loss: 0.025543607771396637,Eval Pose Loss: 0.004192652180790901, Eval Stop Loss: 0.021350955590605736
+Test Loss: 0.026560228317975998,Test Pose Loss: 0.004162981174886227, Test Stop Loss: 0.022397246211767197
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[1.0453658778440104e-05]
+epoch:32/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.01024065911769867
+Avg Pose Loss: 0.004013092257082462
+Avg Stop Loss: 0.00622756639495492
+Avg Loss: 0.012199408264074585
+Avg Pose Loss: 0.004349476039999783
+Avg Stop Loss: 0.007849932196411755
+Avg Loss: 0.011944420897489904
+Avg Pose Loss: 0.004400887337758841
+Avg Stop Loss: 0.0075435335527808955
+Avg Loss: 0.011947558461023229
+Avg Pose Loss: 0.004376411222948683
+Avg Stop Loss: 0.007571147238074545
+Avg Loss: 0.011950636363850716
+Avg Pose Loss: 0.004374338326710938
+Avg Stop Loss: 0.0075762980295916525
+Avg Loss: 0.011983657567139098
+Avg Pose Loss: 0.004372657759546371
+Avg Stop Loss: 0.007610999797368626
+Avg Loss: 0.011936458989128644
+Avg Pose Loss: 0.0043861466435136
+Avg Stop Loss: 0.00755031233738268
+Avg Loss: 0.011912839030169386
+Avg Pose Loss: 0.004376530590481769
+Avg Stop Loss: 0.007536308435618894
+Avg Loss: 0.011927145861145039
+Avg Pose Loss: 0.004379610797871699
+Avg Stop Loss: 0.007547535054480422
+Avg Loss: 0.011944850913448452
+Avg Pose Loss: 0.004384739017196736
+Avg Stop Loss: 0.007560111885850569
+Avg Loss: 0.011978535723596155
+Avg Pose Loss: 0.004386482072750351
+Avg Stop Loss: 0.007592053640088146
+Avg Loss: 0.011961077456256809
+Avg Pose Loss: 0.0043829931326880445
+Avg Stop Loss: 0.007578084316960266
+Avg Loss: 0.011949096061521947
+Avg Pose Loss: 0.004389123657491867
+Avg Stop Loss: 0.007559972399522742
+Avg Loss: 0.011972622091536175
+Avg Pose Loss: 0.004386767032209048
+Avg Stop Loss: 0.007585855053913501
+Avg Loss: 0.011972962754667549
+Avg Pose Loss: 0.004390940938987832
+Avg Stop Loss: 0.007582021813311525
+Avg Loss: 0.01199697002955898
+Avg Pose Loss: 0.004395290359955214
+Avg Stop Loss: 0.00760167966832405
+--eval--
+100it [00:19,  5.10it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.08it/s]                                                                                                                                                                                                   
+Epoch 33/40)
+Train Loss: 0.01201700884848833,Train Pose Loss: 0.004396243020892143, Train Stop Loss: 0.007620765827596188
+Eval Loss: 0.026443058624863625,Eval Pose Loss: 0.004161387216299772, Eval Stop Loss: 0.022281672805547714
+Test Loss: 0.026937372982501984,Test Pose Loss: 0.004149257205426693, Test Stop Loss: 0.022788114845752716
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[8.294311864472434e-06]
+epoch:33/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.013955307193100452
+Avg Pose Loss: 0.0036304863169789314
+Avg Stop Loss: 0.010324820876121521
+Avg Loss: 0.012299386530856389
+Avg Pose Loss: 0.0044434654992073774
+Avg Stop Loss: 0.007855921046633163
+Avg Loss: 0.01221349578471252
+Avg Pose Loss: 0.004412438166767952
+Avg Stop Loss: 0.007801057659066398
+Avg Loss: 0.012096248531522249
+Avg Pose Loss: 0.004385148748241835
+Avg Stop Loss: 0.00771109981190079
+Avg Loss: 0.011950523924649207
+Avg Pose Loss: 0.004386440662091175
+Avg Stop Loss: 0.007564083282879909
+Avg Loss: 0.0117422932742197
+Avg Pose Loss: 0.004383762427020126
+Avg Stop Loss: 0.00735853086869342
+Avg Loss: 0.011672749221262936
+Avg Pose Loss: 0.004384000342844454
+Avg Stop Loss: 0.007288748898273008
+Avg Loss: 0.011639539276604433
+Avg Pose Loss: 0.0043887854085440684
+Avg Stop Loss: 0.007250753881761169
+Avg Loss: 0.011687281128186523
+Avg Pose Loss: 0.00439020953799241
+Avg Stop Loss: 0.007297071603928506
+Avg Loss: 0.011673457723640146
+Avg Pose Loss: 0.004391592254109689
+Avg Stop Loss: 0.0072818654814820844
+Avg Loss: 0.011663872063844711
+Avg Pose Loss: 0.004389975303932875
+Avg Stop Loss: 0.007273896778694128
+Avg Loss: 0.011671198387338452
+Avg Pose Loss: 0.004388519511393167
+Avg Stop Loss: 0.007282678896933879
+Avg Loss: 0.011647764654623827
+Avg Pose Loss: 0.004388360583846094
+Avg Stop Loss: 0.007259404086335318
+Avg Loss: 0.011689120369228168
+Avg Pose Loss: 0.004391727851829753
+Avg Stop Loss: 0.0072973925310443315
+Avg Loss: 0.011722982777010046
+Avg Pose Loss: 0.004392922125181062
+Avg Stop Loss: 0.007330060662174243
+Avg Loss: 0.011715124934839753
+Avg Pose Loss: 0.004385306013451466
+Avg Stop Loss: 0.007329818926080578
+--eval--
+100it [00:20,  4.88it/s]                                                                                                                                                                                                   
+--test--
+114it [00:23,  4.89it/s]                                                                                                                                                                                                   
+Epoch 34/40)
+Train Loss: 0.011693407781422138,Train Pose Loss: 0.004381346981972456, Train Stop Loss: 0.007312060799449682
+Eval Loss: 0.027836723253130913,Eval Pose Loss: 0.004183213226497173, Eval Stop Loss: 0.023653509095311165
+Test Loss: 0.028764743357896805,Test Pose Loss: 0.004146168939769268, Test Stop Loss: 0.024618573486804962
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[6.395177052675792e-06]
+epoch:34/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.008785160258412361
+Avg Pose Loss: 0.004666117485612631
+Avg Stop Loss: 0.004119042307138443
+Avg Loss: 0.011470550505241544
+Avg Pose Loss: 0.004471765745818468
+Avg Stop Loss: 0.006998784722539016
+Avg Loss: 0.011172018229349781
+Avg Pose Loss: 0.0043853629306329425
+Avg Stop Loss: 0.006786655272653706
+Avg Loss: 0.011274626661104419
+Avg Pose Loss: 0.00436280047647853
+Avg Stop Loss: 0.006911826168768652
+Avg Loss: 0.01121029731099891
+Avg Pose Loss: 0.004380663673386461
+Avg Stop Loss: 0.006829633629774011
+Avg Loss: 0.01127825529610147
+Avg Pose Loss: 0.004385554348815701
+Avg Stop Loss: 0.0068927009252110075
+Avg Loss: 0.011186822801797391
+Avg Pose Loss: 0.004378420368190266
+Avg Stop Loss: 0.006808402415980181
+Avg Loss: 0.011216640304348905
+Avg Pose Loss: 0.0043746359485564235
+Avg Stop Loss: 0.006842004346658613
+Avg Loss: 0.011274975061779388
+Avg Pose Loss: 0.004373600109702397
+Avg Stop Loss: 0.006901374951350304
+Avg Loss: 0.011279696644646644
+Avg Pose Loss: 0.004369095844380996
+Avg Stop Loss: 0.006910600800394855
+Avg Loss: 0.011297977355482814
+Avg Pose Loss: 0.004368927433749998
+Avg Stop Loss: 0.006929049914638576
+Avg Loss: 0.01133146241931524
+Avg Pose Loss: 0.004373998691215367
+Avg Stop Loss: 0.0069574637222843926
+Avg Loss: 0.011387537367297623
+Avg Pose Loss: 0.0043735074309351465
+Avg Stop Loss: 0.007014029934326905
+Avg Loss: 0.011378258931308092
+Avg Pose Loss: 0.004372982202501514
+Avg Stop Loss: 0.007005276728896059
+Avg Loss: 0.011355294630617477
+Avg Pose Loss: 0.004376145973994392
+Avg Stop Loss: 0.006979148659863769
+Avg Loss: 0.011341720370564617
+Avg Pose Loss: 0.004366627583642559
+Avg Stop Loss: 0.006975092789636606
+--eval--
+100it [00:19,  5.11it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.10it/s]                                                                                                                                                                                                   
+Epoch 35/40)
+Train Loss: 0.011351875960826874,Train Pose Loss: 0.004370995331555605, Train Stop Loss: 0.006980880629271269
+Eval Loss: 0.027713211253285408,Eval Pose Loss: 0.004158480558544397, Eval Stop Loss: 0.023554731160402298
+Test Loss: 0.02885597012937069,Test Pose Loss: 0.0041328733786940575, Test Stop Loss: 0.024723097681999207
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[4.767963140691305e-06]
+epoch:35/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.00981511827558279
+Avg Pose Loss: 0.004365588538348675
+Avg Stop Loss: 0.005449529737234116
+Avg Loss: 0.011034352225389812
+Avg Pose Loss: 0.0043687792955943855
+Avg Stop Loss: 0.006665572924032291
+Avg Loss: 0.01115527726589373
+Avg Pose Loss: 0.004355471174635772
+Avg Stop Loss: 0.00679980609994567
+Avg Loss: 0.011124252061672089
+Avg Pose Loss: 0.004338954392034696
+Avg Stop Loss: 0.006785297670024153
+Avg Loss: 0.011136192621714308
+Avg Pose Loss: 0.004333093732785889
+Avg Stop Loss: 0.006803098879057793
+Avg Loss: 0.011256021406583324
+Avg Pose Loss: 0.00433331568625025
+Avg Stop Loss: 0.006922705712432633
+Avg Loss: 0.011202176901110496
+Avg Pose Loss: 0.004344407916874834
+Avg Stop Loss: 0.006857768974163122
+Avg Loss: 0.011197616765342026
+Avg Pose Loss: 0.0043499783988771015
+Avg Stop Loss: 0.0068476383654685015
+Avg Loss: 0.01122685419523463
+Avg Pose Loss: 0.00435261622963057
+Avg Stop Loss: 0.006874237962842648
+Avg Loss: 0.011216453407331888
+Avg Pose Loss: 0.004355451521348957
+Avg Stop Loss: 0.006861001877067663
+Avg Loss: 0.01120665913436573
+Avg Pose Loss: 0.004350615696019524
+Avg Stop Loss: 0.006856043430205274
+Avg Loss: 0.011162736753829087
+Avg Pose Loss: 0.004354562893760247
+Avg Stop Loss: 0.006808173850975545
+Avg Loss: 0.011172351328893366
+Avg Pose Loss: 0.004353687649307389
+Avg Stop Loss: 0.006818663670086642
+Avg Loss: 0.011166250715812499
+Avg Pose Loss: 0.004358710494031306
+Avg Stop Loss: 0.006807540213817346
+Avg Loss: 0.011152784628919901
+Avg Pose Loss: 0.0043571699546287096
+Avg Stop Loss: 0.006795614667061974
+Avg Loss: 0.011132084212633847
+Avg Pose Loss: 0.004357893272600249
+Avg Stop Loss: 0.006774190933247228
+--eval--
+100it [00:19,  5.14it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.11it/s]                                                                                                                                                                                                   
+Epoch 36/40)
+Train Loss: 0.01114438846707344,Train Pose Loss: 0.00436218548566103, Train Stop Loss: 0.006782202981412411
+Eval Loss: 0.028292609378695488,Eval Pose Loss: 0.004156491253525019, Eval Stop Loss: 0.024136116728186607
+Test Loss: 0.029051564633846283,Test Pose Loss: 0.004128769971430302, Test Stop Loss: 0.024922795593738556
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[3.4227024433898994e-06]
+epoch:36/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.007955586537718773
+Avg Pose Loss: 0.0040596481412649155
+Avg Stop Loss: 0.00389593793079257
+Avg Loss: 0.010780859120780289
+Avg Pose Loss: 0.004349528869503353
+Avg Stop Loss: 0.006431330269718967
+Avg Loss: 0.010837182852055007
+Avg Pose Loss: 0.004325607190353435
+Avg Stop Loss: 0.006511575632742537
+Avg Loss: 0.010840609660403079
+Avg Pose Loss: 0.0043143317052333355
+Avg Stop Loss: 0.006526277914172985
+Avg Loss: 0.010892110398303987
+Avg Pose Loss: 0.004338727753604774
+Avg Stop Loss: 0.0065533826110229605
+Avg Loss: 0.0108891383367414
+Avg Pose Loss: 0.004332286167700223
+Avg Stop Loss: 0.00655685213255973
+Avg Loss: 0.010913758054406641
+Avg Pose Loss: 0.004342178484818553
+Avg Stop Loss: 0.006571579536077522
+Avg Loss: 0.010904653709961073
+Avg Pose Loss: 0.004335533118090684
+Avg Stop Loss: 0.006569120562974146
+Avg Loss: 0.010878478541398204
+Avg Pose Loss: 0.004334161490301942
+Avg Stop Loss: 0.006544317031911715
+Avg Loss: 0.010900943291442805
+Avg Pose Loss: 0.004349698061919404
+Avg Stop Loss: 0.006551245210271589
+Avg Loss: 0.01092838240251481
+Avg Pose Loss: 0.004359703322362665
+Avg Stop Loss: 0.006568679063986581
+Avg Loss: 0.01096950967599055
+Avg Pose Loss: 0.004355412252335306
+Avg Stop Loss: 0.006614097409486622
+Avg Loss: 0.010973821941617378
+Avg Pose Loss: 0.004350999648412139
+Avg Stop Loss: 0.006622822276339071
+Avg Loss: 0.010958412128481313
+Avg Pose Loss: 0.0043499723184556
+Avg Stop Loss: 0.00660843979338217
+Avg Loss: 0.010929342755831135
+Avg Pose Loss: 0.0043482463722111266
+Avg Stop Loss: 0.0065810963670842135
+Avg Loss: 0.010976966518256007
+Avg Pose Loss: 0.00435330216828076
+Avg Stop Loss: 0.006623664339349731
+--eval--
+100it [00:20,  4.88it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.01it/s]                                                                                                                                                                                                   
+Epoch 37/40)
+Train Loss: 0.01095255184918642,Train Pose Loss: 0.004354339558631182, Train Stop Loss: 0.006598212756216526
+Eval Loss: 0.029394159093499184,Eval Pose Loss: 0.004156467970460653, Eval Stop Loss: 0.025237690657377243
+Test Loss: 0.030022213235497475,Test Pose Loss: 0.004128368105739355, Test Stop Loss: 0.025893844664096832
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[2.36768894031501e-06]
+epoch:37/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.010006397031247616
+Avg Pose Loss: 0.004576168488711119
+Avg Stop Loss: 0.005430228542536497
+Avg Loss: 0.011028816573100515
+Avg Pose Loss: 0.004468390651250092
+Avg Stop Loss: 0.006560425902255765
+Avg Loss: 0.010969189616541067
+Avg Pose Loss: 0.004375223458434145
+Avg Stop Loss: 0.006593966154631839
+Avg Loss: 0.010952757400742103
+Avg Pose Loss: 0.0043639996331927685
+Avg Stop Loss: 0.006588757756720003
+Avg Loss: 0.01087338712526267
+Avg Pose Loss: 0.0043565898348677185
+Avg Stop Loss: 0.0065167972918465135
+Avg Loss: 0.010896937418803423
+Avg Pose Loss: 0.004364571881716598
+Avg Stop Loss: 0.006532365537319191
+Avg Loss: 0.010857803794321374
+Avg Pose Loss: 0.004357347185855201
+Avg Stop Loss: 0.00650045660478582
+Avg Loss: 0.010872499769508371
+Avg Pose Loss: 0.004361920702415977
+Avg Stop Loss: 0.006510579058124594
+Avg Loss: 0.010856844967907845
+Avg Pose Loss: 0.004360051635831836
+Avg Stop Loss: 0.006496793319867661
+Avg Loss: 0.01089426957703424
+Avg Pose Loss: 0.004367978372543918
+Avg Stop Loss: 0.006526291197254741
+Avg Loss: 0.01085666796614925
+Avg Pose Loss: 0.004372937953682034
+Avg Stop Loss: 0.006483730005256675
+Avg Loss: 0.010842727118262261
+Avg Pose Loss: 0.004357372963806102
+Avg Stop Loss: 0.006485354150649664
+Avg Loss: 0.01083411291500648
+Avg Pose Loss: 0.004355323665327921
+Avg Stop Loss: 0.006478789244783495
+Avg Loss: 0.010813907547628393
+Avg Pose Loss: 0.004354412779484022
+Avg Stop Loss: 0.006459494761567488
+Avg Loss: 0.01083059308533261
+Avg Pose Loss: 0.004351309075689662
+Avg Stop Loss: 0.006479284002039805
+Avg Loss: 0.010833649222877405
+Avg Pose Loss: 0.004349671923297939
+Avg Stop Loss: 0.006483977293646239
+--eval--
+100it [00:19,  5.00it/s]                                                                                                                                                                                                   
+--test--
+114it [00:23,  4.94it/s]                                                                                                                                                                                                   
+Epoch 38/40)
+Train Loss: 0.010818456299602985,Train Pose Loss: 0.004348583519458771, Train Stop Loss: 0.006469872780144215
+Eval Loss: 0.02923148311674595,Eval Pose Loss: 0.004148513078689575, Eval Stop Loss: 0.025082970038056374
+Test Loss: 0.02996358834207058,Test Pose Loss: 0.004123738035559654, Test Stop Loss: 0.025839848443865776
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[1.6094271405406857e-06]
+epoch:38/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.009839057922363281
+Avg Pose Loss: 0.004668650217354298
+Avg Stop Loss: 0.005170408170670271
+Avg Loss: 0.010894417928734629
+Avg Pose Loss: 0.004377620688888548
+Avg Stop Loss: 0.006516797250219722
+Avg Loss: 0.010737976726533762
+Avg Pose Loss: 0.004349453421077918
+Avg Stop Loss: 0.006388523278234351
+Avg Loss: 0.010858238670059119
+Avg Pose Loss: 0.004365455346070602
+Avg Stop Loss: 0.00649278330194309
+Avg Loss: 0.010801342123204336
+Avg Pose Loss: 0.0043914788211010716
+Avg Stop Loss: 0.006409863280039513
+Avg Loss: 0.01079412889267186
+Avg Pose Loss: 0.004378949580137839
+Avg Stop Loss: 0.00641517928929743
+Avg Loss: 0.010804901782813762
+Avg Pose Loss: 0.004375442193074155
+Avg Stop Loss: 0.0064294595800544726
+Avg Loss: 0.010804800826195261
+Avg Pose Loss: 0.004369592310371842
+Avg Stop Loss: 0.006435208504198493
+Avg Loss: 0.010809545676699478
+Avg Pose Loss: 0.004365507409223047
+Avg Stop Loss: 0.006444038254686733
+Avg Loss: 0.01078386284714848
+Avg Pose Loss: 0.004357913923506665
+Avg Stop Loss: 0.006425948907878585
+Avg Loss: 0.010774127433781738
+Avg Pose Loss: 0.0043576930067618265
+Avg Stop Loss: 0.006416434409923955
+Avg Loss: 0.010810777766597909
+Avg Pose Loss: 0.004354057955994634
+Avg Stop Loss: 0.006456719794742878
+Avg Loss: 0.010809150041328382
+Avg Pose Loss: 0.004351152735626593
+Avg Stop Loss: 0.0064579972909681255
+Avg Loss: 0.010811917257955517
+Avg Pose Loss: 0.0043469570807290825
+Avg Stop Loss: 0.00646496016362526
+Avg Loss: 0.010810588894320185
+Avg Pose Loss: 0.004347493401067139
+Avg Stop Loss: 0.006463095482949335
+Avg Loss: 0.010784070323321281
+Avg Pose Loss: 0.004347323939181879
+Avg Stop Loss: 0.006436746374754822
+--eval--
+100it [00:19,  5.12it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.08it/s]                                                                                                                                                                                                   
+Epoch 39/40)
+Train Loss: 0.010781733319163322,Train Pose Loss: 0.004346289671957493, Train Stop Loss: 0.006435444112867117
+Eval Loss: 0.029418429359793663,Eval Pose Loss: 0.004147029016166925, Eval Stop Loss: 0.025271400809288025
+Test Loss: 0.030214576050639153,Test Pose Loss: 0.004122051410377026, Test Stop Loss: 0.026092523708939552
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1453
+base_lr:[1.1525919802101657e-06]
+epoch:39/40
+--train--
+                                                                                                                                                                                                                           
+Avg Loss: 0.013830536045134068
+Avg Pose Loss: 0.004421817138791084
+Avg Stop Loss: 0.009408718906342983
+Avg Loss: 0.010814630656991855
+Avg Pose Loss: 0.004356200396461357
+Avg Stop Loss: 0.006458430278972529
+Avg Loss: 0.010898181658923922
+Avg Pose Loss: 0.004378953978734378
+Avg Stop Loss: 0.006519227687718894
+Avg Loss: 0.010797897817882589
+Avg Pose Loss: 0.004358703908711623
+Avg Stop Loss: 0.006439193904916585
+Avg Loss: 0.010780752058189706
+Avg Pose Loss: 0.004346166895888281
+Avg Stop Loss: 0.006434585158091893
+Avg Loss: 0.010762402239421051
+Avg Pose Loss: 0.0043461916748873015
+Avg Stop Loss: 0.006416210558840786
+Avg Loss: 0.010810993828759614
+Avg Pose Loss: 0.004343269202244559
+Avg Stop Loss: 0.006467724622544149
+Avg Loss: 0.010756980678924864
+Avg Pose Loss: 0.0043420477779568855
+Avg Stop Loss: 0.0064149329053688415
+Avg Loss: 0.010746781760768572
+Avg Pose Loss: 0.004335473502315256
+Avg Stop Loss: 0.006411308256781935
+Avg Loss: 0.010741642328469159
+Avg Pose Loss: 0.004334745364786683
+Avg Stop Loss: 0.006406896961162944
+Avg Loss: 0.010723900271823386
+Avg Pose Loss: 0.004332453879824543
+Avg Stop Loss: 0.006391446387056135
+Avg Loss: 0.010714660510319293
+Avg Pose Loss: 0.004338415409586342
+Avg Stop Loss: 0.0063762450975080025
+Avg Loss: 0.010742586818705937
+Avg Pose Loss: 0.004341775505880296
+Avg Stop Loss: 0.006400811310644672
+Avg Loss: 0.010736875123287809
+Avg Pose Loss: 0.004344517459053486
+Avg Stop Loss: 0.006392357663160547
+Avg Loss: 0.010697559895941842
+Avg Pose Loss: 0.0043415422130876
+Avg Stop Loss: 0.0063560176811092595
+Avg Loss: 0.010681581798553726
+Avg Pose Loss: 0.004344030018606726
+Avg Stop Loss: 0.006337551781187935
+--eval--
+100it [00:20,  4.93it/s]                                                                                                                                                                                                   
+--test--
+114it [00:22,  5.00it/s]                                                                                                                                                                                                   
+Epoch 40/40)
+Train Loss: 0.010661465115845203,Train Pose Loss: 0.0043420628644526005, Train Stop Loss: 0.006319402251392603
+Eval Loss: 0.02950666844844818,Eval Pose Loss: 0.004147724248468876, Eval Stop Loss: 0.02535894513130188
+Test Loss: 0.03005794808268547,Test Pose Loss: 0.004121935926377773, Test Stop Loss: 0.025936011224985123
+Training/evaluation finished.

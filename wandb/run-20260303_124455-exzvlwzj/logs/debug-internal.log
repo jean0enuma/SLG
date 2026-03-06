@@ -1,0 +1,7 @@
+{"time":"2026-03-03T12:44:55.308735988+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260303_124455-exzvlwzj/logs/debug-core.log"}
+{"time":"2026-03-03T12:44:55.411070017+09:00","level":"INFO","msg":"created new stream","id":"exzvlwzj"}
+{"time":"2026-03-03T12:44:55.411091586+09:00","level":"INFO","msg":"stream: started","id":"exzvlwzj"}
+{"time":"2026-03-03T12:44:55.411097691+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"exzvlwzj"}
+{"time":"2026-03-03T12:44:55.411168013+09:00","level":"INFO","msg":"sender: started","stream_id":"exzvlwzj"}
+{"time":"2026-03-03T12:44:55.411187214+09:00","level":"INFO","msg":"handler: started","stream_id":"exzvlwzj"}
+{"time":"2026-03-03T12:44:55.936650466+09:00","level":"INFO","msg":"Starting system monitor"}

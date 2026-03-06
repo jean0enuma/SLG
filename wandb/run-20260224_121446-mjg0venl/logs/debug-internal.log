@@ -1,0 +1,15 @@
+{"time":"2026-02-24T12:14:47.189735375+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260224_121446-mjg0venl/logs/debug-core.log"}
+{"time":"2026-02-24T12:14:47.292097113+09:00","level":"INFO","msg":"created new stream","id":"mjg0venl"}
+{"time":"2026-02-24T12:14:47.292111549+09:00","level":"INFO","msg":"stream: started","id":"mjg0venl"}
+{"time":"2026-02-24T12:14:47.292172369+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"mjg0venl"}
+{"time":"2026-02-24T12:14:47.292256369+09:00","level":"INFO","msg":"sender: started","stream_id":"mjg0venl"}
+{"time":"2026-02-24T12:14:47.292272893+09:00","level":"INFO","msg":"handler: started","stream_id":"mjg0venl"}
+{"time":"2026-02-24T12:14:47.743453421+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-24T12:14:49.449383509+09:00","level":"INFO","msg":"stream: closing","id":"mjg0venl"}
+{"time":"2026-02-24T12:14:49.449393989+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-24T12:14:49.449676735+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-24T12:14:50.404280301+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-24T12:14:50.70458738+09:00","level":"INFO","msg":"handler: closed","stream_id":"mjg0venl"}
+{"time":"2026-02-24T12:14:50.704604185+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"mjg0venl"}
+{"time":"2026-02-24T12:14:50.704627973+09:00","level":"INFO","msg":"sender: closed","stream_id":"mjg0venl"}
+{"time":"2026-02-24T12:14:50.704641822+09:00","level":"INFO","msg":"stream: closed","id":"mjg0venl"}

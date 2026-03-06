@@ -1,0 +1,14 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1529
+base_lr:[0.001]
+epoch:0/100
+--train--
+  0%|          | 0/55 [00:47<?, ?it/s]
+Backend tkagg is interactive backend. Turning interactive mode on.
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 74, in train
+    output=model.generate(encoded_text,text_mask,id_list,input_cod_data,input_length_tensor,t=t)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 174, in generate
+    generated_poses= self.pose_decoder.generate(encoded_text,pose_input, text_mask,pose_mask,text_lang)  # (batch_size, pose_seq_len, pose_dim)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 67, in generate
+    pe=self.sinusoidal_position_encoding(int(max_len), decoder_input.size(-1)).to(decoder_input.device).unsqueeze(0)  # (1, max_len, hidden_size)
+ValueError: only one element tensors can be converted to Python scalars

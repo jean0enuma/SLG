@@ -1,0 +1,15 @@
+{"time":"2026-03-05T11:21:25.835534172+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260305_112125-wruwmfen/logs/debug-core.log"}
+{"time":"2026-03-05T11:21:25.939630375+09:00","level":"INFO","msg":"created new stream","id":"wruwmfen"}
+{"time":"2026-03-05T11:21:25.939657152+09:00","level":"INFO","msg":"stream: started","id":"wruwmfen"}
+{"time":"2026-03-05T11:21:25.939674704+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"wruwmfen"}
+{"time":"2026-03-05T11:21:25.939677519+09:00","level":"INFO","msg":"handler: started","stream_id":"wruwmfen"}
+{"time":"2026-03-05T11:21:25.939869839+09:00","level":"INFO","msg":"sender: started","stream_id":"wruwmfen"}
+{"time":"2026-03-05T11:21:27.198988592+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-05T11:21:32.919922631+09:00","level":"INFO","msg":"stream: closing","id":"wruwmfen"}
+{"time":"2026-03-05T11:21:32.920120925+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-05T11:21:32.920467071+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-05T11:21:33.819082505+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-05T11:21:34.151289156+09:00","level":"INFO","msg":"handler: closed","stream_id":"wruwmfen"}
+{"time":"2026-03-05T11:21:34.151315744+09:00","level":"INFO","msg":"sender: closed","stream_id":"wruwmfen"}
+{"time":"2026-03-05T11:21:34.151311571+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"wruwmfen"}
+{"time":"2026-03-05T11:21:34.151416246+09:00","level":"INFO","msg":"stream: closed","id":"wruwmfen"}

@@ -1,0 +1,342 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[0.0001]
+epoch:0/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:22<00:00, 19.32it/s]
+Avg Loss: 6.617361068725586
+Avg CE Loss: 6.617361068725586
+Avg Loss: 5.421233602089457
+Avg CE Loss: 5.421233602089457
+Avg Loss: 5.115434746244061
+Avg CE Loss: 5.115434746244061
+Avg Loss: 4.950362771848508
+Avg CE Loss: 4.950362771848508
+Avg Loss: 4.846240234493912
+Avg CE Loss: 4.846240234493912
+--eval--
+33it [00:01, 21.09it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.14it/s]                                                                                                                                                                                                    
+Epoch 1/100)
+Train Loss: 4.8130, CE Loss: 4.8130
+Eval Loss: 4.3679, CE Loss: 4.3679
+Test Loss: 4.2942, CE Loss: 4.2942
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.997532801828658e-05]
+epoch:1/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:22<00:00, 19.69it/s]
+Avg Loss: 4.43145751953125
+Avg CE Loss: 4.43145751953125
+Avg Loss: 4.417489549901226
+Avg CE Loss: 4.417489549901226
+Avg Loss: 4.38362051479852
+Avg CE Loss: 4.38362051479852
+Avg Loss: 4.362711689400911
+Avg CE Loss: 4.362711689400911
+Avg Loss: 4.351051744380199
+Avg CE Loss: 4.351051744380199
+--eval--
+33it [00:01, 21.27it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.16it/s]                                                                                                                                                                                                    
+Epoch 2/100)
+Train Loss: 4.3474, CE Loss: 4.3474
+Eval Loss: 4.2214, CE Loss: 4.2214
+Test Loss: 4.1512, CE Loss: 4.1512
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.990133642141359e-05]
+epoch:2/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.18it/s]
+Avg Loss: 4.1287841796875
+Avg CE Loss: 4.1287841796875
+Avg Loss: 4.219595628209634
+Avg CE Loss: 4.219595628209634
+Avg Loss: 4.244987306310169
+Avg CE Loss: 4.244987306310169
+Avg Loss: 4.236267216577878
+Avg CE Loss: 4.236267216577878
+Avg Loss: 4.230032677662343
+Avg CE Loss: 4.230032677662343
+--eval--
+33it [00:01, 20.42it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.61it/s]                                                                                                                                                                                                    
+Epoch 3/100)
+Train Loss: 4.2318, CE Loss: 4.2318
+Eval Loss: 4.1688, CE Loss: 4.1688
+Test Loss: 4.0972, CE Loss: 4.0972
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.977809823015401e-05]
+epoch:3/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.32it/s]
+Avg Loss: 4.033109664916992
+Avg CE Loss: 4.033109664916992
+Avg Loss: 4.171151187160228
+Avg CE Loss: 4.171151187160228
+Avg Loss: 4.171331660664497
+Avg CE Loss: 4.171331660664497
+Avg Loss: 4.169633308518368
+Avg CE Loss: 4.169633308518368
+Avg Loss: 4.163914913548496
+Avg CE Loss: 4.163914913548496
+--eval--
+33it [00:01, 20.41it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.27it/s]                                                                                                                                                                                                    
+Epoch 4/100)
+Train Loss: 4.1630, CE Loss: 4.1630
+Eval Loss: 4.1423, CE Loss: 4.1423
+Test Loss: 4.0771, CE Loss: 4.0771
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.960573506572391e-05]
+epoch:4/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:22<00:00, 19.72it/s]
+Avg Loss: 4.1767497062683105
+Avg CE Loss: 4.1767497062683105
+Avg Loss: 4.111988971729089
+Avg CE Loss: 4.111988971729089
+Avg Loss: 4.112994409912261
+Avg CE Loss: 4.112994409912261
+Avg Loss: 4.108426433861058
+Avg CE Loss: 4.108426433861058
+Avg Loss: 4.110667517654914
+Avg CE Loss: 4.110667517654914
+--eval--
+33it [00:01, 20.96it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.38it/s]                                                                                                                                                                                                    
+Epoch 5/100)
+Train Loss: 4.1106, CE Loss: 4.1106
+Eval Loss: 4.1114, CE Loss: 4.1114
+Test Loss: 4.0411, CE Loss: 4.0411
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.93844170297569e-05]
+epoch:5/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.30it/s]
+Avg Loss: 4.11063814163208
+Avg CE Loss: 4.11063814163208
+Avg Loss: 4.031658540857901
+Avg CE Loss: 4.031658540857901
+Avg Loss: 4.058961431778486
+Avg CE Loss: 4.058961431778486
+Avg Loss: 4.062768914770842
+Avg CE Loss: 4.062768914770842
+Avg Loss: 4.069240665197967
+Avg CE Loss: 4.069240665197967
+--eval--
+33it [00:01, 21.38it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.97it/s]                                                                                                                                                                                                    
+Epoch 6/100)
+Train Loss: 4.0641, CE Loss: 4.0641
+Eval Loss: 4.1011, CE Loss: 4.1011
+Test Loss: 4.0301, CE Loss: 4.0301
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.911436253643445e-05]
+epoch:6/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:22<00:00, 20.08it/s]
+Avg Loss: 3.6811599731445312
+Avg CE Loss: 3.6811599731445312
+Avg Loss: 4.0355856725485015
+Avg CE Loss: 4.0355856725485015
+Avg Loss: 4.034219858065174
+Avg CE Loss: 4.034219858065174
+Avg Loss: 4.0311673836058555
+Avg CE Loss: 4.0311673836058555
+Avg Loss: 4.027983436560691
+Avg CE Loss: 4.027983436560691
+--eval--
+33it [00:01, 21.41it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.08it/s]                                                                                                                                                                                                    
+Epoch 7/100)
+Train Loss: 4.0295, CE Loss: 4.0295
+Eval Loss: 4.0934, CE Loss: 4.0934
+Test Loss: 4.0216, CE Loss: 4.0216
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.879583809693738e-05]
+epoch:7/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.24it/s]
+Avg Loss: 4.090869903564453
+Avg CE Loss: 4.090869903564453
+Avg Loss: 3.968026916579445
+Avg CE Loss: 3.968026916579445
+Avg Loss: 3.981535874789034
+Avg CE Loss: 3.981535874789034
+Avg Loss: 3.985819847480799
+Avg CE Loss: 3.985819847480799
+Avg Loss: 3.9856168944342176
+Avg CE Loss: 3.9856168944342176
+--eval--
+33it [00:01, 21.36it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.88it/s]                                                                                                                                                                                                    
+Epoch 8/100)
+Train Loss: 3.9900, CE Loss: 3.9900
+Eval Loss: 4.0778, CE Loss: 4.0778
+Test Loss: 4.0125, CE Loss: 4.0125
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.842915805643157e-05]
+epoch:8/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.23it/s]
+Avg Loss: 3.9470226764678955
+Avg CE Loss: 3.9470226764678955
+Avg Loss: 3.947678799676423
+Avg CE Loss: 3.947678799676423
+Avg Loss: 3.9361691557945897
+Avg CE Loss: 3.9361691557945897
+Avg Loss: 3.9476663385118758
+Avg CE Loss: 3.9476663385118758
+Avg Loss: 3.954818997299879
+Avg CE Loss: 3.954818997299879
+--eval--
+33it [00:01, 21.39it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.20it/s]                                                                                                                                                                                                    
+Epoch 9/100)
+Train Loss: 3.9561, CE Loss: 3.9561
+Eval Loss: 4.0829, CE Loss: 4.0829
+Test Loss: 4.0198, CE Loss: 4.0198
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.801468428384717e-05]
+epoch:9/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.46it/s]
+Avg Loss: 3.840056896209717
+Avg CE Loss: 3.840056896209717
+Avg Loss: 3.8985219261433817
+Avg CE Loss: 3.8985219261433817
+Avg Loss: 3.916085336931902
+Avg CE Loss: 3.916085336931902
+Avg Loss: 3.9258344854627336
+Avg CE Loss: 3.9258344854627336
+Avg Loss: 3.9220904869926243
+Avg CE Loss: 3.9220904869926243
+--eval--
+33it [00:01, 21.38it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.82it/s]                                                                                                                                                                                                    
+Epoch 10/100)
+Train Loss: 3.9274, CE Loss: 3.9274
+Eval Loss: 4.0797, CE Loss: 4.0797
+Test Loss: 4.0101, CE Loss: 4.0101
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.75528258147577e-05]
+epoch:10/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.29it/s]
+Avg Loss: 3.529900312423706
+Avg CE Loss: 3.529900312423706
+Avg Loss: 3.877696660485598
+Avg CE Loss: 3.877696660485598
+Avg Loss: 3.883240096011565
+Avg CE Loss: 3.883240096011565
+Avg Loss: 3.8859719200387746
+Avg CE Loss: 3.8859719200387746
+Avg Loss: 3.888149606319437
+Avg CE Loss: 3.888149606319437
+--eval--
+33it [00:01, 20.20it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 22.41it/s]                                                                                                                                                                                                    
+Epoch 11/100)
+Train Loss: 3.8894, CE Loss: 3.8894
+Eval Loss: 4.0877, CE Loss: 4.0877
+Test Loss: 4.0193, CE Loss: 4.0193
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.70440384477113e-05]
+epoch:11/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.42it/s]
+Avg Loss: 4.135108947753906
+Avg CE Loss: 4.135108947753906
+Avg Loss: 3.8225727836684427
+Avg CE Loss: 3.8225727836684427
+Avg Loss: 3.841431486072825
+Avg CE Loss: 3.841431486072825
+Avg Loss: 3.85555708051916
+Avg CE Loss: 3.85555708051916
+Avg Loss: 3.859437585174294
+Avg CE Loss: 3.859437585174294
+--eval--
+33it [00:01, 21.40it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.07it/s]                                                                                                                                                                                                    
+Epoch 12/100)
+Train Loss: 3.8619, CE Loss: 3.8619
+Eval Loss: 4.0940, CE Loss: 4.0940
+Test Loss: 4.0236, CE Loss: 4.0236
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.64888242944126e-05]
+epoch:12/100
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.27it/s]
+Avg Loss: 3.9860386848449707
+Avg CE Loss: 3.9860386848449707
+Avg Loss: 3.809634550963298
+Avg CE Loss: 3.809634550963298
+Avg Loss: 3.8200515917877653
+Avg CE Loss: 3.8200515917877653
+Avg Loss: 3.8177481236251882
+Avg CE Loss: 3.8177481236251882
+Avg Loss: 3.82104567280434
+Avg CE Loss: 3.82104567280434
+--eval--
+33it [00:01, 21.43it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.25it/s]                                                                                                                                                                                                    
+Epoch 13/100)
+Train Loss: 3.8249, CE Loss: 3.8249
+Eval Loss: 4.0960, CE Loss: 4.0960
+Test Loss: 4.0297, CE Loss: 4.0297
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1217
+base_lr:[9.588773128419907e-05]
+epoch:13/100
+--train--
+ 79%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▏                                     | 350/443 [00:17<00:04, 20.35it/s]
+Avg Loss: 3.9095563888549805
+Avg CE Loss: 3.9095563888549805
+Avg Loss: 3.7708797431228183
+Avg CE Loss: 3.7708797431228183
+Avg Loss: 3.784603142619726
+Avg CE Loss: 3.784603142619726
+Avg Loss: 3.785020411608623
+Avg CE Loss: 3.785020411608623
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 286, in <module>
+    main(config, mode, checkpoint=checkpoint, vqvae_weights=vqvae_weights)
+  File "/home/caffe/work/SLG/main_text2units.py", line 247, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 194, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 113, in train
+    for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1458, in _next_data
+    idx, data = self._get_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1420, in _get_data
+    success, data = self._try_get_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1251, in _try_get_data
+    data = self._data_queue.get(timeout=timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/queues.py", line 113, in get
+    if not self._poll(timeout):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 257, in poll
+    return self._poll(timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 424, in _poll
+    r = wait([self], timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 931, in wait
+    ready = selector.select(timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/selectors.py", line 416, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt

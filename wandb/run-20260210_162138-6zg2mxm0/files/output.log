@@ -1,0 +1,107 @@
+Traceback (most recent call last):
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_xml.py", line 274, in frame_vars_to_xml
+    type_handler.handle(k, v, hidden_ns, eval_full_val, user_type_renderers=user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 128, in handle
+    self.lst.append(self.fun(key, value, evaluate_full_value, user_type_renderers))
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 264, in <lambda>
+    lambda key, var, eval, type_renderers: self.func(var,
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_xml.py", line 342, in var_to_xml
+    xml_value = ' value="%s"' % (make_valid_xml_value(_do_quote(value)))
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_xml.py", line 401, in _do_quote
+    result = quote(elem, '/>_= ')
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/urllib/parse.py", line 889, in quote
+    string = string.encode(encoding, errors)
+UnicodeEncodeError: 'utf-8' codec can't encode character '\udcc2' in position 52: surrogates not allowed
+Unexpected error, recovered safely.
+
+Traceback (most recent call last):
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_xml.py", line 274, in frame_vars_to_xml
+    type_handler.handle(k, v, hidden_ns, eval_full_val, user_type_renderers=user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 144, in handle
+    super(DummyVarHandler, self).handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 28, in handle
+    self.give_to_next(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 42, in give_to_next
+    self._next_handler.handle(key, value, hidden_ns, evaluate_full_value, user_type_renderers)
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 128, in handle
+    self.lst.append(self.fun(key, value, evaluate_full_value, user_type_renderers))
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_frame_type_handler.py", line 264, in <lambda>
+    lambda key, var, eval, type_renderers: self.func(var,
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_xml.py", line 342, in var_to_xml
+    xml_value = ' value="%s"' % (make_valid_xml_value(_do_quote(value)))
+  File "/home/caffe/pycharm-community-2024.1.1/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_xml.py", line 401, in _do_quote
+    result = quote(elem, '/>_= ')
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/urllib/parse.py", line 889, in quote
+    string = string.encode(encoding, errors)
+UnicodeEncodeError: 'utf-8' codec can't encode character '\udcc2' in position 52: surrogates not allowed
+Unexpected error, recovered safely.
+
+  0%|          | 0/14135 [01:53<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 764, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 55, in fetch
+    return self.collate_fn(data)
+  File "/home/caffe/work/SLG/SLG_datasets/SLG_datasets_with_skeleton.py", line 86, in collate_fn
+    all_cod = F.pad(all_cod, (0, 0, 0, pad_size), mode='constant', value=0)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/functional.py", line 5209, in pad
+    return torch._C._nn.pad(input, pad, mode, value)
+TypeError: pad(): argument 'input' (position 1) must be Tensor, not numpy.ndarray

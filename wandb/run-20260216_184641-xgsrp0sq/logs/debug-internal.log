@@ -1,0 +1,15 @@
+{"time":"2026-02-16T18:46:41.897341058+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260216_184641-xgsrp0sq/logs/debug-core.log"}
+{"time":"2026-02-16T18:46:41.999180212+09:00","level":"INFO","msg":"created new stream","id":"xgsrp0sq"}
+{"time":"2026-02-16T18:46:41.999202313+09:00","level":"INFO","msg":"stream: started","id":"xgsrp0sq"}
+{"time":"2026-02-16T18:46:41.999250502+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"xgsrp0sq"}
+{"time":"2026-02-16T18:46:41.999308628+09:00","level":"INFO","msg":"handler: started","stream_id":"xgsrp0sq"}
+{"time":"2026-02-16T18:46:41.999323891+09:00","level":"INFO","msg":"sender: started","stream_id":"xgsrp0sq"}
+{"time":"2026-02-16T18:46:42.401974775+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-16T19:05:26.569663328+09:00","level":"INFO","msg":"stream: closing","id":"xgsrp0sq"}
+{"time":"2026-02-16T19:05:26.569674481+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-16T19:05:26.569942609+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-16T19:05:27.818712902+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-16T19:05:28.378520466+09:00","level":"INFO","msg":"handler: closed","stream_id":"xgsrp0sq"}
+{"time":"2026-02-16T19:05:28.378543071+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"xgsrp0sq"}
+{"time":"2026-02-16T19:05:28.37855955+09:00","level":"INFO","msg":"sender: closed","stream_id":"xgsrp0sq"}
+{"time":"2026-02-16T19:05:28.378574931+09:00","level":"INFO","msg":"stream: closed","id":"xgsrp0sq"}

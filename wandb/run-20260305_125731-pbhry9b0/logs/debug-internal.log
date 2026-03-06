@@ -1,0 +1,18 @@
+{"time":"2026-03-05T12:57:31.592090287+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260305_125731-pbhry9b0/logs/debug-core.log"}
+{"time":"2026-03-05T12:57:31.695282681+09:00","level":"INFO","msg":"created new stream","id":"pbhry9b0"}
+{"time":"2026-03-05T12:57:31.695342366+09:00","level":"INFO","msg":"handler: started","stream_id":"pbhry9b0"}
+{"time":"2026-03-05T12:57:31.695373698+09:00","level":"INFO","msg":"stream: started","id":"pbhry9b0"}
+{"time":"2026-03-05T12:57:31.695386881+09:00","level":"INFO","msg":"sender: started","stream_id":"pbhry9b0"}
+{"time":"2026-03-05T12:57:31.695388821+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"pbhry9b0"}
+{"time":"2026-03-05T12:57:32.213880215+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-05T14:14:52.474909257+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tkeda-jean-tokyo-city-university/SLG_TEXT2POSE/pbhry9b0/file_stream\": dial tcp: lookup api.wandb.ai on 127.0.0.53:53: read udp 127.0.0.1:38228->127.0.0.53:53: i/o timeout"}
+{"time":"2026-03-05T14:23:10.582510276+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tkeda-jean-tokyo-city-university/SLG_TEXT2POSE/pbhry9b0/file_stream\": dial tcp 35.186.228.49:443: connect: connection timed out"}
+{"time":"2026-03-05T15:32:49.062215264+09:00","level":"INFO","msg":"stream: closing","id":"pbhry9b0"}
+{"time":"2026-03-05T15:32:49.062225738+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-05T15:32:49.062552201+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-05T15:32:49.436024522+09:00","level":"INFO","msg":"sender: sendAlert: notified scriptable run alert","data":{"notifyScriptableRunAlert":{"success":true}}}
+{"time":"2026-03-05T15:32:50.845529514+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-05T15:32:51.571595493+09:00","level":"INFO","msg":"handler: closed","stream_id":"pbhry9b0"}
+{"time":"2026-03-05T15:32:51.571622795+09:00","level":"INFO","msg":"sender: closed","stream_id":"pbhry9b0"}
+{"time":"2026-03-05T15:32:51.571617345+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"pbhry9b0"}
+{"time":"2026-03-05T15:32:51.571656289+09:00","level":"INFO","msg":"stream: closed","id":"pbhry9b0"}

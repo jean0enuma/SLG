@@ -1,0 +1,15 @@
+{"time":"2026-03-02T19:41:47.404550687+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260302_194147-q71wm75l/logs/debug-core.log"}
+{"time":"2026-03-02T19:41:47.507243073+09:00","level":"INFO","msg":"created new stream","id":"q71wm75l"}
+{"time":"2026-03-02T19:41:47.507265092+09:00","level":"INFO","msg":"stream: started","id":"q71wm75l"}
+{"time":"2026-03-02T19:41:47.507272101+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"q71wm75l"}
+{"time":"2026-03-02T19:41:47.507276734+09:00","level":"INFO","msg":"handler: started","stream_id":"q71wm75l"}
+{"time":"2026-03-02T19:41:47.5072876+09:00","level":"INFO","msg":"sender: started","stream_id":"q71wm75l"}
+{"time":"2026-03-02T19:41:48.020705579+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-02T19:44:02.135348146+09:00","level":"INFO","msg":"stream: closing","id":"q71wm75l"}
+{"time":"2026-03-02T19:44:02.135366257+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-02T19:44:02.135711848+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-02T19:44:02.970492107+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-02T19:44:03.257721611+09:00","level":"INFO","msg":"handler: closed","stream_id":"q71wm75l"}
+{"time":"2026-03-02T19:44:03.257748545+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"q71wm75l"}
+{"time":"2026-03-02T19:44:03.257770035+09:00","level":"INFO","msg":"sender: closed","stream_id":"q71wm75l"}
+{"time":"2026-03-02T19:44:03.257801899+09:00","level":"INFO","msg":"stream: closed","id":"q71wm75l"}

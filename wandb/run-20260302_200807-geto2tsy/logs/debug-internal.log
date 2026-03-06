@@ -1,0 +1,15 @@
+{"time":"2026-03-02T20:08:08.00765733+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260302_200807-geto2tsy/logs/debug-core.log"}
+{"time":"2026-03-02T20:08:08.110038231+09:00","level":"INFO","msg":"created new stream","id":"geto2tsy"}
+{"time":"2026-03-02T20:08:08.110052716+09:00","level":"INFO","msg":"stream: started","id":"geto2tsy"}
+{"time":"2026-03-02T20:08:08.110058548+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"geto2tsy"}
+{"time":"2026-03-02T20:08:08.110070067+09:00","level":"INFO","msg":"sender: started","stream_id":"geto2tsy"}
+{"time":"2026-03-02T20:08:08.110082521+09:00","level":"INFO","msg":"handler: started","stream_id":"geto2tsy"}
+{"time":"2026-03-02T20:08:08.613113694+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-02T20:08:08.969926521+09:00","level":"INFO","msg":"stream: closing","id":"geto2tsy"}
+{"time":"2026-03-02T20:08:08.969938261+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-02T20:08:08.970184946+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-02T20:08:10.142972221+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-02T20:08:10.522494092+09:00","level":"INFO","msg":"handler: closed","stream_id":"geto2tsy"}
+{"time":"2026-03-02T20:08:10.522522589+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"geto2tsy"}
+{"time":"2026-03-02T20:08:10.52255004+09:00","level":"INFO","msg":"sender: closed","stream_id":"geto2tsy"}
+{"time":"2026-03-02T20:08:10.522553033+09:00","level":"INFO","msg":"stream: closed","id":"geto2tsy"}

@@ -1,0 +1,25 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0213/1526
+base_lr:[0.0001]
+epoch:0/20
+--train--
+  6%|███████████                                                                                                                                                                          | 27/443 [00:07<01:55,  3.61it/s]
+Avg Loss: 2.3587429523468018
+Avg Pose Loss: 1.2277323007583618
+Avg Stop Loss: 0.6790046691894531
+Avg Joint Loss: 4.5200605392456055
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 245, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 209, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 145, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 74, in train
+    scaler.scale(loss).backward()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/_tensor.py", line 626, in backward
+    torch.autograd.backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt

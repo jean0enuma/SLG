@@ -1,0 +1,15 @@
+{"time":"2026-03-06T11:53:42.242287823+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_115342-tfc1tabm/logs/debug-core.log"}
+{"time":"2026-03-06T11:53:42.343890961+09:00","level":"INFO","msg":"created new stream","id":"tfc1tabm"}
+{"time":"2026-03-06T11:53:42.343905528+09:00","level":"INFO","msg":"stream: started","id":"tfc1tabm"}
+{"time":"2026-03-06T11:53:42.343974437+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"tfc1tabm"}
+{"time":"2026-03-06T11:53:42.344044725+09:00","level":"INFO","msg":"sender: started","stream_id":"tfc1tabm"}
+{"time":"2026-03-06T11:53:42.344041812+09:00","level":"INFO","msg":"handler: started","stream_id":"tfc1tabm"}
+{"time":"2026-03-06T11:53:42.837069602+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-06T11:53:58.556925505+09:00","level":"INFO","msg":"stream: closing","id":"tfc1tabm"}
+{"time":"2026-03-06T11:53:58.556944513+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-06T11:53:58.557626846+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-06T11:54:00.052925252+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-06T11:54:00.727848233+09:00","level":"INFO","msg":"handler: closed","stream_id":"tfc1tabm"}
+{"time":"2026-03-06T11:54:00.727868092+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"tfc1tabm"}
+{"time":"2026-03-06T11:54:00.727897181+09:00","level":"INFO","msg":"sender: closed","stream_id":"tfc1tabm"}
+{"time":"2026-03-06T11:54:00.727908976+09:00","level":"INFO","msg":"stream: closed","id":"tfc1tabm"}

@@ -1,0 +1,15 @@
+{"time":"2026-02-13T13:29:40.229854792+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260213_132940-fp2ay2md/logs/debug-core.log"}
+{"time":"2026-02-13T13:29:40.332794049+09:00","level":"INFO","msg":"created new stream","id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:40.332804995+09:00","level":"INFO","msg":"stream: started","id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:40.332870274+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:40.33294721+09:00","level":"INFO","msg":"handler: started","stream_id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:40.333081093+09:00","level":"INFO","msg":"sender: started","stream_id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:40.714956418+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-13T13:29:45.029011518+09:00","level":"INFO","msg":"stream: closing","id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:45.029153071+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-13T13:29:45.029499235+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-13T13:29:45.87074893+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-13T13:29:46.189091961+09:00","level":"INFO","msg":"handler: closed","stream_id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:46.189117158+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:46.189125803+09:00","level":"INFO","msg":"sender: closed","stream_id":"fp2ay2md"}
+{"time":"2026-02-13T13:29:46.189148535+09:00","level":"INFO","msg":"stream: closed","id":"fp2ay2md"}

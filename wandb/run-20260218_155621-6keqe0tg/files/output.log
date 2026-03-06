@@ -1,0 +1,20 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1556
+base_lr:[0.001]
+epoch:0/100
+--train--
+  0%|          | 0/55 [00:08<?, ?it/s]
+Backend tkagg is interactive backend. Turning interactive mode on.
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 74, in train
+    output=model.generate(encoded_text,text_mask,id_list,input_cod_data,input_length_tensor,t=t)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 175, in generate
+    generated_poses= self.pose_decoder.generate(encoded_text,pose_input, text_mask,pose_mask,max_len,text_lang,t)  # (batch_size, pose_seq_len, pose_dim)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 66, in generate
+    decoder_input = self.input_fc(pose_input)  # (batch_size, seq_len, hidden_size)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/linear.py", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (64x192 and 96x512)

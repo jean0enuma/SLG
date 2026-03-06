@@ -1,0 +1,15 @@
+{"time":"2026-02-25T11:52:22.279974182+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260225_115222-p16iv50u/logs/debug-core.log"}
+{"time":"2026-02-25T11:52:22.382217351+09:00","level":"INFO","msg":"created new stream","id":"p16iv50u"}
+{"time":"2026-02-25T11:52:22.382232655+09:00","level":"INFO","msg":"stream: started","id":"p16iv50u"}
+{"time":"2026-02-25T11:52:22.382287714+09:00","level":"INFO","msg":"sender: started","stream_id":"p16iv50u"}
+{"time":"2026-02-25T11:52:22.38228377+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"p16iv50u"}
+{"time":"2026-02-25T11:52:22.382299645+09:00","level":"INFO","msg":"handler: started","stream_id":"p16iv50u"}
+{"time":"2026-02-25T11:52:22.766805736+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-25T11:53:22.311264973+09:00","level":"INFO","msg":"stream: closing","id":"p16iv50u"}
+{"time":"2026-02-25T11:53:22.311290221+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-25T11:53:22.311756053+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-25T11:53:23.167091732+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-25T11:53:23.470237803+09:00","level":"INFO","msg":"handler: closed","stream_id":"p16iv50u"}
+{"time":"2026-02-25T11:53:23.470261657+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"p16iv50u"}
+{"time":"2026-02-25T11:53:23.470270621+09:00","level":"INFO","msg":"sender: closed","stream_id":"p16iv50u"}
+{"time":"2026-02-25T11:53:23.4703064+09:00","level":"INFO","msg":"stream: closed","id":"p16iv50u"}

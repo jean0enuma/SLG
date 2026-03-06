@@ -1,0 +1,15 @@
+{"time":"2026-02-10T16:27:35.691968041+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260210_162735-ki1lhlop/logs/debug-core.log"}
+{"time":"2026-02-10T16:27:35.793568683+09:00","level":"INFO","msg":"created new stream","id":"ki1lhlop"}
+{"time":"2026-02-10T16:27:35.793578411+09:00","level":"INFO","msg":"stream: started","id":"ki1lhlop"}
+{"time":"2026-02-10T16:27:35.7936454+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"ki1lhlop"}
+{"time":"2026-02-10T16:27:35.793678433+09:00","level":"INFO","msg":"handler: started","stream_id":"ki1lhlop"}
+{"time":"2026-02-10T16:27:35.793700046+09:00","level":"INFO","msg":"sender: started","stream_id":"ki1lhlop"}
+{"time":"2026-02-10T16:27:36.258992903+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-10T16:29:43.233445095+09:00","level":"INFO","msg":"stream: closing","id":"ki1lhlop"}
+{"time":"2026-02-10T16:29:43.23346006+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-10T16:29:43.233823306+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-10T16:29:44.033599313+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-10T16:29:44.328340271+09:00","level":"INFO","msg":"handler: closed","stream_id":"ki1lhlop"}
+{"time":"2026-02-10T16:29:44.328358347+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ki1lhlop"}
+{"time":"2026-02-10T16:29:44.328371674+09:00","level":"INFO","msg":"sender: closed","stream_id":"ki1lhlop"}
+{"time":"2026-02-10T16:29:44.32838522+09:00","level":"INFO","msg":"stream: closed","id":"ki1lhlop"}

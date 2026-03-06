@@ -1,0 +1,10 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1547
+base_lr:[0.001]
+epoch:0/100
+--train--
+  0%|          | 0/55 [00:15<?, ?it/s]
+Backend tkagg is interactive backend. Turning interactive mode on.
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 83, in train
+    input_cod_data=torch.cat([input_cod_data,output['predicted_poses'].detach()],dim=1)
+RuntimeError: Tensors must have same number of dimensions: got 4 and 3

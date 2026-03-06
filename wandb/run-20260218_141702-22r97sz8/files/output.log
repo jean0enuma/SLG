@@ -1,0 +1,49 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0218/1413
+base_lr:[0.001]
+epoch:0/100
+--train--
+ 18%|████████████████████████████████▉                                                                                                                                                    | 20/110 [00:17<01:20,  1.12it/s]
+Avg Loss: 0.7950338125228882
+Avg Pose Loss: 0.7142859697341919
+Avg Joint Loss: 0.8074784278869629
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 270, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 232, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 153, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 45, in train
+    for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1480, in _next_data
+    return self._process_data(data)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1505, in _process_data
+    data.reraise()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/_utils.py", line 733, in reraise
+    raise exception
+ValueError: Caught ValueError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/home/caffe/work/SLG/SLG_datasets/SLG_datasets_with_skeleton.py", line 81, in temporal_rescale
+    data=F.interpolate(data,size=new_length,mode='linear',align_corners=False) #(F,2,new_length)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/functional.py", line 4672, in interpolate
+    return torch._C._nn.upsample_linear1d(
+RuntimeError: Input and output sizes should be greater than 0, but got input (W: 0) and output (W: 16)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/caffe/work/SLG/SLG_datasets/SLG_datasets_with_skeleton.py", line 143, in __getitem__
+    cod_data,face_cod_data,hand_cod_data,body_cod_data=self.temporal_rescale(cod_data,face_cod_data,hand_cod_data,body_cod_data)
+  File "/home/caffe/work/SLG/SLG_datasets/SLG_datasets_with_skeleton.py", line 84, in temporal_rescale
+    raise ValueError("Error in F.interpolate")
+ValueError: Error in F.interpolate

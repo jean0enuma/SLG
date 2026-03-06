@@ -1,0 +1,74 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0217/1719
+base_lr:[0.0001]
+epoch:0/20
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 221/221 [01:34<00:00,  2.35it/s]
+Avg Loss: 0.795100212097168
+Avg Pose Loss: 0.7122972011566162
+Avg Stop Loss: 0.6108714938163757
+Avg Joint Loss: 0.8280304074287415
+Avg Loss: 0.18002928431966517
+Avg Pose Loss: 0.1710762110824632
+Avg Stop Loss: 0.440988693201896
+Avg Joint Loss: 0.0895307332941211
+Avg Loss: 0.1291220423519908
+Avg Pose Loss: 0.12391169250604525
+Avg Stop Loss: 0.4088934689611938
+Avg Joint Loss: 0.05210349953904822
+--eval--
+17it [00:06,  2.48it/s]                                                                                                                                                                                                    
+--test--
+21it [00:08,  2.48it/s]                                                                                                                                                                                                    
+Epoch 1/20)
+Train Loss: 0.12343581765890121,Train Pose Loss: 0.11860939115285873, Train Stop Loss: 0.40587663650512695, Train Bone Loss: 0.04826430603861809
+Eval Loss: 0.03738938271999359,Eval Pose Loss: 0.03724055737257004, Eval Stop Loss: 0.37439438700675964, Eval Bone Loss: 0.0014882427640259266
+Test Loss: 0.03725086525082588,Test Pose Loss: 0.03711320087313652, Test Stop Loss: 0.37470677495002747, Test Bone Loss: 0.0013766329502686858
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0217/1719
+base_lr:[9.939057285945933e-05]
+epoch:1/20
+--train--
+ 65%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▍                                                               | 143/221 [01:04<00:35,  2.20it/s]
+Avg Loss: 0.06410378962755203
+Avg Pose Loss: 0.06318999081850052
+Avg Stop Loss: 0.37252452969551086
+Avg Joint Loss: 0.009138003922998905
+Avg Loss: 0.06025050923523336
+Avg Pose Loss: 0.059477489773589784
+Avg Stop Loss: 0.3798393117319239
+Avg Joint Loss: 0.007730196824869012
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 248, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 210, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 146, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 58, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 39, in compute_loss
+    outputs = model.generate(padded_tokens_tensor,id_list,padded_cod_data[0],input_length_tensor)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 166, in generate
+    generated_poses,stop_logits = self.pose_decoder.generate(encoded_text,pose_input, text_mask,pose_mask,text_lang)  # (batch_size, pose_seq_len, pose_dim)
+  File "/home/caffe/work/SLG/models/text2pose.py", line 83, in generate
+    decoded_output = self.transformer_decoder(decoder_input, encoded_text_perm,tgt_mask=causal_mask,memory_key_padding_mask=~text_attn_mask.bool())  # (t+1, batch_size, hidden_size)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/transformer.py", line 613, in forward
+    output = mod(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/transformer.py", line 1105, in forward
+    x = x + self._ff_block(self.norm3(x))
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/transformer.py", line 1161, in _ff_block
+    x = self.linear2(self.dropout(self.activation(self.linear1(x))))
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/linear.py", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 23.59 GiB of which 9.38 MiB is free. Including non-PyTorch memory, this process has 23.56 GiB memory in use. Of the allocated memory 22.89 GiB is allocated by PyTorch, and 362.82 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

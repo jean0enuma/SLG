@@ -1,0 +1,69 @@
+                                                                                                                                                                                                                           
+Avg Loss: 3.3535075187683105
+Avg Pose Loss: 2.616015911102295
+Avg Stop Loss: 0.7374915480613708
+Avg Loss: 0.4647658679744985
+Avg Pose Loss: 0.39285103002987287
+Avg Stop Loss: 0.07191483547339345
+Avg Loss: 0.31467993853993675
+Avg Pose Loss: 0.25856145071004755
+Avg Stop Loss: 0.056118486495456886
+Avg Loss: 0.24914647044731533
+Avg Pose Loss: 0.199585619732193
+Avg Stop Loss: 0.0495608498920931
+Avg Loss: 0.21056721179265334
+Avg Pose Loss: 0.16492930220026625
+Avg Stop Loss: 0.045637908904927034
+Avg Loss: 0.18456730404180918
+Avg Pose Loss: 0.14193117967295552
+Avg Stop Loss: 0.04263612381489334
+Avg Loss: 0.1660324808662624
+Avg Pose Loss: 0.12533528662709745
+Avg Stop Loss: 0.04069719376498074
+Avg Loss: 0.15200371087957892
+Avg Pose Loss: 0.11275531998842146
+Avg Stop Loss: 0.039248390487274326
+Avg Loss: 0.14029403655939782
+Avg Pose Loss: 0.10268686086953281
+Avg Stop Loss: 0.03760717534570584
+Avg Loss: 0.13090781600821297
+Avg Pose Loss: 0.09450466464067935
+Avg Stop Loss: 0.036403151042966146
+Avg Loss: 0.12286351239690176
+Avg Pose Loss: 0.08767980875281782
+Avg Stop Loss: 0.03518370333147216
+Avg Loss: 0.11630382371574072
+Avg Pose Loss: 0.08196959593971949
+Avg Stop Loss: 0.03433422751379598
+Avg Loss: 0.11051320706453054
+Avg Pose Loss: 0.07700394140517682
+Avg Stop Loss: 0.03350926539104596
+Avg Loss: 0.10538588828485256
+Avg Pose Loss: 0.07268584176875095
+Avg Stop Loss: 0.03270004625982683
+Avg Loss: 0.10096945865963886
+Avg Pose Loss: 0.06888310662035343
+Avg Stop Loss: 0.032086351811939015
+Avg Loss: 0.09706315526529044
+Avg Pose Loss: 0.0655247136481419
+Avg Stop Loss: 0.03153844138757536
+100it [00:54,  1.82it/s]                                                                                                                                                                                                   
+114it [00:58,  1.95it/s]                                                                                                                                                                                                   
+Epoch 1/40)
+Train Loss: 0.09383060038089752,Train Pose Loss: 0.06274309009313583, Train Stop Loss: 0.031087512150406837
+Eval Loss: 0.031884003430604935,Eval Pose Loss: 0.007153320126235485, Eval Stop Loss: 0.024730684235692024
+Test Loss: 0.03237226977944374,Test Pose Loss: 0.007113423198461533, Test Stop Loss: 0.02525884471833706
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p.py", line 189, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p.py", line 155, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 125, in fit
+    torch.save({
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 943, in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 810, in _open_zipfile_writer
+    return container(name_or_buffer)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/serialization.py", line 781, in __init__
+    super().__init__(torch._C.PyTorchFileWriter(self.name, _compute_crc32))
+RuntimeError: Parent directory /media/caffe/data_storage/CSLR/keyword_models/train/2026/0212/1327/0 does not exist.

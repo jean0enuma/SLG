@@ -1,0 +1,7 @@
+{"time":"2026-02-18T17:10:14.400565553+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_171014-il84kown/logs/debug-core.log"}
+{"time":"2026-02-18T17:10:14.503138844+09:00","level":"INFO","msg":"created new stream","id":"il84kown"}
+{"time":"2026-02-18T17:10:14.503152521+09:00","level":"INFO","msg":"stream: started","id":"il84kown"}
+{"time":"2026-02-18T17:10:14.503200344+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"il84kown"}
+{"time":"2026-02-18T17:10:14.503238691+09:00","level":"INFO","msg":"sender: started","stream_id":"il84kown"}
+{"time":"2026-02-18T17:10:14.503259992+09:00","level":"INFO","msg":"handler: started","stream_id":"il84kown"}
+{"time":"2026-02-18T17:10:14.838680271+09:00","level":"INFO","msg":"Starting system monitor"}

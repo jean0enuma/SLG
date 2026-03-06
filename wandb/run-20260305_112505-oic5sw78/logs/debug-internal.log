@@ -1,0 +1,16 @@
+{"time":"2026-03-05T11:25:05.577155086+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260305_112505-oic5sw78/logs/debug-core.log"}
+{"time":"2026-03-05T11:25:05.679906686+09:00","level":"INFO","msg":"created new stream","id":"oic5sw78"}
+{"time":"2026-03-05T11:25:05.679920428+09:00","level":"INFO","msg":"stream: started","id":"oic5sw78"}
+{"time":"2026-03-05T11:25:05.679975979+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"oic5sw78"}
+{"time":"2026-03-05T11:25:05.680022625+09:00","level":"INFO","msg":"handler: started","stream_id":"oic5sw78"}
+{"time":"2026-03-05T11:25:05.680027812+09:00","level":"INFO","msg":"sender: started","stream_id":"oic5sw78"}
+{"time":"2026-03-05T11:25:06.151840322+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-05T13:02:51.408465249+09:00","level":"INFO","msg":"stream: closing","id":"oic5sw78"}
+{"time":"2026-03-05T13:02:51.408475193+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-05T13:02:51.408741781+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-05T13:02:51.632213828+09:00","level":"INFO","msg":"sender: sendAlert: notified scriptable run alert","data":{"notifyScriptableRunAlert":{"success":true}}}
+{"time":"2026-03-05T13:02:52.761312478+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-05T13:02:53.058058602+09:00","level":"INFO","msg":"handler: closed","stream_id":"oic5sw78"}
+{"time":"2026-03-05T13:02:53.058078262+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"oic5sw78"}
+{"time":"2026-03-05T13:02:53.05810918+09:00","level":"INFO","msg":"sender: closed","stream_id":"oic5sw78"}
+{"time":"2026-03-05T13:02:53.058112786+09:00","level":"INFO","msg":"stream: closed","id":"oic5sw78"}

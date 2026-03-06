@@ -1,0 +1,15 @@
+{"time":"2026-03-02T20:06:55.214205426+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260302_200655-diuccabk/logs/debug-core.log"}
+{"time":"2026-03-02T20:06:55.317245598+09:00","level":"INFO","msg":"created new stream","id":"diuccabk"}
+{"time":"2026-03-02T20:06:55.317266384+09:00","level":"INFO","msg":"stream: started","id":"diuccabk"}
+{"time":"2026-03-02T20:06:55.317273044+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"diuccabk"}
+{"time":"2026-03-02T20:06:55.317283574+09:00","level":"INFO","msg":"sender: started","stream_id":"diuccabk"}
+{"time":"2026-03-02T20:06:55.317311447+09:00","level":"INFO","msg":"handler: started","stream_id":"diuccabk"}
+{"time":"2026-03-02T20:06:56.169925259+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-02T20:06:56.40288275+09:00","level":"INFO","msg":"stream: closing","id":"diuccabk"}
+{"time":"2026-03-02T20:06:56.402898011+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-02T20:06:56.403120387+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-02T20:06:58.025483364+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-02T20:06:58.419058032+09:00","level":"INFO","msg":"handler: closed","stream_id":"diuccabk"}
+{"time":"2026-03-02T20:06:58.419096191+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"diuccabk"}
+{"time":"2026-03-02T20:06:58.419121585+09:00","level":"INFO","msg":"sender: closed","stream_id":"diuccabk"}
+{"time":"2026-03-02T20:06:58.4191326+09:00","level":"INFO","msg":"stream: closed","id":"diuccabk"}

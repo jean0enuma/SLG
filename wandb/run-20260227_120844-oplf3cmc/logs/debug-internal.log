@@ -1,0 +1,15 @@
+{"time":"2026-02-27T12:08:45.08276703+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260227_120844-oplf3cmc/logs/debug-core.log"}
+{"time":"2026-02-27T12:08:45.185922948+09:00","level":"INFO","msg":"created new stream","id":"oplf3cmc"}
+{"time":"2026-02-27T12:08:45.185938844+09:00","level":"INFO","msg":"stream: started","id":"oplf3cmc"}
+{"time":"2026-02-27T12:08:45.185999241+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"oplf3cmc"}
+{"time":"2026-02-27T12:08:45.186045743+09:00","level":"INFO","msg":"sender: started","stream_id":"oplf3cmc"}
+{"time":"2026-02-27T12:08:45.186056403+09:00","level":"INFO","msg":"handler: started","stream_id":"oplf3cmc"}
+{"time":"2026-02-27T12:08:45.629485915+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-27T12:11:36.887121054+09:00","level":"INFO","msg":"stream: closing","id":"oplf3cmc"}
+{"time":"2026-02-27T12:11:36.887133786+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-27T12:11:36.88753688+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-27T12:11:37.721427828+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-27T12:11:38.247372212+09:00","level":"INFO","msg":"handler: closed","stream_id":"oplf3cmc"}
+{"time":"2026-02-27T12:11:38.247396331+09:00","level":"INFO","msg":"sender: closed","stream_id":"oplf3cmc"}
+{"time":"2026-02-27T12:11:38.247393732+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"oplf3cmc"}
+{"time":"2026-02-27T12:11:38.247431001+09:00","level":"INFO","msg":"stream: closed","id":"oplf3cmc"}

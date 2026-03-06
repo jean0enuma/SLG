@@ -1,0 +1,51 @@
+dataset: "phoenixT"
+work_dir: "/home/caffe/work/SLG/"
+device: "cuda:0"
+dataset_parameters:
+  use_phoenixT: True
+  use_how2sign: False
+  use_csl-daily: False
+lr_parameters:
+  epoch: 600
+  learning_rate : 0.00005
+  min_lr: 0
+  weight_decay: 0.01
+  milestones: [200,320]
+  gamma: 0.2
+  dropout: 0.3
+  amp: True
+  display_step: 100
+  accumulation_step: 1
+  batch_size: 32
+  scheduler_timing: "epoch"
+  scheduler_type: "CosineAnnealingLR"
+  grad_clip_norm: 1.0
+  ema: False
+  ema_beta: 0.999
+loss_parameters:
+    pose_loss_weight: 1.0
+    stop_loss_weight: 0.0
+    bone_loss_weight: 0.0
+    velocity_loss_weight: 0.1
+    max_length: 300
+    pose_weights: 0.1
+    hand_weights: 0.9
+
+model:
+  text_encoder_name: "openai/clip-vit-base-patch32"
+  text_encoder_requires_grad: False
+  time_embedding_dim: 64
+  text_adapter: True
+  diffusion_timesteps: 1000
+  decoder_hidden_dim: 512
+  decoder_ffn_dim: 2048
+  pose_dim: 96
+  hand_dim: 42
+  body_dim: 12
+  decoder_num_heads: 4
+  decoder_dropout: 0.3
+  decoder_num_layers: 2
+  decoder_num_lang: 1
+  decoder_m_lang: False
+  pred_type: "x0"
+  trainable: True

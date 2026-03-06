@@ -1,0 +1,15 @@
+{"time":"2026-03-06T19:24:29.715620744+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_192429-4gblkgxe/logs/debug-core.log"}
+{"time":"2026-03-06T19:24:29.818733839+09:00","level":"INFO","msg":"created new stream","id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:29.818747124+09:00","level":"INFO","msg":"stream: started","id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:29.818755823+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:29.818778446+09:00","level":"INFO","msg":"sender: started","stream_id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:29.818811754+09:00","level":"INFO","msg":"handler: started","stream_id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:30.36149741+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-06T19:24:37.027936105+09:00","level":"INFO","msg":"stream: closing","id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:37.027953469+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-06T19:24:37.028792803+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-06T19:24:38.00245001+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-06T19:24:38.397208866+09:00","level":"INFO","msg":"handler: closed","stream_id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:38.397244043+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:38.397314119+09:00","level":"INFO","msg":"sender: closed","stream_id":"4gblkgxe"}
+{"time":"2026-03-06T19:24:38.397322691+09:00","level":"INFO","msg":"stream: closed","id":"4gblkgxe"}

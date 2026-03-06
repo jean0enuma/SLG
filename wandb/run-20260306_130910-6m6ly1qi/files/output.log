@@ -1,0 +1,29 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1309
+base_lr:[0.0001]
+epoch:0/20
+--train--
+  0%|                                                                                                                                                                                              | 0/443 [00:01<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 286, in <module>
+    main(config, mode, checkpoint=checkpoint, vqvae_weights=vqvae_weights)
+  File "/home/caffe/work/SLG/main_text2units.py", line 247, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 194, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 124, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 106, in compute_loss
+    loss = model(sequence,padded_cod_data,input_length_tensor,padded_mask)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 147, in forward
+    pose_outputs= self.decoder(encoded_text,unit_tokens, text_mask,pose_mask,None)  # (batch_size, pose_seq_len,code_dim)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 37, in forward
+    decoder_input=torch.cat([self.bos_token.expand(batch_size, -1, -1), decoder_input], dim=1)  # BOSトークンの追加
+RuntimeError: Tensors must have same number of dimensions: got 3 and 2

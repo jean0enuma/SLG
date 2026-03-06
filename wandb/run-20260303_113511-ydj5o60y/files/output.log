@@ -1,0 +1,1474 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.001]
+epoch:0/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.89it/s]
+Avg Loss: 6.471398830413818
+Avg Recon Pose Loss: 4.676896095275879
+Avg Recon Dir Loss: 0.9357035160064697
+Avg Vel Loss: 13.124959945678711
+Avg VQ Loss: 0.20255139470100403
+Avg Perplexity: 20.744688034057617
+Avg Loss: 1.83019086452994
+Avg Recon Pose Loss: 0.398467784544619
+Avg Recon Dir Loss: 0.5729833794112252
+Avg Vel Loss: 4.9762154971018875
+Avg VQ Loss: 0.6099289166602758
+Avg Perplexity: 4.7718548668493135
+Avg Loss: 1.848639859192407
+Avg Recon Pose Loss: 0.24590702265945832
+Avg Recon Dir Loss: 0.5690106003735196
+Avg Vel Loss: 3.8063814046964124
+Avg VQ Loss: 0.8434031590893494
+Avg Perplexity: 5.625514205415451
+Avg Loss: 1.689937023229377
+Avg Recon Pose Loss: 0.193413737332108
+Avg Recon Dir Loss: 0.5500069538818245
+Avg Vel Loss: 3.4454986367906844
+Avg VQ Loss: 0.774241392708003
+Avg Perplexity: 5.44616086934492
+Avg Loss: 1.4431205345805447
+Avg Recon Pose Loss: 0.16537033428352074
+Avg Recon Dir Loss: 0.5146885564796942
+Avg Vel Loss: 3.252281554024713
+Avg VQ Loss: 0.6004475602541035
+Avg Perplexity: 7.70281519913614
+--eval--
+33it [00:01, 22.49it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.09it/s]                                                                                                                                                                                                    
+Epoch 1/200)
+Train Loss: 1.3646, Recon Pose Loss: 0.1568, Recon Dir Loss: 0.4980, Vel Loss: 3.1863, VQ Loss: 0.5504, Perplexity: 8.6468
+Eval Loss: 0.5845, Recon Pose Loss: 0.0770, Recon Dir Loss: 0.3422, Vel Loss: 2.3442, VQ Loss: 0.0480, Perplexity: 15.2578
+Test Loss: 0.5904, Recon Pose Loss: 0.0884, Recon Dir Loss: 0.3357, Vel Loss: 2.3345, VQ Loss: 0.0496, Perplexity: 14.9856
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009999383162408303]
+epoch:1/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.17it/s]
+Avg Loss: 0.5191977024078369
+Avg Recon Pose Loss: 0.06470014154911041
+Avg Recon Dir Loss: 0.29066210985183716
+Avg Vel Loss: 2.333329916000366
+Avg VQ Loss: 0.04716894030570984
+Avg Perplexity: 17.796525955200195
+Avg Loss: 0.6314736224047028
+Avg Recon Pose Loss: 0.07651261763997597
+Avg Recon Dir Loss: 0.32349541724318326
+Avg Vel Loss: 2.5658461929547904
+Avg VQ Loss: 0.10317327760823883
+Avg Perplexity: 18.046414885190455
+Avg Loss: 0.6126465248824352
+Avg Recon Pose Loss: 0.07640136426212776
+Avg Recon Dir Loss: 0.3070133785851559
+Avg Vel Loss: 2.5712809965978214
+Avg VQ Loss: 0.10066773044640448
+Avg Perplexity: 18.98021783401717
+Avg Loss: 0.5826945844480762
+Avg Recon Pose Loss: 0.0759030054772019
+Avg Recon Dir Loss: 0.2937414629316805
+Avg Vel Loss: 2.5645017726872847
+Avg VQ Loss: 0.08482502397162178
+Avg Perplexity: 23.279946517310666
+Avg Loss: 0.5650420585772641
+Avg Recon Pose Loss: 0.0750968512751515
+Avg Recon Dir Loss: 0.28435468205490017
+Avg Vel Loss: 2.5507550970871846
+Avg VQ Loss: 0.0780527675222429
+Avg Perplexity: 26.39107872779827
+--eval--
+33it [00:01, 22.30it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.98it/s]                                                                                                                                                                                                    
+Epoch 2/200)
+Train Loss: 0.5623, Recon Pose Loss: 0.0746, Recon Dir Loss: 0.2804, Vel Loss: 2.5448, VQ Loss: 0.0801, Perplexity: 27.5643
+Eval Loss: 0.5546, Recon Pose Loss: 0.0722, Recon Dir Loss: 0.2534, Vel Loss: 2.2669, VQ Loss: 0.1157, Perplexity: 26.0843
+Test Loss: 0.5617, Recon Pose Loss: 0.0831, Recon Dir Loss: 0.2493, Vel Loss: 2.2609, VQ Loss: 0.1162, Perplexity: 25.2596
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009997532801828658]
+epoch:2/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.09it/s]
+Avg Loss: 0.6089410185813904
+Avg Recon Pose Loss: 0.0770973190665245
+Avg Recon Dir Loss: 0.2714430093765259
+Avg Vel Loss: 2.5711240768432617
+Avg VQ Loss: 0.13184446096420288
+Avg Perplexity: 22.035844802856445
+Avg Loss: 0.5592596755169406
+Avg Recon Pose Loss: 0.07050893732374257
+Avg Recon Dir Loss: 0.2349683817955527
+Avg Vel Loss: 2.499119550874918
+Avg VQ Loss: 0.128826373284406
+Avg Perplexity: 38.1845860622897
+Avg Loss: 0.5577918113167606
+Avg Recon Pose Loss: 0.07053239089413661
+Avg Recon Dir Loss: 0.23095912037797234
+Avg Vel Loss: 2.505692702620777
+Avg VQ Loss: 0.13101566301204673
+Avg Perplexity: 41.28662369381729
+Avg Loss: 0.5528414458333456
+Avg Recon Pose Loss: 0.06965500919575311
+Avg Recon Dir Loss: 0.2252216969811639
+Avg Vel Loss: 2.502230227587627
+Avg VQ Loss: 0.13285322569038385
+Avg Perplexity: 43.507572300806395
+Avg Loss: 0.5479343954910364
+Avg Recon Pose Loss: 0.06905375640291228
+Avg Recon Dir Loss: 0.2216960222197887
+Avg Vel Loss: 2.502774016220968
+Avg VQ Loss: 0.13204591399862284
+Avg Perplexity: 45.92144274057593
+--eval--
+33it [00:01, 22.56it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.19it/s]                                                                                                                                                                                                    
+Epoch 3/200)
+Train Loss: 0.5455, Recon Pose Loss: 0.0688, Recon Dir Loss: 0.2199, Vel Loss: 2.4992, VQ Loss: 0.1319, Perplexity: 47.3455
+Eval Loss: 0.5070, Recon Pose Loss: 0.0692, Recon Dir Loss: 0.2106, Vel Loss: 2.2379, VQ Loss: 0.1153, Perplexity: 52.2404
+Test Loss: 0.5104, Recon Pose Loss: 0.0768, Recon Dir Loss: 0.2076, Vel Loss: 2.2275, VQ Loss: 0.1147, Perplexity: 51.8759
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009994449374809851]
+epoch:3/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.04it/s]
+Avg Loss: 0.4850778877735138
+Avg Recon Pose Loss: 0.0685490295290947
+Avg Recon Dir Loss: 0.19033551216125488
+Avg Vel Loss: 2.4034206867218018
+Avg VQ Loss: 0.10602229833602905
+Avg Perplexity: 56.6585578918457
+Avg Loss: 0.5117218866206632
+Avg Recon Pose Loss: 0.06468967584395173
+Avg Recon Dir Loss: 0.19891833078743207
+Avg Vel Loss: 2.4593091176287962
+Avg VQ Loss: 0.1251484221308538
+Avg Perplexity: 62.892369487498065
+Avg Loss: 0.5113035434514136
+Avg Recon Pose Loss: 0.06440064924495731
+Avg Recon Dir Loss: 0.1981931279102961
+Avg Vel Loss: 2.4573525303038792
+Avg VQ Loss: 0.12584213630773536
+Avg Perplexity: 67.19590345544009
+Avg Loss: 0.511304882376693
+Avg Recon Pose Loss: 0.06395078730147542
+Avg Recon Dir Loss: 0.19652009282595295
+Avg Vel Loss: 2.4550113915605007
+Avg VQ Loss: 0.1280834312207279
+Avg Perplexity: 71.92461651266612
+Avg Loss: 0.5135139190496649
+Avg Recon Pose Loss: 0.06369490439346306
+Avg Recon Dir Loss: 0.1946573816332734
+Avg Vel Loss: 2.4506671125454798
+Avg VQ Loss: 0.1326282749375203
+Avg Perplexity: 75.22753882467597
+--eval--
+33it [00:01, 22.48it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.99it/s]                                                                                                                                                                                                    
+Epoch 4/200)
+Train Loss: 0.5168, Recon Pose Loss: 0.0636, Recon Dir Loss: 0.1942, Vel Loss: 2.4504, VQ Loss: 0.1364, Perplexity: 76.6191
+Eval Loss: 0.5759, Recon Pose Loss: 0.0633, Recon Dir Loss: 0.1920, Vel Loss: 2.2166, VQ Loss: 0.2098, Perplexity: 68.6455
+Test Loss: 0.5765, Recon Pose Loss: 0.0708, Recon Dir Loss: 0.1884, Vel Loss: 2.2079, VQ Loss: 0.2069, Perplexity: 66.9279
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009990133642141358]
+epoch:4/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.18it/s]
+Avg Loss: 0.5991883277893066
+Avg Recon Pose Loss: 0.06198687106370926
+Avg Recon Dir Loss: 0.2122112661600113
+Avg Vel Loss: 2.498490571975708
+Avg VQ Loss: 0.20006561279296875
+Avg Perplexity: 104.52222442626953
+Avg Loss: 0.5328007340431213
+Avg Recon Pose Loss: 0.0617011612152109
+Avg Recon Dir Loss: 0.18615245376483047
+Avg Vel Loss: 2.42890458295841
+Avg VQ Loss: 0.16350188460385445
+Avg Perplexity: 91.9563794655375
+Avg Loss: 0.5320461642979389
+Avg Recon Pose Loss: 0.06172693011105357
+Avg Recon Dir Loss: 0.18529351819213943
+Avg Vel Loss: 2.433038174216427
+Avg VQ Loss: 0.16337380335846943
+Avg Perplexity: 93.44329458208226
+Avg Loss: 0.5299074142874277
+Avg Recon Pose Loss: 0.06115554763233147
+Avg Recon Dir Loss: 0.18367465152296908
+Avg Vel Loss: 2.428502716495349
+Avg VQ Loss: 0.1636520760053416
+Avg Perplexity: 93.80133623142179
+Avg Loss: 0.5298494380013901
+Avg Recon Pose Loss: 0.06107557644867838
+Avg Recon Dir Loss: 0.1822912360813255
+Avg Vel Loss: 2.429722274628066
+Avg VQ Loss: 0.16499650944721075
+Avg Perplexity: 94.28689742623422
+--eval--
+33it [00:01, 22.41it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.28it/s]                                                                                                                                                                                                    
+Epoch 5/200)
+Train Loss: 0.5282, Recon Pose Loss: 0.0608, Recon Dir Loss: 0.1813, Vel Loss: 2.4256, VQ Loss: 0.1648, Perplexity: 93.8088
+Eval Loss: 0.5114, Recon Pose Loss: 0.0603, Recon Dir Loss: 0.1793, Vel Loss: 2.1957, VQ Loss: 0.1620, Perplexity: 71.6296
+Test Loss: 0.5133, Recon Pose Loss: 0.0670, Recon Dir Loss: 0.1776, Vel Loss: 2.1862, VQ Loss: 0.1594, Perplexity: 68.1441
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.000998458666866564]
+epoch:5/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.05it/s]
+Avg Loss: 0.5756403207778931
+Avg Recon Pose Loss: 0.05370724946260452
+Avg Recon Dir Loss: 0.18617500364780426
+Avg Vel Loss: 2.4703049659729004
+Avg VQ Loss: 0.21224279701709747
+Avg Perplexity: 82.9301986694336
+Avg Loss: 0.531000941991806
+Avg Recon Pose Loss: 0.059660238720993006
+Avg Recon Dir Loss: 0.17732623145721926
+Avg Vel Loss: 2.440102480425693
+Avg VQ Loss: 0.17200934518091748
+Avg Perplexity: 102.09222094847424
+Avg Loss: 0.5262657429151867
+Avg Recon Pose Loss: 0.05928810480148045
+Avg Recon Dir Loss: 0.17512898666052082
+Avg Vel Loss: 2.4288251637226312
+Avg VQ Loss: 0.17040739086136888
+Avg Perplexity: 102.51004221901965
+Avg Loss: 0.524322949374633
+Avg Recon Pose Loss: 0.05878853487265467
+Avg Recon Dir Loss: 0.17376959210020362
+Avg Vel Loss: 2.4234838390667175
+Avg VQ Loss: 0.1705906284706933
+Avg Perplexity: 103.93375221835419
+Avg Loss: 0.5227119199504282
+Avg Recon Pose Loss: 0.05836033591642938
+Avg Recon Dir Loss: 0.17204636547184943
+Avg Vel Loss: 2.413910359218531
+Avg VQ Loss: 0.1716096992616047
+Avg Perplexity: 105.16887957794113
+--eval--
+33it [00:01, 22.35it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.16it/s]                                                                                                                                                                                                    
+Epoch 6/200)
+Train Loss: 0.5232, Recon Pose Loss: 0.0584, Recon Dir Loss: 0.1719, Vel Loss: 2.4145, VQ Loss: 0.1721, Perplexity: 105.7920
+Eval Loss: 0.5543, Recon Pose Loss: 0.0577, Recon Dir Loss: 0.1762, Vel Loss: 2.1883, VQ Loss: 0.2109, Perplexity: 77.9942
+Test Loss: 0.5572, Recon Pose Loss: 0.0632, Recon Dir Loss: 0.1746, Vel Loss: 2.1792, VQ Loss: 0.2104, Perplexity: 79.1235
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.00099778098230154]
+epoch:6/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.15it/s]
+Avg Loss: 0.5512322187423706
+Avg Recon Pose Loss: 0.06202482432126999
+Avg Recon Dir Loss: 0.16002927720546722
+Avg Vel Loss: 2.3814327716827393
+Avg VQ Loss: 0.2101065218448639
+Avg Perplexity: 91.82302856445312
+Avg Loss: 0.5273154490064866
+Avg Recon Pose Loss: 0.05807930194210298
+Avg Recon Dir Loss: 0.1694066974491176
+Avg Vel Loss: 2.4237633978966437
+Avg VQ Loss: 0.17864127597301313
+Avg Perplexity: 112.84275379747447
+Avg Loss: 0.5239930465743317
+Avg Recon Pose Loss: 0.057304232682458205
+Avg Recon Dir Loss: 0.16709913309682067
+Avg Vel Loss: 2.4131614628122815
+Avg VQ Loss: 0.178931605274701
+Avg Perplexity: 112.74856085326542
+Avg Loss: 0.5255379871870592
+Avg Recon Pose Loss: 0.057007376154098795
+Avg Recon Dir Loss: 0.16558577746548922
+Avg Vel Loss: 2.4072673542554988
+Avg VQ Loss: 0.18258146402051678
+Avg Perplexity: 115.19699015569846
+Avg Loss: 0.5275626945079414
+Avg Recon Pose Loss: 0.056665380501613356
+Avg Recon Dir Loss: 0.1646299358280817
+Avg Vel Loss: 2.404596030860768
+Avg VQ Loss: 0.1860375751060738
+Avg Perplexity: 116.37307756381142
+--eval--
+33it [00:01, 22.29it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.14it/s]                                                                                                                                                                                                    
+Epoch 7/200)
+Train Loss: 0.5278, Recon Pose Loss: 0.0566, Recon Dir Loss: 0.1642, Vel Loss: 2.4041, VQ Loss: 0.1868, Perplexity: 116.7260
+Eval Loss: 0.5108, Recon Pose Loss: 0.0559, Recon Dir Loss: 0.1649, Vel Loss: 2.1731, VQ Loss: 0.1814, Perplexity: 98.1507
+Test Loss: 0.5159, Recon Pose Loss: 0.0616, Recon Dir Loss: 0.1654, Vel Loss: 2.1633, VQ Loss: 0.1808, Perplexity: 94.1170
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009969804777275899]
+epoch:7/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.20it/s]
+Avg Loss: 0.517190158367157
+Avg Recon Pose Loss: 0.04944853484630585
+Avg Recon Dir Loss: 0.1655685305595398
+Avg Vel Loss: 2.3883554935455322
+Avg VQ Loss: 0.18275532126426697
+Avg Perplexity: 124.33612060546875
+Avg Loss: 0.5366664826869965
+Avg Recon Pose Loss: 0.05643191214392681
+Avg Recon Dir Loss: 0.1609152345964224
+Avg Vel Loss: 2.41136366305965
+Avg VQ Loss: 0.19875115119289644
+Avg Perplexity: 125.0046604269802
+Avg Loss: 0.53300681013373
+Avg Recon Pose Loss: 0.05588924024828631
+Avg Recon Dir Loss: 0.15966134355287648
+Avg Vel Loss: 2.400563522357846
+Avg VQ Loss: 0.19742804680445894
+Avg Perplexity: 126.78986187835238
+Avg Loss: 0.5303879982213245
+Avg Recon Pose Loss: 0.055078709355719464
+Avg Recon Dir Loss: 0.15933867563737983
+Avg Vel Loss: 2.3976807451723423
+Avg VQ Loss: 0.19608657185817477
+Avg Perplexity: 128.03062165219126
+Avg Loss: 0.5288876225228916
+Avg Recon Pose Loss: 0.05489228214334669
+Avg Recon Dir Loss: 0.1584303117452417
+Avg Vel Loss: 2.399614714030316
+Avg VQ Loss: 0.1955842901197752
+Avg Perplexity: 129.91196515851485
+--eval--
+33it [00:01, 22.24it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.93it/s]                                                                                                                                                                                                    
+Epoch 8/200)
+Train Loss: 0.5289, Recon Pose Loss: 0.0548, Recon Dir Loss: 0.1583, Vel Loss: 2.3985, VQ Loss: 0.1959, Perplexity: 129.6406
+Eval Loss: 0.5192, Recon Pose Loss: 0.0543, Recon Dir Loss: 0.1598, Vel Loss: 2.1704, VQ Loss: 0.1965, Perplexity: 103.0520
+Test Loss: 0.5182, Recon Pose Loss: 0.0603, Recon Dir Loss: 0.1607, Vel Loss: 2.1602, VQ Loss: 0.1893, Perplexity: 99.3590
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.000996057350657239]
+epoch:8/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.13it/s]
+Avg Loss: 0.5498965978622437
+Avg Recon Pose Loss: 0.044798918068408966
+Avg Recon Dir Loss: 0.17390486598014832
+Avg Vel Loss: 2.6534781455993652
+Avg VQ Loss: 0.19851893186569214
+Avg Perplexity: 124.49813842773438
+Avg Loss: 0.5295598350539066
+Avg Recon Pose Loss: 0.05279852143756234
+Avg Recon Dir Loss: 0.15589166351474157
+Avg Vel Loss: 2.401733648658979
+Avg VQ Loss: 0.2007829678973349
+Avg Perplexity: 134.14082177794805
+Avg Loss: 0.5273997482672259
+Avg Recon Pose Loss: 0.053023054510058454
+Avg Recon Dir Loss: 0.15494586208566505
+Avg Vel Loss: 2.3945492262863994
+Avg VQ Loss: 0.19970337012365683
+Avg Perplexity: 134.3728310504363
+Avg Loss: 0.5265061599867684
+Avg Recon Pose Loss: 0.05305585133969982
+Avg Recon Dir Loss: 0.15482374404454943
+Avg Vel Loss: 2.3929776480031566
+Avg VQ Loss: 0.19897768156374016
+Avg Perplexity: 134.44861197233993
+Avg Loss: 0.5285058088433415
+Avg Recon Pose Loss: 0.053160864785499404
+Avg Recon Dir Loss: 0.15492981157620947
+Avg Vel Loss: 2.397178243817831
+Avg VQ Loss: 0.200556218772755
+Avg Perplexity: 134.85856590366126
+--eval--
+33it [00:01, 22.30it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.96it/s]                                                                                                                                                                                                    
+Epoch 9/200)
+Train Loss: 0.5283, Recon Pose Loss: 0.0531, Recon Dir Loss: 0.1549, Vel Loss: 2.3965, VQ Loss: 0.2006, Perplexity: 135.1605
+Eval Loss: 0.5421, Recon Pose Loss: 0.0523, Recon Dir Loss: 0.1570, Vel Loss: 2.1685, VQ Loss: 0.2243, Perplexity: 121.9520
+Test Loss: 0.5392, Recon Pose Loss: 0.0584, Recon Dir Loss: 0.1565, Vel Loss: 2.1589, VQ Loss: 0.2164, Perplexity: 118.1763
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009950118288582787]
+epoch:9/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.16it/s]
+Avg Loss: 0.5581005215644836
+Avg Recon Pose Loss: 0.04462859407067299
+Avg Recon Dir Loss: 0.16125890612602234
+Avg Vel Loss: 2.4003982543945312
+Avg VQ Loss: 0.23219311237335205
+Avg Perplexity: 165.29234313964844
+Avg Loss: 0.5341248122772367
+Avg Recon Pose Loss: 0.052773495453714146
+Avg Recon Dir Loss: 0.15371490557595055
+Avg Vel Loss: 2.4035850114161423
+Avg VQ Loss: 0.20745716295620004
+Avg Perplexity: 140.5759676942731
+Avg Loss: 0.5285823385217296
+Avg Recon Pose Loss: 0.05266556054798525
+Avg Recon Dir Loss: 0.15202449655058373
+Avg Vel Loss: 2.395521990695403
+Avg VQ Loss: 0.20411618298559048
+Avg Perplexity: 143.21700544974104
+Avg Loss: 0.5269043927770912
+Avg Recon Pose Loss: 0.052345459346359355
+Avg Recon Dir Loss: 0.15181557150972247
+Avg Vel Loss: 2.396331865526117
+Avg VQ Loss: 0.20292676792192302
+Avg Perplexity: 144.00854400938928
+Avg Loss: 0.5261889904960433
+Avg Recon Pose Loss: 0.05211293466036159
+Avg Recon Dir Loss: 0.15137148804572456
+Avg Vel Loss: 2.3931109881460517
+Avg VQ Loss: 0.20304901719539242
+Avg Perplexity: 143.89626791709082
+--eval--
+33it [00:01, 22.43it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.17it/s]                                                                                                                                                                                                    
+Epoch 10/200)
+Train Loss: 0.5267, Recon Pose Loss: 0.0522, Recon Dir Loss: 0.1514, Vel Loss: 2.3939, VQ Loss: 0.2034, Perplexity: 143.8397
+Eval Loss: 0.5132, Recon Pose Loss: 0.0538, Recon Dir Loss: 0.1553, Vel Loss: 2.1614, VQ Loss: 0.1960, Perplexity: 119.2358
+Test Loss: 0.5112, Recon Pose Loss: 0.0597, Recon Dir Loss: 0.1551, Vel Loss: 2.1515, VQ Loss: 0.1889, Perplexity: 112.0617
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009938441702975688]
+epoch:10/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.12it/s]
+Avg Loss: 0.5242075324058533
+Avg Recon Pose Loss: 0.05353815481066704
+Avg Recon Dir Loss: 0.14245346188545227
+Avg Vel Loss: 2.3872647285461426
+Avg VQ Loss: 0.20885267853736877
+Avg Perplexity: 142.1156463623047
+Avg Loss: 0.5295347833987509
+Avg Recon Pose Loss: 0.05163703799837887
+Avg Recon Dir Loss: 0.14952040485816426
+Avg Vel Loss: 2.388628787333422
+Avg VQ Loss: 0.20894589710353625
+Avg Perplexity: 144.91985721399288
+Avg Loss: 0.5257963791712007
+Avg Recon Pose Loss: 0.05182742425680754
+Avg Recon Dir Loss: 0.1487546965702256
+Avg Vel Loss: 2.3898093510623
+Avg VQ Loss: 0.2057237866802595
+Avg Perplexity: 147.1449240309682
+Avg Loss: 0.527237366402268
+Avg Recon Pose Loss: 0.051644257186259146
+Avg Recon Dir Loss: 0.14860455365077999
+Avg Vel Loss: 2.3914060434233706
+Avg VQ Loss: 0.20741824914648682
+Avg Perplexity: 148.04035521345676
+Avg Loss: 0.5263255909642673
+Avg Recon Pose Loss: 0.05147657432869783
+Avg Recon Dir Loss: 0.14845726912158386
+Avg Vel Loss: 2.3914416609262292
+Avg VQ Loss: 0.20681966138896798
+Avg Perplexity: 149.0271871856918
+--eval--
+33it [00:01, 22.03it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.55it/s]                                                                                                                                                                                                    
+Epoch 11/200)
+Train Loss: 0.5257, Recon Pose Loss: 0.0514, Recon Dir Loss: 0.1482, Vel Loss: 2.3900, VQ Loss: 0.2066, Perplexity: 148.9956
+Eval Loss: 0.5174, Recon Pose Loss: 0.0519, Recon Dir Loss: 0.1524, Vel Loss: 2.1579, VQ Loss: 0.2052, Perplexity: 125.1055
+Test Loss: 0.5181, Recon Pose Loss: 0.0576, Recon Dir Loss: 0.1526, Vel Loss: 2.1485, VQ Loss: 0.2005, Perplexity: 123.4542
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.000992554663077387]
+epoch:11/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.13it/s]
+Avg Loss: 0.457778662443161
+Avg Recon Pose Loss: 0.047737859189510345
+Avg Recon Dir Loss: 0.12878423929214478
+Avg Vel Loss: 2.2703075408935547
+Avg VQ Loss: 0.16774117946624756
+Avg Perplexity: 180.9965057373047
+Avg Loss: 0.5243518833476718
+Avg Recon Pose Loss: 0.05039527945884383
+Avg Recon Dir Loss: 0.14604461930765963
+Avg Vel Loss: 2.378640611573021
+Avg VQ Loss: 0.20897995378121292
+Avg Perplexity: 148.64688427613513
+Avg Loss: 0.5237126031621772
+Avg Recon Pose Loss: 0.050468995963311315
+Avg Recon Dir Loss: 0.14567941278960575
+Avg Vel Loss: 2.379647231220606
+Avg VQ Loss: 0.20858183214023931
+Avg Perplexity: 148.72878644952726
+Avg Loss: 0.5265448395397972
+Avg Recon Pose Loss: 0.05071036228012801
+Avg Recon Dir Loss: 0.14616008657355642
+Avg Vel Loss: 2.385188791838991
+Avg VQ Loss: 0.21041494924760737
+Avg Perplexity: 150.5177643481283
+Avg Loss: 0.5265035431581245
+Avg Recon Pose Loss: 0.05060032824811495
+Avg Recon Dir Loss: 0.1459848951743428
+Avg Vel Loss: 2.38640758521539
+Avg VQ Loss: 0.2105979385072751
+Avg Perplexity: 151.09517821885106
+--eval--
+33it [00:01, 22.28it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.22it/s]                                                                                                                                                                                                    
+Epoch 12/200)
+Train Loss: 0.5266, Recon Pose Loss: 0.0506, Recon Dir Loss: 0.1459, Vel Loss: 2.3874, VQ Loss: 0.2107, Perplexity: 151.0184
+Eval Loss: 0.5205, Recon Pose Loss: 0.0518, Recon Dir Loss: 0.1474, Vel Loss: 2.1490, VQ Loss: 0.2138, Perplexity: 128.7945
+Test Loss: 0.5191, Recon Pose Loss: 0.0567, Recon Dir Loss: 0.1483, Vel Loss: 2.1399, VQ Loss: 0.2072, Perplexity: 122.1810
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009911436253643444]
+epoch:12/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.05it/s]
+Avg Loss: 0.49917149543762207
+Avg Recon Pose Loss: 0.04481907933950424
+Avg Recon Dir Loss: 0.1284821629524231
+Avg Vel Loss: 2.2445693016052246
+Avg VQ Loss: 0.21364176273345947
+Avg Perplexity: 136.9114532470703
+Avg Loss: 0.5227270208963073
+Avg Recon Pose Loss: 0.04960229177728738
+Avg Recon Dir Loss: 0.14243586265509672
+Avg Vel Loss: 2.379363687911836
+Avg VQ Loss: 0.21172068009872247
+Avg Perplexity: 151.36834626150602
+Avg Loss: 0.5244932773694471
+Avg Recon Pose Loss: 0.049820390210222845
+Avg Recon Dir Loss: 0.1434484717635373
+Avg Vel Loss: 2.3833368737899248
+Avg VQ Loss: 0.21205756876302595
+Avg Perplexity: 153.1672234226815
+Avg Loss: 0.5258837850188892
+Avg Recon Pose Loss: 0.049881888671075784
+Avg Recon Dir Loss: 0.1440253150324489
+Avg Vel Loss: 2.3887123966533874
+Avg VQ Loss: 0.21254095776730597
+Avg Perplexity: 155.63152807495524
+Avg Loss: 0.5252100082109694
+Avg Recon Pose Loss: 0.049773033884843984
+Avg Recon Dir Loss: 0.14370828826082616
+Avg Vel Loss: 2.3871378298114956
+Avg VQ Loss: 0.2123717913529522
+Avg Perplexity: 155.20324988614888
+--eval--
+33it [00:01, 22.15it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.05it/s]                                                                                                                                                                                                    
+Epoch 13/200)
+Train Loss: 0.5248, Recon Pose Loss: 0.0498, Recon Dir Loss: 0.1433, Vel Loss: 2.3854, VQ Loss: 0.2125, Perplexity: 155.2989
+Eval Loss: 0.5205, Recon Pose Loss: 0.0502, Recon Dir Loss: 0.1455, Vel Loss: 2.1464, VQ Loss: 0.2175, Perplexity: 132.6301
+Test Loss: 0.5196, Recon Pose Loss: 0.0557, Recon Dir Loss: 0.1462, Vel Loss: 2.1363, VQ Loss: 0.2108, Perplexity: 123.9730
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009896114053108828]
+epoch:13/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.03it/s]
+Avg Loss: 0.49662959575653076
+Avg Recon Pose Loss: 0.04317484796047211
+Avg Recon Dir Loss: 0.12129364907741547
+Avg Vel Loss: 2.235600233078003
+Avg VQ Loss: 0.22038108110427856
+Avg Perplexity: 119.0162582397461
+Avg Loss: 0.5208831571116306
+Avg Recon Pose Loss: 0.049874253091540664
+Avg Recon Dir Loss: 0.14073679950272683
+Avg Vel Loss: 2.3757128975178934
+Avg VQ Loss: 0.2114864550899751
+Avg Perplexity: 155.15500557776724
+Avg Loss: 0.521749587497901
+Avg Recon Pose Loss: 0.04948172694192597
+Avg Recon Dir Loss: 0.1412034733452607
+Avg Vel Loss: 2.384280449122339
+Avg VQ Loss: 0.2118503630013015
+Avg Perplexity: 156.8168528163018
+Avg Loss: 0.5214473083367775
+Avg Recon Pose Loss: 0.04927261887842239
+Avg Recon Dir Loss: 0.141193492294744
+Avg Vel Loss: 2.3817662574920146
+Avg VQ Loss: 0.21189288245483096
+Avg Perplexity: 158.2795936102883
+Avg Loss: 0.5225716300884684
+Avg Recon Pose Loss: 0.0491920742403688
+Avg Recon Dir Loss: 0.14139231006403516
+Avg Vel Loss: 2.3817964509835563
+Avg VQ Loss: 0.2128974199666644
+Avg Perplexity: 158.54188295968453
+--eval--
+33it [00:01, 21.93it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.14it/s]                                                                                                                                                                                                    
+Epoch 14/200)
+Train Loss: 0.5233, Recon Pose Loss: 0.0492, Recon Dir Loss: 0.1416, Vel Loss: 2.3838, VQ Loss: 0.2134, Perplexity: 158.9870
+Eval Loss: 0.5277, Recon Pose Loss: 0.0492, Recon Dir Loss: 0.1445, Vel Loss: 2.1471, VQ Loss: 0.2267, Perplexity: 141.5854
+Test Loss: 0.5259, Recon Pose Loss: 0.0544, Recon Dir Loss: 0.1449, Vel Loss: 2.1369, VQ Loss: 0.2197, Perplexity: 134.5922
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009879583809693736]
+epoch:14/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.07it/s]
+Avg Loss: 0.5734182000160217
+Avg Recon Pose Loss: 0.04185102880001068
+Avg Recon Dir Loss: 0.14393296837806702
+Avg Vel Loss: 2.3556535243988037
+Avg VQ Loss: 0.26985153555870056
+Avg Perplexity: 151.92572021484375
+Avg Loss: 0.5195830904021121
+Avg Recon Pose Loss: 0.048593099975940024
+Avg Recon Dir Loss: 0.140533020221951
+Avg Vel Loss: 2.381965495572232
+Avg VQ Loss: 0.21135869489447906
+Avg Perplexity: 162.5415414489142
+Avg Loss: 0.5225131465724452
+Avg Recon Pose Loss: 0.048598333470412154
+Avg Recon Dir Loss: 0.14059329184874966
+Avg Vel Loss: 2.386971688389185
+Avg VQ Loss: 0.21397293422056074
+Avg Perplexity: 162.14618599355518
+Avg Loss: 0.5222843858688773
+Avg Recon Pose Loss: 0.04862737020731368
+Avg Recon Dir Loss: 0.14060601626717767
+Avg Vel Loss: 2.387725775424032
+Avg VQ Loss: 0.21366470725433376
+Avg Perplexity: 161.20364410299004
+Avg Loss: 0.519866894010891
+Avg Recon Pose Loss: 0.04850543542135683
+Avg Recon Dir Loss: 0.1398402286363659
+Avg Vel Loss: 2.3801797417333894
+Avg VQ Loss: 0.21251224022256465
+Avg Perplexity: 160.93276241235898
+--eval--
+33it [00:01, 22.26it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.10it/s]                                                                                                                                                                                                    
+Epoch 15/200)
+Train Loss: 0.5198, Recon Pose Loss: 0.0485, Recon Dir Loss: 0.1399, Vel Loss: 2.3808, VQ Loss: 0.2124, Perplexity: 160.8020
+Eval Loss: 0.5202, Recon Pose Loss: 0.0496, Recon Dir Loss: 0.1442, Vel Loss: 2.1435, VQ Loss: 0.2192, Perplexity: 137.2263
+Test Loss: 0.5172, Recon Pose Loss: 0.0551, Recon Dir Loss: 0.1449, Vel Loss: 2.1345, VQ Loss: 0.2105, Perplexity: 131.1834
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009861849601988382]
+epoch:15/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.15it/s]
+Avg Loss: 0.523845911026001
+Avg Recon Pose Loss: 0.04927807301282883
+Avg Recon Dir Loss: 0.15064483880996704
+Avg Vel Loss: 2.5093493461608887
+Avg VQ Loss: 0.19845548272132874
+Avg Perplexity: 177.55734252929688
+Avg Loss: 0.5276215876093006
+Avg Recon Pose Loss: 0.04959586270079754
+Avg Recon Dir Loss: 0.14162908044486944
+Avg Vel Loss: 2.398285660413232
+Avg VQ Loss: 0.2164823581086527
+Avg Perplexity: 163.80867669133858
+Avg Loss: 0.5247868367688573
+Avg Recon Pose Loss: 0.048639488494514826
+Avg Recon Dir Loss: 0.14063823627150474
+Avg Vel Loss: 2.389698071266288
+Avg VQ Loss: 0.2160242057558316
+Avg Perplexity: 162.53309847703622
+Avg Loss: 0.520524051399326
+Avg Recon Pose Loss: 0.04848046673839274
+Avg Recon Dir Loss: 0.13913252182379118
+Avg Vel Loss: 2.383220973600977
+Avg VQ Loss: 0.21375001065952834
+Avg Perplexity: 162.35070450995056
+Avg Loss: 0.5186085656396766
+Avg Recon Pose Loss: 0.04820967573403123
+Avg Recon Dir Loss: 0.1386731705835038
+Avg Vel Loss: 2.380976335663451
+Avg VQ Loss: 0.2126768994286768
+Avg Perplexity: 163.2297700991357
+--eval--
+33it [00:01, 22.12it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.22it/s]                                                                                                                                                                                                    
+Epoch 16/200)
+Train Loss: 0.5189, Recon Pose Loss: 0.0481, Recon Dir Loss: 0.1386, Vel Loss: 2.3819, VQ Loss: 0.2131, Perplexity: 163.0554
+Eval Loss: 0.5145, Recon Pose Loss: 0.0488, Recon Dir Loss: 0.1403, Vel Loss: 2.1417, VQ Loss: 0.2183, Perplexity: 142.6279
+Test Loss: 0.5141, Recon Pose Loss: 0.0543, Recon Dir Loss: 0.1407, Vel Loss: 2.1324, VQ Loss: 0.2125, Perplexity: 133.4330
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009842915805643154]
+epoch:16/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.88it/s]
+Avg Loss: 0.4384429156780243
+Avg Recon Pose Loss: 0.045762863010168076
+Avg Recon Dir Loss: 0.13125357031822205
+Avg Vel Loss: 2.240004539489746
+Avg VQ Loss: 0.14942625164985657
+Avg Perplexity: 190.12161254882812
+Avg Loss: 0.5171731220613612
+Avg Recon Pose Loss: 0.04767843350620553
+Avg Recon Dir Loss: 0.13655915022781578
+Avg Vel Loss: 2.359801448217713
+Avg VQ Loss: 0.2149454673918167
+Avg Perplexity: 165.18837836237236
+Avg Loss: 0.5169589903520707
+Avg Recon Pose Loss: 0.0475786510132142
+Avg Recon Dir Loss: 0.13608832056842632
+Avg Vel Loss: 2.366599486241886
+Avg VQ Loss: 0.21496204268279953
+Avg Perplexity: 164.08770300262603
+Avg Loss: 0.5186663956143135
+Avg Recon Pose Loss: 0.047647876436033125
+Avg Recon Dir Loss: 0.13678387319823831
+Avg Vel Loss: 2.374994003891549
+Avg VQ Loss: 0.21548494345127941
+Avg Perplexity: 165.24761993306817
+Avg Loss: 0.518699661083055
+Avg Recon Pose Loss: 0.047577210420979524
+Avg Recon Dir Loss: 0.13656276068708248
+Avg Vel Loss: 2.378580627893272
+Avg VQ Loss: 0.21563065620580515
+Avg Perplexity: 166.6684672862217
+--eval--
+33it [00:01, 22.31it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.04it/s]                                                                                                                                                                                                    
+Epoch 17/200)
+Train Loss: 0.5188, Recon Pose Loss: 0.0476, Recon Dir Loss: 0.1366, Vel Loss: 2.3795, VQ Loss: 0.2156, Perplexity: 166.9432
+Eval Loss: 0.5277, Recon Pose Loss: 0.0487, Recon Dir Loss: 0.1397, Vel Loss: 2.1379, VQ Loss: 0.2324, Perplexity: 143.5836
+Test Loss: 0.5300, Recon Pose Loss: 0.0548, Recon Dir Loss: 0.1405, Vel Loss: 2.1281, VQ Loss: 0.2284, Perplexity: 135.2365
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.000982278709228899]
+epoch:17/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.15it/s]
+Avg Loss: 0.4842946529388428
+Avg Recon Pose Loss: 0.04183945432305336
+Avg Recon Dir Loss: 0.11194856464862823
+Avg Vel Loss: 2.20774507522583
+Avg VQ Loss: 0.2201193869113922
+Avg Perplexity: 148.20651245117188
+Avg Loss: 0.5264452527655233
+Avg Recon Pose Loss: 0.047139041420846885
+Avg Recon Dir Loss: 0.13674926765189313
+Avg Vel Loss: 2.3915453901385315
+Avg VQ Loss: 0.22297967099907376
+Avg Perplexity: 170.86781084419476
+Avg Loss: 0.5197052343271265
+Avg Recon Pose Loss: 0.04705290045978418
+Avg Recon Dir Loss: 0.13569591212925033
+Avg Vel Loss: 2.3838963081587607
+Avg VQ Loss: 0.21776160382809331
+Avg Perplexity: 173.02868667526624
+Avg Loss: 0.5166967877517903
+Avg Recon Pose Loss: 0.046880335011751546
+Avg Recon Dir Loss: 0.13483545473742722
+Avg Vel Loss: 2.3760328356213742
+Avg VQ Loss: 0.21617935493934987
+Avg Perplexity: 173.25346782595614
+Avg Loss: 0.5169290590315982
+Avg Recon Pose Loss: 0.047113739855197304
+Avg Recon Dir Loss: 0.13478407016641777
+Avg Vel Loss: 2.3769975041510754
+Avg VQ Loss: 0.21618137135172721
+Avg Perplexity: 173.8236904191852
+--eval--
+33it [00:01, 22.41it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.36it/s]                                                                                                                                                                                                    
+Epoch 18/200)
+Train Loss: 0.5173, Recon Pose Loss: 0.0471, Recon Dir Loss: 0.1351, Vel Loss: 2.3795, VQ Loss: 0.2162, Perplexity: 174.4207
+Eval Loss: 0.5230, Recon Pose Loss: 0.0482, Recon Dir Loss: 0.1372, Vel Loss: 2.1370, VQ Loss: 0.2308, Perplexity: 155.2862
+Test Loss: 0.5256, Recon Pose Loss: 0.0535, Recon Dir Loss: 0.1382, Vel Loss: 2.1276, VQ Loss: 0.2276, Perplexity: 145.5822
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009801468428384714]
+epoch:18/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 20.79it/s]
+Avg Loss: 0.5188380479812622
+Avg Recon Pose Loss: 0.04229654371738434
+Avg Recon Dir Loss: 0.13172858953475952
+Avg Vel Loss: 2.2294344902038574
+Avg VQ Loss: 0.23334121704101562
+Avg Perplexity: 159.42677307128906
+Avg Loss: 0.5146756880354173
+Avg Recon Pose Loss: 0.04620698876310103
+Avg Recon Dir Loss: 0.1331560649346597
+Avg Vel Loss: 2.378257954474723
+Avg VQ Loss: 0.21639973633360154
+Avg Perplexity: 177.81058132058322
+Avg Loss: 0.5167606753199848
+Avg Recon Pose Loss: 0.046273455839252
+Avg Recon Dir Loss: 0.13350739255918198
+Avg Vel Loss: 2.3800091304589266
+Avg VQ Loss: 0.21797937050980715
+Avg Perplexity: 178.14319367669708
+Avg Loss: 0.5163713260940539
+Avg Recon Pose Loss: 0.04646895402590698
+Avg Recon Dir Loss: 0.1330647962136918
+Avg Vel Loss: 2.3760767893933776
+Avg VQ Loss: 0.2180337369243964
+Avg Perplexity: 179.1211107070264
+Avg Loss: 0.518403510426048
+Avg Recon Pose Loss: 0.04652029137473154
+Avg Recon Dir Loss: 0.1333766870405014
+Avg Vel Loss: 2.379192263705475
+Avg VQ Loss: 0.2195469181882473
+Avg Perplexity: 180.2343371574421
+--eval--
+33it [00:01, 22.36it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.96it/s]                                                                                                                                                                                                    
+Epoch 19/200)
+Train Loss: 0.5179, Recon Pose Loss: 0.0464, Recon Dir Loss: 0.1334, Vel Loss: 2.3804, VQ Loss: 0.2191, Perplexity: 180.9966
+Eval Loss: 0.5198, Recon Pose Loss: 0.0469, Recon Dir Loss: 0.1360, Vel Loss: 2.1335, VQ Loss: 0.2302, Perplexity: 162.9038
+Test Loss: 0.5242, Recon Pose Loss: 0.0523, Recon Dir Loss: 0.1363, Vel Loss: 2.1241, VQ Loss: 0.2294, Perplexity: 151.0108
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009778965073991648]
+epoch:19/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.17it/s]
+Avg Loss: 0.5189329385757446
+Avg Recon Pose Loss: 0.048645444214344025
+Avg Recon Dir Loss: 0.12611709535121918
+Avg Vel Loss: 2.415980815887451
+Avg VQ Loss: 0.22337137162685394
+Avg Perplexity: 153.3727569580078
+Avg Loss: 0.5155989282792157
+Avg Recon Pose Loss: 0.04583524658095719
+Avg Recon Dir Loss: 0.1315744973645352
+Avg Vel Loss: 2.3721324948981257
+Avg VQ Loss: 0.2195825581208314
+Avg Perplexity: 180.90576579783223
+Avg Loss: 0.5160819770981423
+Avg Recon Pose Loss: 0.04579970309167952
+Avg Recon Dir Loss: 0.13174956110282918
+Avg Vel Loss: 2.380846171829831
+Avg VQ Loss: 0.21949040274418408
+Avg Perplexity: 182.86312964899622
+Avg Loss: 0.5158257814142791
+Avg Recon Pose Loss: 0.045908436785603676
+Avg Recon Dir Loss: 0.13145278683829545
+Avg Vel Loss: 2.377631645266004
+Avg VQ Loss: 0.21958297431666984
+Avg Perplexity: 183.52452936521004
+Avg Loss: 0.5155966680246101
+Avg Recon Pose Loss: 0.045772856050298696
+Avg Recon Dir Loss: 0.13138955179369657
+Avg Vel Loss: 2.376965297427855
+Avg VQ Loss: 0.21958599408665797
+Avg Perplexity: 184.55546434740177
+--eval--
+33it [00:01, 22.33it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.17it/s]                                                                                                                                                                                                    
+Epoch 20/200)
+Train Loss: 0.5156, Recon Pose Loss: 0.0458, Recon Dir Loss: 0.1315, Vel Loss: 2.3796, VQ Loss: 0.2194, Perplexity: 184.8808
+Eval Loss: 0.5068, Recon Pose Loss: 0.0468, Recon Dir Loss: 0.1331, Vel Loss: 2.1357, VQ Loss: 0.2201, Perplexity: 167.5109
+Test Loss: 0.5085, Recon Pose Loss: 0.0516, Recon Dir Loss: 0.1345, Vel Loss: 2.1252, VQ Loss: 0.2162, Perplexity: 154.5156
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009755282581475766]
+epoch:20/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.14it/s]
+Avg Loss: 0.5250936150550842
+Avg Recon Pose Loss: 0.04919079691171646
+Avg Recon Dir Loss: 0.12524983286857605
+Avg Vel Loss: 2.410250663757324
+Avg VQ Loss: 0.23014044761657715
+Avg Perplexity: 158.07940673828125
+Avg Loss: 0.5157559779610964
+Avg Recon Pose Loss: 0.045762117214427134
+Avg Recon Dir Loss: 0.12955715241703655
+Avg Vel Loss: 2.375811232198583
+Avg VQ Loss: 0.22164614660905138
+Avg Perplexity: 191.14228156061455
+Avg Loss: 0.5155296048418206
+Avg Recon Pose Loss: 0.04542396286159606
+Avg Recon Dir Loss: 0.13007053810713895
+Avg Vel Loss: 2.374308090304854
+Avg VQ Loss: 0.22131969924293346
+Avg Perplexity: 188.57196500408116
+Avg Loss: 0.5148492276272505
+Avg Recon Pose Loss: 0.045357663679459564
+Avg Recon Dir Loss: 0.12983588361957937
+Avg Vel Loss: 2.3784612381577097
+Avg VQ Loss: 0.2207326177148724
+Avg Perplexity: 188.34606206139853
+Avg Loss: 0.5162578701527042
+Avg Recon Pose Loss: 0.04539254552073907
+Avg Recon Dir Loss: 0.1303522377240093
+Avg Vel Loss: 2.3801288777158742
+Avg VQ Loss: 0.22150664250749602
+Avg Perplexity: 188.46016053844272
+--eval--
+33it [00:01, 22.41it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.76it/s]                                                                                                                                                                                                    
+Epoch 21/200)
+Train Loss: 0.5151, Recon Pose Loss: 0.0453, Recon Dir Loss: 0.1301, Vel Loss: 2.3783, VQ Loss: 0.2208, Perplexity: 188.8983
+Eval Loss: 0.5025, Recon Pose Loss: 0.0459, Recon Dir Loss: 0.1319, Vel Loss: 2.1317, VQ Loss: 0.2182, Perplexity: 167.7934
+Test Loss: 0.5098, Recon Pose Loss: 0.0508, Recon Dir Loss: 0.1330, Vel Loss: 2.1211, VQ Loss: 0.2199, Perplexity: 155.2030
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009730426794137723]
+epoch:21/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.13it/s]
+Avg Loss: 0.500419020652771
+Avg Recon Pose Loss: 0.04197026416659355
+Avg Recon Dir Loss: 0.11640051007270813
+Avg Vel Loss: 2.2762460708618164
+Avg VQ Loss: 0.22823593020439148
+Avg Perplexity: 140.94146728515625
+Avg Loss: 0.5129746806503522
+Avg Recon Pose Loss: 0.04543864668005764
+Avg Recon Dir Loss: 0.12907357056542199
+Avg Vel Loss: 2.3826815161374535
+Avg VQ Loss: 0.21932838901434795
+Avg Perplexity: 192.6376467412061
+Avg Loss: 0.516942594181839
+Avg Recon Pose Loss: 0.045101315802454356
+Avg Recon Dir Loss: 0.12992460988647309
+Avg Vel Loss: 2.3791069142260954
+Avg VQ Loss: 0.22296132510574304
+Avg Perplexity: 192.82338342619178
+Avg Loss: 0.5165453328444712
+Avg Recon Pose Loss: 0.0450039915121671
+Avg Recon Dir Loss: 0.12991262187692415
+Avg Vel Loss: 2.381570902377664
+Avg VQ Loss: 0.22255017561373916
+Avg Perplexity: 193.33595389939623
+Avg Loss: 0.5148966354027651
+Avg Recon Pose Loss: 0.04487082647378011
+Avg Recon Dir Loss: 0.12941340672925225
+Avg Vel Loss: 2.3793046058264755
+Avg VQ Loss: 0.22164717208863494
+Avg Perplexity: 193.22845761496527
+--eval--
+33it [00:01, 22.14it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.99it/s]                                                                                                                                                                                                    
+Epoch 22/200)
+Train Loss: 0.5135, Recon Pose Loss: 0.0449, Recon Dir Loss: 0.1292, Vel Loss: 2.3776, VQ Loss: 0.2206, Perplexity: 193.0467
+Eval Loss: 0.4957, Recon Pose Loss: 0.0462, Recon Dir Loss: 0.1326, Vel Loss: 2.1309, VQ Loss: 0.2104, Perplexity: 165.9079
+Test Loss: 0.4996, Recon Pose Loss: 0.0506, Recon Dir Loss: 0.1340, Vel Loss: 2.1204, VQ Loss: 0.2089, Perplexity: 155.4852
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009704403844771124]
+epoch:22/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.14it/s]
+Avg Loss: 0.4319005310535431
+Avg Recon Pose Loss: 0.04381640627980232
+Avg Recon Dir Loss: 0.10756815969944
+Avg Vel Loss: 2.1990737915039062
+Avg VQ Loss: 0.1705622673034668
+Avg Perplexity: 196.95762634277344
+Avg Loss: 0.5104475776747902
+Avg Recon Pose Loss: 0.044400789175588304
+Avg Recon Dir Loss: 0.12685134453643668
+Avg Vel Loss: 2.373077117570556
+Avg VQ Loss: 0.22054158711787497
+Avg Perplexity: 191.24074652643486
+Avg Loss: 0.508787375777515
+Avg Recon Pose Loss: 0.04426607680483837
+Avg Recon Dir Loss: 0.12763794663533642
+Avg Vel Loss: 2.3724007173557187
+Avg VQ Loss: 0.21826331613965294
+Avg Perplexity: 190.7522070585792
+Avg Loss: 0.5098158368636604
+Avg Recon Pose Loss: 0.044333075578525616
+Avg Recon Dir Loss: 0.12788102379768
+Avg Vel Loss: 2.3764811263131937
+Avg VQ Loss: 0.2187776798722752
+Avg Perplexity: 192.48743202995223
+Avg Loss: 0.5091020044989122
+Avg Recon Pose Loss: 0.04434997796027589
+Avg Recon Dir Loss: 0.12753745101559488
+Avg Vel Loss: 2.3750576298135773
+Avg VQ Loss: 0.21846169229606144
+Avg Perplexity: 193.0704704532005
+--eval--
+33it [00:01, 22.24it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.07it/s]                                                                                                                                                                                                    
+Epoch 23/200)
+Train Loss: 0.5109, Recon Pose Loss: 0.0446, Recon Dir Loss: 0.1278, Vel Loss: 2.3783, VQ Loss: 0.2196, Perplexity: 192.6340
+Eval Loss: 0.4946, Recon Pose Loss: 0.0451, Recon Dir Loss: 0.1306, Vel Loss: 2.1286, VQ Loss: 0.2124, Perplexity: 172.1217
+Test Loss: 0.4968, Recon Pose Loss: 0.0495, Recon Dir Loss: 0.1320, Vel Loss: 2.1174, VQ Loss: 0.2094, Perplexity: 158.1662
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009677220154149334]
+epoch:23/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.03it/s]
+Avg Loss: 0.46015965938568115
+Avg Recon Pose Loss: 0.05170781537890434
+Avg Recon Dir Loss: 0.13785475492477417
+Avg Vel Loss: 2.3639461994171143
+Avg VQ Loss: 0.15239976346492767
+Avg Perplexity: 191.24481201171875
+Avg Loss: 0.5097148498096088
+Avg Recon Pose Loss: 0.044562180923058255
+Avg Recon Dir Loss: 0.12786905592916034
+Avg Vel Loss: 2.379825705348855
+Avg VQ Loss: 0.2182923252924834
+Avg Perplexity: 192.73202068970934
+Avg Loss: 0.5057486442487631
+Avg Recon Pose Loss: 0.04431818966841816
+Avg Recon Dir Loss: 0.127353548669993
+Avg Vel Loss: 2.3761907199128944
+Avg VQ Loss: 0.21526736747566147
+Avg Perplexity: 195.9022314346845
+Avg Loss: 0.5041938407278537
+Avg Recon Pose Loss: 0.04414233512112072
+Avg Recon Dir Loss: 0.12677658797300534
+Avg Vel Loss: 2.3729887487880417
+Avg VQ Loss: 0.21462547759281045
+Avg Perplexity: 195.13769990027544
+Avg Loss: 0.503935220086961
+Avg Recon Pose Loss: 0.04411809603472303
+Avg Recon Dir Loss: 0.12663179171501548
+Avg Vel Loss: 2.375573166290721
+Avg VQ Loss: 0.21440667155526225
+Avg Perplexity: 196.18717891854837
+--eval--
+33it [00:01, 22.21it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.08it/s]                                                                                                                                                                                                    
+Epoch 24/200)
+Train Loss: 0.5036, Recon Pose Loss: 0.0442, Recon Dir Loss: 0.1265, Vel Loss: 2.3756, VQ Loss: 0.2141, Perplexity: 196.2852
+Eval Loss: 0.5163, Recon Pose Loss: 0.0450, Recon Dir Loss: 0.1290, Vel Loss: 2.1260, VQ Loss: 0.2360, Perplexity: 171.3517
+Test Loss: 0.5255, Recon Pose Loss: 0.0497, Recon Dir Loss: 0.1303, Vel Loss: 2.1160, VQ Loss: 0.2397, Perplexity: 160.5873
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009648882429441253]
+epoch:24/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.18it/s]
+Avg Loss: 0.5280388593673706
+Avg Recon Pose Loss: 0.04976177588105202
+Avg Recon Dir Loss: 0.12267954647541046
+Avg Vel Loss: 2.438098192214966
+Avg VQ Loss: 0.23369261622428894
+Avg Perplexity: 192.21958923339844
+Avg Loss: 0.5023459479360297
+Avg Recon Pose Loss: 0.043313784985849174
+Avg Recon Dir Loss: 0.12553060630170426
+Avg Vel Loss: 2.3652263561097704
+Avg VQ Loss: 0.21524023611356716
+Avg Perplexity: 202.0976530773805
+Avg Loss: 0.501187689861848
+Avg Recon Pose Loss: 0.04347383621987419
+Avg Recon Dir Loss: 0.12494827087838851
+Avg Vel Loss: 2.3706487114749737
+Avg VQ Loss: 0.2142331460815164
+Avg Perplexity: 200.86073257674033
+Avg Loss: 0.502610141454741
+Avg Recon Pose Loss: 0.04364427947671311
+Avg Recon Dir Loss: 0.12543200149488606
+Avg Vel Loss: 2.373712113529345
+Avg VQ Loss: 0.21484825287348408
+Avg Perplexity: 199.9895099627219
+Avg Loss: 0.5020504350822763
+Avg Recon Pose Loss: 0.04374935105443001
+Avg Recon Dir Loss: 0.125251717178007
+Avg Vel Loss: 2.373824382660692
+Avg VQ Loss: 0.21435814564513447
+Avg Perplexity: 199.1768535509371
+--eval--
+33it [00:01, 22.04it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.48it/s]                                                                                                                                                                                                    
+Epoch 25/200)
+Train Loss: 0.5028, Recon Pose Loss: 0.0438, Recon Dir Loss: 0.1254, Vel Loss: 2.3751, VQ Loss: 0.2149, Perplexity: 199.3990
+Eval Loss: 0.4861, Recon Pose Loss: 0.0444, Recon Dir Loss: 0.1289, Vel Loss: 2.1224, VQ Loss: 0.2067, Perplexity: 174.3261
+Test Loss: 0.4907, Recon Pose Loss: 0.0490, Recon Dir Loss: 0.1307, Vel Loss: 2.1130, VQ Loss: 0.2054, Perplexity: 160.8489
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.000961939766255643]
+epoch:25/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.10it/s]
+Avg Loss: 0.4648270606994629
+Avg Recon Pose Loss: 0.04671493545174599
+Avg Recon Dir Loss: 0.11048351973295212
+Avg Vel Loss: 2.1626453399658203
+Avg VQ Loss: 0.1994963139295578
+Avg Perplexity: 176.5824737548828
+Avg Loss: 0.4980421272834929
+Avg Recon Pose Loss: 0.0435730114136592
+Avg Recon Dir Loss: 0.1238458850743747
+Avg Vel Loss: 2.3770342132832742
+Avg VQ Loss: 0.21177151769694716
+Avg Perplexity: 198.92933020261253
+Avg Loss: 0.5017085618047572
+Avg Recon Pose Loss: 0.04371184264471875
+Avg Recon Dir Loss: 0.12464763717123525
+Avg Vel Loss: 2.3817074061626227
+Avg VQ Loss: 0.21426370910447629
+Avg Perplexity: 200.8378297416725
+Avg Loss: 0.4996046961541984
+Avg Recon Pose Loss: 0.0436763222703704
+Avg Recon Dir Loss: 0.12396475581136653
+Avg Vel Loss: 2.372230748401528
+Avg VQ Loss: 0.21335207839245812
+Avg Perplexity: 200.07423466780654
+Avg Loss: 0.5001104286781273
+Avg Recon Pose Loss: 0.043611909125808465
+Avg Recon Dir Loss: 0.12427207073219994
+Avg Vel Loss: 2.3752596853974453
+Avg VQ Loss: 0.21346346207167444
+Avg Perplexity: 200.84998677317935
+--eval--
+33it [00:01, 22.31it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.36it/s]                                                                                                                                                                                                    
+Epoch 26/200)
+Train Loss: 0.5012, Recon Pose Loss: 0.0436, Recon Dir Loss: 0.1245, Vel Loss: 2.3745, VQ Loss: 0.2144, Perplexity: 200.4715
+Eval Loss: 0.4761, Recon Pose Loss: 0.0444, Recon Dir Loss: 0.1273, Vel Loss: 2.1216, VQ Loss: 0.1982, Perplexity: 178.6224
+Test Loss: 0.4826, Recon Pose Loss: 0.0489, Recon Dir Loss: 0.1290, Vel Loss: 2.1116, VQ Loss: 0.1991, Perplexity: 165.1241
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009588773128419901]
+epoch:26/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.05it/s]
+Avg Loss: 0.40444669127464294
+Avg Recon Pose Loss: 0.035373300313949585
+Avg Recon Dir Loss: 0.10913027822971344
+Avg Vel Loss: 2.1220014095306396
+Avg VQ Loss: 0.15384304523468018
+Avg Perplexity: 180.61561584472656
+Avg Loss: 0.5017158374337867
+Avg Recon Pose Loss: 0.04443276939120623
+Avg Recon Dir Loss: 0.12363359309954218
+Avg Vel Loss: 2.3831289451901276
+Avg VQ Loss: 0.21449302476231413
+Avg Perplexity: 196.49770030408803
+Avg Loss: 0.5008776921834519
+Avg Recon Pose Loss: 0.04366247754414283
+Avg Recon Dir Loss: 0.12412891614792952
+Avg Vel Loss: 2.3788402827818
+Avg VQ Loss: 0.2141442797077236
+Avg Perplexity: 200.12009987902286
+Avg Loss: 0.5014114313545417
+Avg Recon Pose Loss: 0.04350099888354837
+Avg Recon Dir Loss: 0.12404819815558848
+Avg Vel Loss: 2.379582950047084
+Avg VQ Loss: 0.21488308347142812
+Avg Perplexity: 200.16827559867176
+Avg Loss: 0.5005836337433194
+Avg Recon Pose Loss: 0.04344824208248583
+Avg Recon Dir Loss: 0.12392767507610773
+Avg Vel Loss: 2.3764310406330518
+Avg VQ Loss: 0.2143861623178991
+Avg Perplexity: 200.8920058633324
+--eval--
+33it [00:01, 22.44it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.93it/s]                                                                                                                                                                                                    
+Epoch 27/200)
+Train Loss: 0.4993, Recon Pose Loss: 0.0433, Recon Dir Loss: 0.1235, Vel Loss: 2.3730, VQ Loss: 0.2138, Perplexity: 200.5004
+Eval Loss: 0.4727, Recon Pose Loss: 0.0450, Recon Dir Loss: 0.1266, Vel Loss: 2.1218, VQ Loss: 0.1951, Perplexity: 178.8645
+Test Loss: 0.4760, Recon Pose Loss: 0.0497, Recon Dir Loss: 0.1275, Vel Loss: 2.1117, VQ Loss: 0.1933, Perplexity: 164.5895
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009557016383177221]
+epoch:27/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.17it/s]
+Avg Loss: 0.38594284653663635
+Avg Recon Pose Loss: 0.04447309672832489
+Avg Recon Dir Loss: 0.10698540508747101
+Avg Vel Loss: 2.15837025642395
+Avg VQ Loss: 0.1265658438205719
+Avg Perplexity: 172.13864135742188
+Avg Loss: 0.4994338520682684
+Avg Recon Pose Loss: 0.04400454131462196
+Avg Recon Dir Loss: 0.12253024495474182
+Avg Vel Loss: 2.372279445723732
+Avg VQ Loss: 0.21428508879524646
+Avg Perplexity: 198.50124880346922
+Avg Loss: 0.49763668947551976
+Avg Recon Pose Loss: 0.043398427290480525
+Avg Recon Dir Loss: 0.12183620554594259
+Avg Vel Loss: 2.36321748429863
+Avg VQ Loss: 0.21424117973491327
+Avg Perplexity: 199.92575718514362
+Avg Loss: 0.4949291549449743
+Avg Recon Pose Loss: 0.0429810005552646
+Avg Recon Dir Loss: 0.1213159281203517
+Avg Vel Loss: 2.35798719792667
+Avg VQ Loss: 0.21273286403017583
+Avg Perplexity: 199.38392963599526
+Avg Loss: 0.496929956195955
+Avg Recon Pose Loss: 0.04297944390101177
+Avg Recon Dir Loss: 0.12222829305025705
+Avg Vel Loss: 2.368815489243391
+Avg VQ Loss: 0.2132814423253114
+Avg Perplexity: 200.7514273626846
+--eval--
+33it [00:01, 22.23it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.01it/s]                                                                                                                                                                                                    
+Epoch 28/200)
+Train Loss: 0.4981, Recon Pose Loss: 0.0430, Recon Dir Loss: 0.1224, Vel Loss: 2.3707, VQ Loss: 0.2141, Perplexity: 201.2645
+Eval Loss: 0.4844, Recon Pose Loss: 0.0438, Recon Dir Loss: 0.1260, Vel Loss: 2.1188, VQ Loss: 0.2087, Perplexity: 185.6939
+Test Loss: 0.4880, Recon Pose Loss: 0.0485, Recon Dir Loss: 0.1264, Vel Loss: 2.1090, VQ Loss: 0.2078, Perplexity: 173.6162
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009524135262330093]
+epoch:28/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.07it/s]
+Avg Loss: 0.5156294703483582
+Avg Recon Pose Loss: 0.03892303630709648
+Avg Recon Dir Loss: 0.13729435205459595
+Avg Vel Loss: 2.5563645362854004
+Avg VQ Loss: 0.2115938663482666
+Avg Perplexity: 202.93858337402344
+Avg Loss: 0.5009866643069995
+Avg Recon Pose Loss: 0.04300549010386561
+Avg Recon Dir Loss: 0.12252317745201659
+Avg Vel Loss: 2.389005479246083
+Avg VQ Loss: 0.21600771909303004
+Avg Perplexity: 203.5631141284905
+Avg Loss: 0.5007154782909659
+Avg Recon Pose Loss: 0.04296338893658486
+Avg Recon Dir Loss: 0.12263093829451509
+Avg Vel Loss: 2.3857914322051244
+Avg VQ Loss: 0.21583157636929506
+Avg Perplexity: 203.25211163421176
+Avg Loss: 0.4978160572012398
+Avg Recon Pose Loss: 0.042602280130071495
+Avg Recon Dir Loss: 0.12128419161733994
+Avg Vel Loss: 2.3697482795018296
+Avg VQ Loss: 0.2154421694205449
+Avg Perplexity: 202.46033845312175
+Avg Loss: 0.49788094384414594
+Avg Recon Pose Loss: 0.04283174348906835
+Avg Recon Dir Loss: 0.12123588063844719
+Avg Vel Loss: 2.3683081119137808
+Avg VQ Loss: 0.21539791223785823
+Avg Perplexity: 202.41729869509575
+--eval--
+33it [00:01, 22.36it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.14it/s]                                                                                                                                                                                                    
+Epoch 29/200)
+Train Loss: 0.4992, Recon Pose Loss: 0.0428, Recon Dir Loss: 0.1214, Vel Loss: 2.3698, VQ Loss: 0.2165, Perplexity: 202.6624
+Eval Loss: 0.4855, Recon Pose Loss: 0.0440, Recon Dir Loss: 0.1242, Vel Loss: 2.1177, VQ Loss: 0.2114, Perplexity: 185.9307
+Test Loss: 0.4892, Recon Pose Loss: 0.0482, Recon Dir Loss: 0.1264, Vel Loss: 2.1078, VQ Loss: 0.2093, Perplexity: 173.6642
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009490137878803073]
+epoch:29/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.01it/s]
+Avg Loss: 0.46721190214157104
+Avg Recon Pose Loss: 0.04718605801463127
+Avg Recon Dir Loss: 0.10849377512931824
+Avg Vel Loss: 2.2492973804473877
+Avg VQ Loss: 0.19906720519065857
+Avg Perplexity: 171.03538513183594
+Avg Loss: 0.49798576814113277
+Avg Recon Pose Loss: 0.04248112962018735
+Avg Recon Dir Loss: 0.12064628037485746
+Avg Vel Loss: 2.3612494563112163
+Avg VQ Loss: 0.21679588414654874
+Avg Perplexity: 203.7318261779181
+Avg Loss: 0.5024847925005861
+Avg Recon Pose Loss: 0.04291990706094759
+Avg Recon Dir Loss: 0.12122874706983566
+Avg Vel Loss: 2.373342432192902
+Avg VQ Loss: 0.2196690140671991
+Avg Perplexity: 203.29744329499962
+Avg Loss: 0.5005356023873998
+Avg Recon Pose Loss: 0.04295024556104725
+Avg Recon Dir Loss: 0.12064684202207679
+Avg Vel Loss: 2.368731528025529
+Avg VQ Loss: 0.21850193626064796
+Avg Perplexity: 204.04658903711262
+Avg Loss: 0.49989187605957736
+Avg Recon Pose Loss: 0.04274502742636085
+Avg Recon Dir Loss: 0.1205891216745103
+Avg Vel Loss: 2.367621673907425
+Avg VQ Loss: 0.21817664103466378
+Avg Perplexity: 203.75120612926912
+--eval--
+33it [00:01, 22.55it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.38it/s]                                                                                                                                                                                                    
+Epoch 30/200)
+Train Loss: 0.4995, Recon Pose Loss: 0.0427, Recon Dir Loss: 0.1205, Vel Loss: 2.3702, VQ Loss: 0.2177, Perplexity: 203.9980
+Eval Loss: 0.4917, Recon Pose Loss: 0.0433, Recon Dir Loss: 0.1232, Vel Loss: 2.1161, VQ Loss: 0.2195, Perplexity: 175.6404
+Test Loss: 0.4976, Recon Pose Loss: 0.0476, Recon Dir Loss: 0.1252, Vel Loss: 2.1067, VQ Loss: 0.2195, Perplexity: 165.7552
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009455032620941834]
+epoch:30/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:21<00:00, 21.08it/s]
+Avg Loss: 0.4529082179069519
+Avg Recon Pose Loss: 0.035904694348573685
+Avg Recon Dir Loss: 0.11363407969474792
+Avg Vel Loss: 2.3408608436584473
+Avg VQ Loss: 0.18632639944553375
+Avg Perplexity: 225.267333984375
+Avg Loss: 0.5002183595506271
+Avg Recon Pose Loss: 0.04208513697849052
+Avg Recon Dir Loss: 0.12007048696574599
+Avg Vel Loss: 2.3664641781608657
+Avg VQ Loss: 0.2197395257725574
+Avg Perplexity: 198.0588457466352
+Avg Loss: 0.4957607011889937
+Avg Recon Pose Loss: 0.041815518248659464
+Avg Recon Dir Loss: 0.11894796540339787
+Avg Vel Loss: 2.3576336001875386
+Avg VQ Loss: 0.21711553610972503
+Avg Perplexity: 199.28581275750156
+Avg Loss: 0.49658590941334085
+Avg Recon Pose Loss: 0.04229914136478473
+Avg Recon Dir Loss: 0.11892213536259344
+Avg Vel Loss: 2.3632317207184346
+Avg VQ Loss: 0.21720304525769826
+Avg Perplexity: 202.5060445082148
+Avg Loss: 0.49826414203108693
+Avg Recon Pose Loss: 0.04241428321269236
+Avg Recon Dir Loss: 0.11937192624941134
+Avg Vel Loss: 2.3682535324905283
+Avg VQ Loss: 0.21806525388857967
+Avg Perplexity: 202.50427040613798
+--eval--
+33it [00:01, 22.09it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.24it/s]                                                                                                                                                                                                    
+Epoch 31/200)
+Train Loss: 0.4987, Recon Pose Loss: 0.0424, Recon Dir Loss: 0.1195, Vel Loss: 2.3682, VQ Loss: 0.2184, Perplexity: 202.1105
+Eval Loss: 0.4966, Recon Pose Loss: 0.0435, Recon Dir Loss: 0.1229, Vel Loss: 2.1149, VQ Loss: 0.2245, Perplexity: 172.2968
+Test Loss: 0.5008, Recon Pose Loss: 0.0478, Recon Dir Loss: 0.1246, Vel Loss: 2.1066, VQ Loss: 0.2230, Perplexity: 160.8137
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009418828150443463]
+epoch:31/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.10it/s]
+Avg Loss: 0.4849785566329956
+Avg Recon Pose Loss: 0.045285627245903015
+Avg Recon Dir Loss: 0.10538338124752045
+Avg Vel Loss: 2.277890205383301
+Avg VQ Loss: 0.22041502594947815
+Avg Perplexity: 177.28399658203125
+Avg Loss: 0.5050427606790373
+Avg Recon Pose Loss: 0.04234887251980824
+Avg Recon Dir Loss: 0.12072983671828072
+Avg Vel Loss: 2.383843908215513
+Avg VQ Loss: 0.22277185409375938
+Avg Perplexity: 201.08287365601794
+Avg Loss: 0.5015683055517093
+Avg Recon Pose Loss: 0.04227377530836051
+Avg Recon Dir Loss: 0.11938320971395246
+Avg Vel Loss: 2.3702475455269885
+Avg VQ Loss: 0.2213989415423787
+Avg Perplexity: 201.9608674310333
+Avg Loss: 0.5007769875352169
+Avg Recon Pose Loss: 0.04219321439977104
+Avg Recon Dir Loss: 0.11918867221009295
+Avg Vel Loss: 2.370389796570686
+Avg VQ Loss: 0.22087560925768857
+Avg Perplexity: 202.50839770751142
+Avg Loss: 0.5003197365568166
+Avg Recon Pose Loss: 0.042101151776729975
+Avg Recon Dir Loss: 0.1186746210231448
+Avg Vel Loss: 2.3672302821627875
+Avg VQ Loss: 0.22118244734488224
+Avg Perplexity: 202.35954927744118
+--eval--
+33it [00:01, 22.27it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 23.93it/s]                                                                                                                                                                                                    
+Epoch 32/200)
+Train Loss: 0.4996, Recon Pose Loss: 0.0421, Recon Dir Loss: 0.1186, Vel Loss: 2.3677, VQ Loss: 0.2205, Perplexity: 202.5180
+Eval Loss: 0.4863, Recon Pose Loss: 0.0436, Recon Dir Loss: 0.1215, Vel Loss: 2.1115, VQ Loss: 0.2157, Perplexity: 171.1727
+Test Loss: 0.4923, Recon Pose Loss: 0.0479, Recon Dir Loss: 0.1230, Vel Loss: 2.1019, VQ Loss: 0.2163, Perplexity: 157.7373
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009381533400219311]
+epoch:32/200
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 443/443 [00:20<00:00, 21.14it/s]
+Avg Loss: 0.4961385428905487
+Avg Recon Pose Loss: 0.04584483429789543
+Avg Recon Dir Loss: 0.12673728168010712
+Avg Vel Loss: 2.595759630203247
+Avg VQ Loss: 0.1937684416770935
+Avg Perplexity: 178.47689819335938
+Avg Loss: 0.5007984688376436
+Avg Recon Pose Loss: 0.04228192073578882
+Avg Recon Dir Loss: 0.11835182413901432
+Avg Vel Loss: 2.3849608685710644
+Avg VQ Loss: 0.22091668018020025
+Avg Perplexity: 204.2636416595761
+Avg Loss: 0.4975926328950854
+Avg Recon Pose Loss: 0.04182108820633805
+Avg Recon Dir Loss: 0.11697874577780862
+Avg Vel Loss: 2.365568840681617
+Avg VQ Loss: 0.22051435642278017
+Avg Perplexity: 201.84897192200617
+Avg Loss: 0.4990081222746459
+Avg Recon Pose Loss: 0.04194581111973504
+Avg Recon Dir Loss: 0.11748087067045643
+Avg Vel Loss: 2.3647407408172505
+Avg VQ Loss: 0.22134440231362845
+Avg Perplexity: 201.5939771835986
+Avg Loss: 0.4997661992944684
+Avg Recon Pose Loss: 0.04201617944251718
+Avg Recon Dir Loss: 0.11813592227022547
+Avg Vel Loss: 2.3698322469754114
+Avg VQ Loss: 0.2211224837716381
+Avg Perplexity: 201.84427414511208
+--eval--
+33it [00:01, 22.22it/s]                                                                                                                                                                                                    
+--test--
+41it [00:01, 24.24it/s]                                                                                                                                                                                                    
+Epoch 33/200)
+Train Loss: 0.4986, Recon Pose Loss: 0.0420, Recon Dir Loss: 0.1179, Vel Loss: 2.3681, VQ Loss: 0.2204, Perplexity: 202.0418
+Eval Loss: 0.5009, Recon Pose Loss: 0.0425, Recon Dir Loss: 0.1212, Vel Loss: 2.1102, VQ Loss: 0.2317, Perplexity: 184.1399
+Test Loss: 0.5043, Recon Pose Loss: 0.0467, Recon Dir Loss: 0.1225, Vel Loss: 2.1010, VQ Loss: 0.2300, Perplexity: 173.3777
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0303/1135
+base_lr:[0.0009343157572190951]
+epoch:33/200
+--train--
+ 44%|███████████████████████████████████████████████████████████████████████████████▏                                                                                                    | 195/443 [00:09<00:11, 20.85it/s]
+Avg Loss: 0.5367354154586792
+Avg Recon Pose Loss: 0.04520637169480324
+Avg Recon Dir Loss: 0.10410104691982269
+Avg Vel Loss: 2.271540403366089
+Avg VQ Loss: 0.2738509774208069
+Avg Perplexity: 171.94239807128906
+Avg Loss: 0.4990011276585041
+Avg Recon Pose Loss: 0.04230625226651088
+Avg Recon Dir Loss: 0.11740001608239542
+Avg Vel Loss: 2.37211013076329
+Avg VQ Loss: 0.22068935027807066
+Avg Perplexity: 198.06347067049234
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_text2units.py", line 302, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_text2units.py", line 264, in main
+    trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 182, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 49, in train
+    for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 708, in __next__
+    data = self._next_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1458, in _next_data
+    idx, data = self._get_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1420, in _get_data
+    success, data = self._try_get_data()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1251, in _try_get_data
+    data = self._data_queue.get(timeout=timeout)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/queues.py", line 122, in get
+    return _ForkingPickler.loads(res)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/multiprocessing/reductions.py", line 541, in rebuild_storage_fd
+    fd = df.detach()
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/resource_sharer.py", line 57, in detach
+    with _resource_sharer.get_connection(self._id) as conn:
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/resource_sharer.py", line 86, in get_connection
+    c = Client(address, authkey=process.current_process().authkey)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 508, in Client
+    answer_challenge(c, authkey)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 757, in answer_challenge
+    response = connection.recv_bytes(256)        # reject large message
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 216, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 414, in _recv_bytes
+    buf = self._recv(4)
+  File "/home/caffe/anaconda3/envs/SLG/lib/python3.10/multiprocessing/connection.py", line 379, in _recv
+    chunk = read(handle, remaining)
+KeyboardInterrupt

@@ -1,0 +1,15 @@
+{"time":"2026-02-17T19:13:57.015154163+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260217_191356-tceta5hx/logs/debug-core.log"}
+{"time":"2026-02-17T19:13:57.118093131+09:00","level":"INFO","msg":"created new stream","id":"tceta5hx"}
+{"time":"2026-02-17T19:13:57.118106909+09:00","level":"INFO","msg":"stream: started","id":"tceta5hx"}
+{"time":"2026-02-17T19:13:57.118116958+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"tceta5hx"}
+{"time":"2026-02-17T19:13:57.118157848+09:00","level":"INFO","msg":"sender: started","stream_id":"tceta5hx"}
+{"time":"2026-02-17T19:13:57.118156996+09:00","level":"INFO","msg":"handler: started","stream_id":"tceta5hx"}
+{"time":"2026-02-17T19:13:57.605440366+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-17T19:14:01.314986033+09:00","level":"INFO","msg":"stream: closing","id":"tceta5hx"}
+{"time":"2026-02-17T19:14:01.315007853+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-17T19:14:01.315537679+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-17T19:14:02.105657708+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-17T19:14:02.430906973+09:00","level":"INFO","msg":"handler: closed","stream_id":"tceta5hx"}
+{"time":"2026-02-17T19:14:02.430930392+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"tceta5hx"}
+{"time":"2026-02-17T19:14:02.430971569+09:00","level":"INFO","msg":"sender: closed","stream_id":"tceta5hx"}
+{"time":"2026-02-17T19:14:02.43097797+09:00","level":"INFO","msg":"stream: closed","id":"tceta5hx"}

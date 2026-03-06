@@ -1,0 +1,1 @@
+{"test_pose_loss":23472.939453125,"_wandb":{"runtime":121},"_step":0,"_timestamp":1.7713989748472333e+09,"eval_pose_loss":25192.69140625,"eval_bone_loss":4.43990368e+08,"test_bone_loss":4.07706848e+08,"test_loss":4.079416e+07,"_runtime":97.24977398,"eval_loss":4.4424232e+07}

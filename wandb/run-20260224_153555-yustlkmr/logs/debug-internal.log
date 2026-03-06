@@ -1,0 +1,15 @@
+{"time":"2026-02-24T15:35:56.063517185+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260224_153555-yustlkmr/logs/debug-core.log"}
+{"time":"2026-02-24T15:35:56.165312083+09:00","level":"INFO","msg":"created new stream","id":"yustlkmr"}
+{"time":"2026-02-24T15:35:56.165331767+09:00","level":"INFO","msg":"stream: started","id":"yustlkmr"}
+{"time":"2026-02-24T15:35:56.165380532+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"yustlkmr"}
+{"time":"2026-02-24T15:35:56.165384565+09:00","level":"INFO","msg":"sender: started","stream_id":"yustlkmr"}
+{"time":"2026-02-24T15:35:56.165387099+09:00","level":"INFO","msg":"handler: started","stream_id":"yustlkmr"}
+{"time":"2026-02-24T15:35:56.662041685+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-24T15:35:57.39808815+09:00","level":"INFO","msg":"stream: closing","id":"yustlkmr"}
+{"time":"2026-02-24T15:35:57.398105397+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-24T15:35:57.398375563+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-24T15:35:58.379982299+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-24T15:36:00.16828756+09:00","level":"INFO","msg":"handler: closed","stream_id":"yustlkmr"}
+{"time":"2026-02-24T15:36:00.168320935+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"yustlkmr"}
+{"time":"2026-02-24T15:36:00.168342111+09:00","level":"INFO","msg":"sender: closed","stream_id":"yustlkmr"}
+{"time":"2026-02-24T15:36:00.168353086+09:00","level":"INFO","msg":"stream: closed","id":"yustlkmr"}

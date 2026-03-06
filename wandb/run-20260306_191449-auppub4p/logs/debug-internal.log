@@ -1,0 +1,15 @@
+{"time":"2026-03-06T19:14:50.117212107+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260306_191449-auppub4p/logs/debug-core.log"}
+{"time":"2026-03-06T19:14:50.219758606+09:00","level":"INFO","msg":"created new stream","id":"auppub4p"}
+{"time":"2026-03-06T19:14:50.219778496+09:00","level":"INFO","msg":"stream: started","id":"auppub4p"}
+{"time":"2026-03-06T19:14:50.219787353+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"auppub4p"}
+{"time":"2026-03-06T19:14:50.2198243+09:00","level":"INFO","msg":"handler: started","stream_id":"auppub4p"}
+{"time":"2026-03-06T19:14:50.219838805+09:00","level":"INFO","msg":"sender: started","stream_id":"auppub4p"}
+{"time":"2026-03-06T19:14:51.059706935+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-06T19:16:10.171271115+09:00","level":"INFO","msg":"stream: closing","id":"auppub4p"}
+{"time":"2026-03-06T19:16:10.171282627+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-06T19:16:10.171591912+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-06T19:16:11.170413936+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-06T19:16:12.083530201+09:00","level":"INFO","msg":"handler: closed","stream_id":"auppub4p"}
+{"time":"2026-03-06T19:16:12.08355193+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"auppub4p"}
+{"time":"2026-03-06T19:16:12.083568923+09:00","level":"INFO","msg":"sender: closed","stream_id":"auppub4p"}
+{"time":"2026-03-06T19:16:12.083593913+09:00","level":"INFO","msg":"stream: closed","id":"auppub4p"}

@@ -1,0 +1,12 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0226/1654
+base_lr:[0.0001]
+epoch:0/400
+--train--
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 271, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 233, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 141, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=ema)
+NameError: name 'ema' is not defined

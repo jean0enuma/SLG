@@ -1,0 +1,46 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0226/1704
+base_lr:[0.001]
+epoch:0/1000
+--train--
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 221/221 [01:46<00:00,  2.08it/s]
+Avg Loss: 1.322092056274414
+Avg Pose Loss: 1.322092056274414
+Avg Joint Loss: 0.07741410285234451
+Avg Loss: 1.040241574296857
+Avg Pose Loss: 1.040241574296857
+Avg Joint Loss: 0.06024282189584015
+Avg Loss: 1.0190906717409542
+Avg Pose Loss: 1.0190906717409542
+Avg Joint Loss: 0.0589468589895845
+--eval--
+17it [00:07,  2.22it/s]                                                                                                                                                                                                    
+--test--
+21it [00:09,  2.23it/s]                                                                                                                                                                                                    
+Epoch 1/1000)
+Train Loss: 1.0159718990325928,Train Pose Loss: 1.0159718990325928, Train Bone Loss: 0.05872439965605736
+Eval Loss: 0.9754802584648132,Eval Pose Loss: 0.9754802584648132,Eval Bone Loss: 0.048736803233623505
+Test Loss: 0.9770680665969849,Test Pose Loss: 0.9770680665969849, Test Bone Loss: 0.05883380025625229
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0226/1704
+base_lr:[0.0009999975326009292]
+epoch:1/1000
+--train--
+ 33%|██████████████████████████████████████████████████████████▉                                                                                                                          | 72/221 [00:36<01:15,  1.98it/s]
+Avg Loss: 0.9729394912719727
+Avg Pose Loss: 0.9729394912719727
+Avg Joint Loss: 0.09351986646652222
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 274, in <module>
+    main(config, mode, checkpoint=checkpoint)
+  File "/home/caffe/work/SLG/main_t2p_diffusion.py", line 236, in main
+    trainer.fit(model, optimizer, scheduler, criterion, dl_train, dl_dev, dl_test, device,
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 141, in fit
+    train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+  File "/home/caffe/work/SLG/trainer/Text2Pose_trainer.py", line 62, in train
+    scaler.scale(loss).backward()
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/_tensor.py", line 626, in backward
+    torch.autograd.backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt

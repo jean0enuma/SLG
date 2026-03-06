@@ -1,0 +1,15 @@
+{"time":"2026-03-03T19:28:25.691799798+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260303_192825-wx782pdq/logs/debug-core.log"}
+{"time":"2026-03-03T19:28:25.794537569+09:00","level":"INFO","msg":"created new stream","id":"wx782pdq"}
+{"time":"2026-03-03T19:28:25.794553671+09:00","level":"INFO","msg":"stream: started","id":"wx782pdq"}
+{"time":"2026-03-03T19:28:25.794633316+09:00","level":"INFO","msg":"sender: started","stream_id":"wx782pdq"}
+{"time":"2026-03-03T19:28:25.794631314+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"wx782pdq"}
+{"time":"2026-03-03T19:28:25.794656813+09:00","level":"INFO","msg":"handler: started","stream_id":"wx782pdq"}
+{"time":"2026-03-03T19:28:26.169306056+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-03T19:31:16.750029113+09:00","level":"INFO","msg":"stream: closing","id":"wx782pdq"}
+{"time":"2026-03-03T19:31:16.750056111+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-03T19:31:16.750469963+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-03T19:31:17.657972436+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-03T19:31:18.012835261+09:00","level":"INFO","msg":"handler: closed","stream_id":"wx782pdq"}
+{"time":"2026-03-03T19:31:18.01285717+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"wx782pdq"}
+{"time":"2026-03-03T19:31:18.012875269+09:00","level":"INFO","msg":"sender: closed","stream_id":"wx782pdq"}
+{"time":"2026-03-03T19:31:18.012904789+09:00","level":"INFO","msg":"stream: closed","id":"wx782pdq"}

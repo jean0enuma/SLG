@@ -1,0 +1,15 @@
+{"time":"2026-02-16T11:50:27.801672452+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260216_115027-d9oa16om/logs/debug-core.log"}
+{"time":"2026-02-16T11:50:27.904596882+09:00","level":"INFO","msg":"created new stream","id":"d9oa16om"}
+{"time":"2026-02-16T11:50:27.904610939+09:00","level":"INFO","msg":"stream: started","id":"d9oa16om"}
+{"time":"2026-02-16T11:50:27.904661633+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"d9oa16om"}
+{"time":"2026-02-16T11:50:27.904666817+09:00","level":"INFO","msg":"sender: started","stream_id":"d9oa16om"}
+{"time":"2026-02-16T11:50:27.904725994+09:00","level":"INFO","msg":"handler: started","stream_id":"d9oa16om"}
+{"time":"2026-02-16T11:50:28.461641549+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-16T11:50:31.936128498+09:00","level":"INFO","msg":"stream: closing","id":"d9oa16om"}
+{"time":"2026-02-16T11:50:31.936140568+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-16T11:50:31.936463243+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-16T11:50:32.715790238+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-16T11:50:33.059334813+09:00","level":"INFO","msg":"handler: closed","stream_id":"d9oa16om"}
+{"time":"2026-02-16T11:50:33.059351506+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"d9oa16om"}
+{"time":"2026-02-16T11:50:33.059378323+09:00","level":"INFO","msg":"sender: closed","stream_id":"d9oa16om"}
+{"time":"2026-02-16T11:50:33.059381464+09:00","level":"INFO","msg":"stream: closed","id":"d9oa16om"}

@@ -1,0 +1,15 @@
+{"time":"2026-02-13T14:24:57.06262902+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260213_142456-ir7sl52k/logs/debug-core.log"}
+{"time":"2026-02-13T14:24:57.164989081+09:00","level":"INFO","msg":"created new stream","id":"ir7sl52k"}
+{"time":"2026-02-13T14:24:57.165003834+09:00","level":"INFO","msg":"stream: started","id":"ir7sl52k"}
+{"time":"2026-02-13T14:24:57.165051606+09:00","level":"INFO","msg":"handler: started","stream_id":"ir7sl52k"}
+{"time":"2026-02-13T14:24:57.165049423+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"ir7sl52k"}
+{"time":"2026-02-13T14:24:57.165072056+09:00","level":"INFO","msg":"sender: started","stream_id":"ir7sl52k"}
+{"time":"2026-02-13T14:24:57.525738172+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-13T14:33:37.874627242+09:00","level":"INFO","msg":"stream: closing","id":"ir7sl52k"}
+{"time":"2026-02-13T14:33:37.874929135+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-13T14:33:37.875489171+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-13T14:33:38.64524844+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-13T14:33:39.228280417+09:00","level":"INFO","msg":"handler: closed","stream_id":"ir7sl52k"}
+{"time":"2026-02-13T14:33:39.22829001+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ir7sl52k"}
+{"time":"2026-02-13T14:33:39.228302006+09:00","level":"INFO","msg":"sender: closed","stream_id":"ir7sl52k"}
+{"time":"2026-02-13T14:33:39.228331727+09:00","level":"INFO","msg":"stream: closed","id":"ir7sl52k"}

@@ -1,0 +1,15 @@
+{"time":"2026-02-18T15:29:37.510127737+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_152937-kjliaxcr/logs/debug-core.log"}
+{"time":"2026-02-18T15:29:37.612711925+09:00","level":"INFO","msg":"created new stream","id":"kjliaxcr"}
+{"time":"2026-02-18T15:29:37.612728617+09:00","level":"INFO","msg":"stream: started","id":"kjliaxcr"}
+{"time":"2026-02-18T15:29:37.612764866+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"kjliaxcr"}
+{"time":"2026-02-18T15:29:37.612771069+09:00","level":"INFO","msg":"handler: started","stream_id":"kjliaxcr"}
+{"time":"2026-02-18T15:29:37.612801217+09:00","level":"INFO","msg":"sender: started","stream_id":"kjliaxcr"}
+{"time":"2026-02-18T15:29:37.894460516+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-18T15:30:26.105624106+09:00","level":"INFO","msg":"stream: closing","id":"kjliaxcr"}
+{"time":"2026-02-18T15:30:26.105635453+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-18T15:30:26.10585832+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-18T15:30:26.843790392+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-18T15:30:27.383177523+09:00","level":"INFO","msg":"handler: closed","stream_id":"kjliaxcr"}
+{"time":"2026-02-18T15:30:27.383200391+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"kjliaxcr"}
+{"time":"2026-02-18T15:30:27.383217833+09:00","level":"INFO","msg":"sender: closed","stream_id":"kjliaxcr"}
+{"time":"2026-02-18T15:30:27.383231556+09:00","level":"INFO","msg":"stream: closed","id":"kjliaxcr"}

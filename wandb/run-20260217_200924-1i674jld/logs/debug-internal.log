@@ -1,0 +1,20 @@
+{"time":"2026-02-17T20:09:24.793614555+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260217_200924-1i674jld/logs/debug-core.log"}
+{"time":"2026-02-17T20:09:24.896076641+09:00","level":"INFO","msg":"created new stream","id":"1i674jld"}
+{"time":"2026-02-17T20:09:24.896094873+09:00","level":"INFO","msg":"stream: started","id":"1i674jld"}
+{"time":"2026-02-17T20:09:24.896147409+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"1i674jld"}
+{"time":"2026-02-17T20:09:24.896153011+09:00","level":"INFO","msg":"handler: started","stream_id":"1i674jld"}
+{"time":"2026-02-17T20:09:24.896166268+09:00","level":"INFO","msg":"sender: started","stream_id":"1i674jld"}
+{"time":"2026-02-17T20:09:25.246954045+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-18T07:02:56.447580808+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": context deadline exceeded"}
+{"time":"2026-02-18T07:03:11.390342684+09:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/tkeda-jean-tokyo-city-university/SLG_TEXT2POSE/1i674jld/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2026-02-18T09:12:51.873986659+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai on 127.0.0.53:53: read udp 127.0.0.1:34820->127.0.0.53:53: i/o timeout"}
+{"time":"2026-02-18T09:13:01.874601728+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai on 127.0.0.53:53: server misbehaving"}
+{"time":"2026-02-18T09:13:57.07814387+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tkeda-jean-tokyo-city-university/SLG_TEXT2POSE/1i674jld/file_stream\": dial tcp 35.186.228.49:443: connect: connection timed out"}
+{"time":"2026-02-18T10:53:51.017786362+09:00","level":"INFO","msg":"stream: closing","id":"1i674jld"}
+{"time":"2026-02-18T10:53:51.017808214+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-18T10:53:51.0181445+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-18T10:53:52.600033077+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-18T10:53:53.375224603+09:00","level":"INFO","msg":"handler: closed","stream_id":"1i674jld"}
+{"time":"2026-02-18T10:53:53.375244669+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"1i674jld"}
+{"time":"2026-02-18T10:53:53.3752678+09:00","level":"INFO","msg":"sender: closed","stream_id":"1i674jld"}
+{"time":"2026-02-18T10:53:53.37528692+09:00","level":"INFO","msg":"stream: closed","id":"1i674jld"}

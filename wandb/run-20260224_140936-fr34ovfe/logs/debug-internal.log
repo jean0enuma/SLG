@@ -1,0 +1,15 @@
+{"time":"2026-02-24T14:09:36.218836366+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260224_140936-fr34ovfe/logs/debug-core.log"}
+{"time":"2026-02-24T14:09:36.320917421+09:00","level":"INFO","msg":"created new stream","id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:36.320940136+09:00","level":"INFO","msg":"stream: started","id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:36.320992105+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:36.320993205+09:00","level":"INFO","msg":"handler: started","stream_id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:36.321011283+09:00","level":"INFO","msg":"sender: started","stream_id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:36.70680091+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-24T14:09:36.878986232+09:00","level":"INFO","msg":"stream: closing","id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:36.878998881+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-24T14:09:36.879340584+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-02-24T14:09:38.172878994+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-02-24T14:09:38.464944158+09:00","level":"INFO","msg":"handler: closed","stream_id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:38.46496908+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:38.464988387+09:00","level":"INFO","msg":"sender: closed","stream_id":"fr34ovfe"}
+{"time":"2026-02-24T14:09:38.465008165+09:00","level":"INFO","msg":"stream: closed","id":"fr34ovfe"}

@@ -1,0 +1,24 @@
+saved path:/media/caffe/data_storage/CSLR/keyword_models/train/2026/0306/1203
+base_lr:[5e-05]
+epoch:0/100
+--train--
+  0%|          | 0/221 [00:45<?, ?it/s]
+Backend tkagg is interactive backend. Turning interactive mode on.
+Traceback (most recent call last):
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 124, in train
+    loss_dict = self.compute_loss(batch, model, criterion)
+  File "/home/caffe/work/SLG/trainer/Text2Units_trainer.py", line 106, in compute_loss
+    loss = model(sequence,padded_cod_data,input_length_tensor,padded_mask)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 147, in forward
+    pose_outputs= self.decoder(encoded_text,unit_tokens, text_mask,pose_mask,None)  # (batch_size, pose_seq_len,code_dim)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/caffe/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/caffe/work/SLG/models/text2units.py", line 39, in forward
+    decoder_input= decoder_input + self.sinusoidal_position_encoding(pose_len, decoder_input.size(-1)).to(decoder_input.device).unsqueeze(0)  # 位置エンコーディングの追加
+RuntimeError: The size of tensor a (46) must match the size of tensor b (45) at non-singleton dimension 1

@@ -1,0 +1,10 @@
+{"time":"2026-02-18T18:41:27.609431515+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/home/caffe/work/SLG/wandb/run-20260218_184127-nk3fmukm/logs/debug-core.log"}
+{"time":"2026-02-18T18:41:27.710950411+09:00","level":"INFO","msg":"created new stream","id":"nk3fmukm"}
+{"time":"2026-02-18T18:41:27.710965523+09:00","level":"INFO","msg":"stream: started","id":"nk3fmukm"}
+{"time":"2026-02-18T18:41:27.710972985+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"nk3fmukm"}
+{"time":"2026-02-18T18:41:27.711041001+09:00","level":"INFO","msg":"sender: started","stream_id":"nk3fmukm"}
+{"time":"2026-02-18T18:41:27.711038645+09:00","level":"INFO","msg":"handler: started","stream_id":"nk3fmukm"}
+{"time":"2026-02-18T18:41:28.097143131+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-02-18T19:48:14.02685237+09:00","level":"INFO","msg":"stream: closing","id":"nk3fmukm"}
+{"time":"2026-02-18T19:48:14.026876632+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-02-18T19:48:14.027314879+09:00","level":"INFO","msg":"Stopped system monitor"}
