@@ -44,7 +44,7 @@ TRAIN_BINARY_DATADIR_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release
 TEST_BINARY_DATADIR_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/features/binary_mask/test"
 DEV_BINARY_DATADIR_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/features/binary_mask/dev"
 #Phoenix-Tのテキストのデータのパス
-TEXT_TRAIN_PATH_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/annotations/manual/PHOENIX-2014-T.train.corpus.csv"
+TEXT_TRAIN_PATH_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/annotations/manual/PHOENIX-2014-T.train-complex-annotation.corpus.csv"
 TEXT_DEV_PATH_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/annotations/manual/PHOENIX-2014-T.dev.corpus.csv"
 TEXT_TEST_PATH_T="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/annotations/manual/PHOENIX-2014-T.test.corpus.csv"
 #skeleton_phoenix
@@ -205,5 +205,6 @@ FACE_CSL_DAILY_DATADIR="/media/caffe/data_storage/CSL-Daily/sentence/pose_face_5
 FACE_CSL_DAILY_DATADIR_PROCESSED="/media/caffe/data_storage/CSL-Daily/sentence/pose_face_512x512_processed"
 CSL_DAILY_LABELS="/media/caffe/data_storage/CSL-Daily/sentence_label"
 AUTSL_NUM_CLASS=226
+ANCHOR_FRAME_PATH="/media/caffe/data_storage/phoenix/phoenix2014-release/phoenix-2014-multisigner/features/Full_Frame_skeleton_preprocessed/test/24November_2009_Tuesday_tagesschau_default-2.csv"
 
 

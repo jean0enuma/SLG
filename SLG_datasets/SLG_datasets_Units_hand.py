@@ -3,8 +3,7 @@ from torch.utils.data import Dataset
 from loader import *
 
 import torch.nn.functional as F
-
-class SLGText2UnitsDatasets(Dataset):
+class SLGText2UnitsHandsDatasets(Dataset):
     """
     phoenixデータセットを読み込むためのクラス(ctc_loss用)
     loaderの出力はdata,targets,input_length,target_length
@@ -131,12 +130,8 @@ class SLGText2UnitsDatasets(Dataset):
         if self.is_processed:
             #face_cod_data=coordinate_preprocess_face(face_data)
             T,JC=cod_data.shape
-            cod_data=torch.tensor(cod_data).reshape(T,-1,3).permute(2,0,1)#(3,T,JC)
-            face_data=torch.tensor(face_data).reshape(T,-1,2).permute(2,0,1)#(3,T,FC)
-            center=cod_data[:, :, 1]#(3,T)
-            shoulder_length=torch.sqrt((cod_data[0,:,2]-cod_data[0,:,3])**2+(cod_data[1,:,2]-cod_data[1,:,3])**2+(cod_data[2,:,2]-cod_data[2,:,3])**2)#(T,)
-            cod_data-=center.unsqueeze(2)#(3,T,JC)
-            cod_data/=shoulder_length.unsqueeze(0).unsqueeze(2)#(3,T,JC)
+            cod_data=torch.tensor(cod_data).reshape(T,-1,3).permute(2,0,1)#(2,T,JC)
+            face_data=torch.tensor(face_data).reshape(T,-1,2).permute(2,0,1)#(2,T,FC)
             hand_cod_data = cod_data[:,:, 6:]
             body_cod_data = cod_data[:, :,:6]
             cod_data=torch.tensor(cod_data).float()
@@ -166,19 +161,38 @@ class SLGText2UnitsDatasets(Dataset):
                 hand_cod_data=torch.tensor(hand_cod_data)
                 body_cod_data=torch.tensor(body_cod_data)
 
-        left_data=hand_cod_data[:, :, :21].permute(1, 2, 0)#(2,T,21)
-        right_data=hand_cod_data[:, :, 21:].permute(1, 2, 0)
-        pose_data=cod_data.permute(1,2,0) #(T,JC,2or3)
-        left_valid=torch.sum(torch.abs(left_data[:,:,:2]),dim=(1,2))>0 #(T,)
-        right_valid=torch.sum(torch.abs(right_data[:,:,:2]),dim=(1,2))>0 #(T,)
-        left_valid=torch.tensor(left_valid).bool()
-        right_valid=torch.tensor(right_valid).bool()
-        #pose_data=pose_data.reshape(pose_data.shape[0],-1) #(T,JC*2or3)
-        mask={"left_valid":left_valid,"right_valid":right_valid}
+        if self.is_coarse:
+            left_data = hand_cod_data[:, :, :21].permute(1, 2, 0).numpy()#(2,T,21)
+            right_data = hand_cod_data[:, :, 21:].permute(1, 2, 0).numpy()
+            pose_data=cod_data.permute(1,2,0).numpy() #(T,JC,2or3)
+            pose_data,mask=build_coarse_from_mediapipe(pose_data,left_data,right_data,add_hand_points=None,is_heuristic_feature=True)
+            pose_data=concat_coarse_with_interaction(pose_data,left_data,right_data,mask)
+            pose_data=torch.tensor(pose_data).float()
+        else:
+            left_data=hand_cod_data[:, :, :21].permute(1, 2, 0)#(2,T,21)
+            right_data=hand_cod_data[:, :, 21:].permute(1, 2, 0)
+            body_data=cod_data[:,:,:6].permute(1,2,0)
+            pose_data=cod_data.permute(1,2,0) #(T,JC,2or3)
+            left_valid=torch.sum(torch.abs(left_data[:,:,:2]),dim=(1,2))>0 #(T,)
+            right_valid=torch.sum(torch.abs(right_data[:,:,:2]),dim=(1,2))>0 #(T,)
+            left_valid=torch.tensor(left_valid).bool()
+            right_valid=torch.tensor(right_valid).bool()
+            pose_data=pose_data.reshape(pose_data.shape[0],-1) #(T,JC*2or3)
+            left_data=left_data.reshape(left_data.shape[0],-1) #(T,21*2or3)
+            right_data=right_data.reshape(right_data.shape[0],-1) #(T,21*2or3)
+            body_data=body_data.reshape(body_data.shape[0],-1) #(T,6*2or3)
+            mask={"left_valid":left_valid,"right_valid":right_valid}
+        if self.trainable:
+            pose_data+=torch.randn_like(pose_data)*0.01
+            pose_data*=1+torch.rand(1)*0.05
+            #pose_data=self.temporal_rescale(pose_data)
         #hand maskの作成(手の座標が全て0のフレームをbool値でマスクする)
         left_hand_mask=torch.tensor(mask['left_valid']) #(T,)
         right_hand_mask=torch.tensor(mask['right_valid']) #(T,)
         hand_mask=torch.stack([left_hand_mask,right_hand_mask],dim=1) #(T,2)
+        #if self.trainable:
+        #    cod_data,face_cod_data,hand_cod_data,body_cod_data=self.temporal_rescale(cod_data,face_cod_data,hand_cod_data,body_cod_data)
+
         # data.size()=(T,C,H,W)
         input_length = torch.tensor(pose_data.shape[0])  # 入力データの長さ
         # ラベル系列の取得
@@ -199,13 +213,12 @@ class SLGText2UnitsDatasets(Dataset):
         padded_mask=[]
         for data,mask in zip(cod_data_list,hand_mask_list):
             pad_size = max_length - data.shape[0]
-            #data:(T,JC,2or3)
             if pad_size > 0:
-                data =torch.cat([data, torch.zeros(pad_size, data.shape[1],data.shape[2])], dim=0)  # (T,JC,2or3)
+                data =torch.cat([data, torch.zeros(pad_size, data.shape[1])], dim=0)  # (max_length, F)
                 mask=torch.cat([mask,torch.zeros(pad_size,mask.shape[1])],dim=0).bool() #(max_length,2)
             padded_cod_data.append(data)
             padded_mask.append(mask)
-        padded_cod_data = torch.stack([data for data in padded_cod_data])#(バッチサイズ,T,JC,2or3)
+        padded_cod_data = torch.stack([data for data in padded_cod_data])
         padded_mask=torch.stack([mask for mask in padded_mask])
         # 入力長のテンソル化
         input_length_tensor = torch.tensor(input_length_list)

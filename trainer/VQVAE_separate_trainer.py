@@ -90,6 +90,8 @@ class VQVAESeparateTrainer(BaseTrainer):
         self.scheduler=scheduler
         self.step=0
         self.g_scheduler=0.0
+        self.replacement_num_batches=self.config["lr_parameters"]["replacement_num_batches"]
+        self.iter=0
     def generate_scheduler(self,epoch):
         #学習中にteacher forcing率を変化させるスケジューラを生成
         #エポック単位でcosineで0から1へ変化させる
@@ -153,6 +155,9 @@ class VQVAESeparateTrainer(BaseTrainer):
             total_hand_vq_loss.append(hand_vq_loss.item())
             total_extra_vq_loss.append(extra_vq_loss.item())
             total_perplexity.append(perplexity.item())
+            # codebook replacement
+            if ((self.iter + 1) % self.replacement_num_batches == 0):
+                model.random_restart(loss_dict['z_e'],threshold=0.5)
             if batch_idx % 100== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_pose_loss)}")
@@ -162,6 +167,7 @@ class VQVAESeparateTrainer(BaseTrainer):
                 tqdm.write(f"Avg Hand VQ Loss: {np.mean(total_hand_vq_loss)}")
                 tqdm.write(f"Avg Extra VQ Loss: {np.mean(total_extra_vq_loss)}")
                 tqdm.write(f"Avg Perplexity: {np.mean(total_perplexity)}")
+            self.iter+=1
 
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_pose_avg_loss = np.mean(total_recon_pose_loss).astype(np.float32)
@@ -413,60 +419,78 @@ class VQVAESeparateTrainer(BaseTrainer):
         )
 
         return
-    def visualize(self,model,loader,device):
-        # 可視化用のディレクトリを作成
-        #予測したポーズとGTポーズをそれぞれ256x256の白画像にプロットする
-        if os.path.exists(f"{self.config['save_path']}/visualize"):
-            shutil.rmtree(f"{self.config['save_path']}/visualize")
-        os.makedirs(f"{self.config['save_path']}/visualize",exist_ok=True)
-        #予測したポーズとGTポーズを保存するディレクトリを作成
-        os.makedirs(f"{self.config['save_path']}/visualize/GT",exist_ok=True)
-        os.makedirs(f"{self.config['save_path']}/visualize/Pred",exist_ok=True)
 
+    def visualize(self, model, loader, device):
+        """
+        学習済みモデルのコードブック使用状況を部位ごとに可視化する。
+        保存先: f"{save_path}/visualize/" (ファイル名は固定)
+        """
         model.eval()
-        prev_hist=None
+
+        # 統計蓄積用の変数を初期化
+        pose_hist = None
+        left_hist = None
+        right_hist = None
+
+        # 全データを通算して統計を取る
         with torch.no_grad():
-            for batch in tqdm(loader, total=len(loader.dataset) // loader.batch_size):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path = batch
-                padded_cod_data = padded_cod_data.float().to(device)
-                padded_mask = padded_mask.to(device)
-                input_length_tensor = input_length_tensor.to(device)
-                id_list = id_list.to(device)
-                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
-                outputs = model.code_usage_histogram(padded_cod_data,prev_hist=prev_hist,hand_valid_mask=padded_mask,input_length=input_length_tensor)
-                prev_hist=outputs
-                pred_poses=outputs['predicted_poses'].cpu()
-                B,T,D=pred_poses.shape
-                pred_poses=pred_poses.view(B,T,D//3,3).numpy()
-                gt_poses=padded_cod_data[0].cpu()
-                gt_poses=gt_poses.permute(0,2,3,1).numpy()
-                input_lengths=input_length_tensor.cpu().numpy()
-                id_list=id_list.cpu().numpy()
-                for i in range(len(id_list)):
-                    os.makedirs(f"{self.config['save_path']}/visualize/GT/{data_path[i].split('/')[-1]}",exist_ok=True)
-                    os.makedirs(f"{self.config['save_path']}/visualize/Pred/{data_path[i].split('/')[-1]}",exist_ok=True)
-                    #opencvを使って白画像にposeをプロット
-                    for t in range(input_lengths[i]):
-                        gt_img = np.ones((256, 256, 3), dtype=np.uint8) * 255
-                        pred_img = np.ones((256, 256, 3), dtype=np.uint8) * 255
-                        for f in range(D//3):
-                            x_gt=int(gt_poses[i][t][f][0]*256)
-                            y_gt=int(gt_poses[i][t][f][1]*256)
-                            x_pred=int(pred_poses[i][t][f][0]*256)
-                            y_pred=int(pred_poses[i][t][f][1]*256)
-                            cv2.circle(gt_img,(x_gt,y_gt),3,(0,0,255),-1)
-                            try:
-                                cv2.circle(pred_img,(x_pred,y_pred),3,(255,0,0),-1)
-                            except:
-                                cv2.circle(pred_img, (0, 0), 3, (255, 0, 0), -1)
+            for batch in tqdm(loader, desc="Visualizing Token Usage (Post-training)"):
+                # データローダーの出力形式に合わせてアンパック
+                x, hand_mask, lengths, _, _ = batch
 
-                        #if stop_logits[i] < t:
-                        cv2.imwrite(f"{self.config['save_path']}/visualize/Pred/{data_path[i].split('/')[-1]}/{t:03}.png", pred_img)
-                        #if input_lengths[i]>t:
-                        cv2.imwrite(f"{self.config['save_path']}/visualize/GT/{data_path[i].split('/')[-1]}/{t:03}.png", gt_img)
-            if prev_hist is not None:
-                save_code_usage_histogram(prev_hist,f"{self.config['save_path']}/visualize/code_usage_histogram.png",top_k=50,title="Code Usage Histogram")
-                save_code_usage_probability(prev_hist,f"{self.config['save_path']}/visualize/code_usage_probability.png",top_k=50,title="Code Usage Probability")
+                x = x.float().to(device)
+                hand_mask = hand_mask.to(device)
+                lengths = lengths.to(device)
 
-        return
+                # モデル内蔵の更新メソッドで統計を蓄積
+                pose_hist, left_hist, right_hist = model.code_usage_histogram_update(
+                    x,
+                    pose_prev_hist=pose_hist,
+                    left_prev_hist=left_hist,
+                    right_prev_hist=right_hist,
+                    input_length=lengths,
+                    hand_valid_mask=hand_mask,
+                    normalize=True
+                )
+
+        # 保存ディレクトリの確定
+        visualize_dir = os.path.join(self.config["save_path"], "visualize")
+        os.makedirs(visualize_dir, exist_ok=True)
+
+        hists_to_save = {
+            "pose": pose_hist,
+            "left_hand": left_hist,
+            "right_hand": right_hist
+        }
+
+        # 画像の生成と保存
+        for name, hist_dict in hists_to_save.items():
+            if hist_dict is None:
+                continue
+
+            # ヒストグラム（頻度カウント）
+            hist_path = os.path.join(visualize_dir, f"usage_hist_{name}.png")
+            save_code_usage_histogram(
+                hist_dict,
+                hist_path,
+                title=f"Code Usage Histogram: {name}"
+            )
+
+            # 確率分布
+            prob_path = os.path.join(visualize_dir, f"usage_prob_{name}.png")
+            save_code_usage_probability(
+                hist_dict,
+                prob_path,
+                title=f"Code Usage Probability: {name}"
+            )
+
+        # 最終的な Perplexity をコンソールに出力
+        print(f"\n{'=' * 30}")
+        print(f"Final Token Usage Statistics")
+        print(f"{'=' * 30}")
+        for name, h in hists_to_save.items():
+            if h and "perplexity_from_hist" in h:
+                p = h["perplexity_from_hist"].item()
+                print(f"[{name:10}] Perplexity: {p:.2f}")
+        print(f"{'=' * 30}\nResults saved to: {visualize_dir}")
 

@@ -90,6 +90,8 @@ class VQVAETrainer(BaseTrainer):
         self.scheduler=scheduler
         self.step=0
         self.g_scheduler=0.0
+        self.replacement_num_batches=self.config["lr_parameters"]["replacement_num_batches"]
+        self.iter=0
     def generate_scheduler(self,epoch):
         #学習中にteacher forcing率を変化させるスケジューラを生成
         #エポック単位でcosineで0から1へ変化させる
@@ -128,8 +130,8 @@ class VQVAETrainer(BaseTrainer):
 
             loss = loss_dict['loss_total']
             recon_pose_loss=loss_dict['loss_recon_pos']
-            recon_dir_loss_list=loss_dict['loss_recon_dir']
-            loss_vel=loss_dict['loss_vel']
+            recon_dir_loss_list=loss_dict.get('loss_recon_dir',torch.tensor(0.0))
+            loss_vel=loss_dict.get('loss_vel',torch.tensor(0.0))
             loss_vq=loss_dict['loss_vq']
             perplexity=loss_dict['perplexity']
             scaler.scale(loss).backward()
@@ -147,6 +149,8 @@ class VQVAETrainer(BaseTrainer):
             total_vel_loss.append(loss_vel.item())
             total_vq_loss.append(loss_vq.item())
             total_perplexity.append(perplexity.item())
+            if ((self.iter + 1) % self.replacement_num_batches == 0):
+                model.random_restart(loss_dict['z_e'],threshold=0.5)
             if batch_idx % 100== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_pose_loss)}")
@@ -154,6 +158,9 @@ class VQVAETrainer(BaseTrainer):
                 tqdm.write(f"Avg Vel Loss: {np.mean(total_vel_loss)}")
                 tqdm.write(f"Avg VQ Loss: {np.mean(total_vq_loss)}")
                 tqdm.write(f"Avg Perplexity: {np.mean(total_perplexity)}")
+
+            self.iter+=1
+
 
 
 
@@ -191,8 +198,8 @@ class VQVAETrainer(BaseTrainer):
                     loss_dict = self.compute_loss(batch, model, criterion)
                 loss = loss_dict['loss_total']
                 recon_pose_loss = loss_dict['loss_recon_pos']
-                recon_dir_loss_list = loss_dict['loss_recon_dir']
-                loss_vel = loss_dict['loss_vel']
+                recon_dir_loss_list = loss_dict.get('loss_recon_dir', torch.tensor(0.0))
+                loss_vel = loss_dict.get('loss_vel', torch.tensor(0.0))
                 loss_vq = loss_dict['loss_vq']
                 perplexity = loss_dict['perplexity']
                 total_loss.append(loss.item())

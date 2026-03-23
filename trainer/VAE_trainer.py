@@ -1,5 +1,6 @@
 from mpmath.functions.zeta import polylog_series
 from networkx.utils import powerlaw_sequence
+from transformers.training_args import trainer_log_levels
 
 from trainer.based_trainer import BaseTrainer
 import torch
@@ -84,12 +85,11 @@ def save_code_usage_probability(
 
 
 
-class Text2UnitsTrainer(BaseTrainer):
+class VAETrainer(BaseTrainer):
     def __init__(self,config,scheduler=None):
         self.config=config
         self.scheduler=scheduler
         self.step=0
-        self.g_scheduler=0.0
     def generate_scheduler(self,epoch):
         #学習中にteacher forcing率を変化させるスケジューラを生成
         #エポック単位でcosineで0から1へ変化させる
@@ -101,31 +101,31 @@ class Text2UnitsTrainer(BaseTrainer):
         else:
             self.g_scheduler=scheduler(epoch)
     def compute_loss(self, batch, model, criterion):
-        padded_cod_data, padded_mask,input_length_tensor, id_list,sequence = batch
+        padded_cod_data, padded_mask,input_length_tensor, id_list = batch
 
-        loss = model(sequence,padded_cod_data,input_length_tensor,padded_mask)
+        loss = model(padded_cod_data,input_length_tensor)
         return loss
     def train(self, model, optimizer, criterion, train_loader, device,ema=False):
         model.train()
         total_loss = []
-        total_ce_loss=[]
+        total_recon_loss=[]
+        total_kl_loss=[]
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
         for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
-            padded_cod_data,padded_mask, input_length_tensor, id_list,data_path,sequence=batch
+            padded_cod_data,padded_mask, input_length_tensor, id_list,data_path=batch
             padded_cod_data=padded_cod_data.float().to(device)
             padded_mask=padded_mask.to(device)
             input_length_tensor=input_length_tensor.to(device)
             id_list=id_list.to(device)
-            sequence=sequence.to(device)
-            batch = (padded_cod_data,padded_mask, input_length_tensor, id_list, sequence)
+            batch = (padded_cod_data,padded_mask, input_length_tensor, id_list)
             optimizer.zero_grad(set_to_none=True)
             #g_prob = random.random()
             with torch.cuda.amp.autocast(dtype=torch.bfloat16,enabled=self.config["lr_parameters"]["amp"]):
                 loss_dict = self.compute_loss(batch, model, criterion)
 
             loss = loss_dict['loss_total']
-            ce_loss = loss_dict['ce_loss']
-            acc=loss_dict['acc']
+            recon_loss = loss_dict['recon_loss']
+            kl_loss = loss_dict['kl_loss']
             scaler.scale(loss).backward()
             ##grad_clip
             if self.config["lr_parameters"]["grad_clip_norm"] is not None:
@@ -135,62 +135,70 @@ class Text2UnitsTrainer(BaseTrainer):
             scaler.update()
             if ema:
                 ema.update()
-
             total_loss.append(loss.item())
-            total_ce_loss.append(ce_loss.item())
+            total_recon_loss.append(recon_loss.item())
+            total_kl_loss.append(kl_loss.item())
+
+            # codebook replacement
             if batch_idx % 100== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
-                tqdm.write(f"Avg CE Loss: {np.mean(total_ce_loss)}")
-                tqdm.write(f"Acc: {acc.item():.4f}")
+                tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_loss)}")
+                tqdm.write(f"Avg KL Loss: {np.mean(total_kl_loss)}")
 
         avg_loss = np.mean(total_loss).astype(np.float32)
-        ce_avg_loss = np.mean(total_ce_loss).astype(np.float32)
+        recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
+        kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
         return {
             "loss": avg_loss,
-            "ce_loss": ce_avg_loss
+            "recon_loss": recon_avg_loss,
+            "kl_loss": kl_avg_loss,
         }
     def eval(self, model, criterion, test_loader, device):
         model.eval()
         total_loss = []
-        total_ce_loss=[]
-        total_acc=[]
+        total_loss = []
+        total_recon_loss=[]
+        total_kl_loss=[]
         with torch.no_grad():
             for batch in tqdm(test_loader, total=len(test_loader.dataset) // test_loader.batch_size):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, sequence = batch
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path = batch
                 padded_cod_data = padded_cod_data.float().to(device)
                 padded_mask = padded_mask.to(device)
                 input_length_tensor = input_length_tensor.to(device)
                 id_list = id_list.to(device)
-                sequence=sequence.to(device)
-                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list, sequence)
+                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
                 with torch.cuda.amp.autocast(dtype=torch.bfloat16,enabled=self.config["lr_parameters"]["amp"]):
                     loss_dict = self.compute_loss(batch, model, criterion)
                 loss = loss_dict['loss_total']
-                ce_loss = loss_dict['ce_loss']
-                acc=loss_dict['acc']
-                total_acc.append(acc.item())
+                recon_loss = loss_dict['recon_loss']
+                kl_loss = loss_dict['kl_loss']
                 total_loss.append(loss.item())
-                total_ce_loss.append(ce_loss.item())
+                total_recon_loss.append(recon_loss.item())
+                total_kl_loss.append(kl_loss.item())
         avg_loss = np.mean(total_loss).astype(np.float32)
-        ce_avg_loss=np.mean(total_ce_loss).astype(np.float32)
-        avg_acc=np.mean(total_acc).astype(np.float32)
-        print(f"Avg Acc: {avg_acc:.4f}")
+        recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
+        kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
         return {
             "loss": avg_loss,
-            "ce_loss": ce_avg_loss
+            "recon_loss": recon_avg_loss,
+            "kl_loss": kl_avg_loss,
         }
     def fit(self,model,optimizer,scheduler,criterion,train_loader,eval_loader,test_loader,device,early_stopping=None):
         if self.config["lr_parameters"]["ema"]:
             ema_model=EMA(model,self.config["lr_parameters"]["ema_beta"])
         num_epochs=self.config["lr_parameters"]['epoch']
         train_loss_list=self.config['train_loss_list'] if 'train_loss_list' in self.config.keys() else []
-        train_ce_loss_list=self.config['train_celoss_list'] if 'train_ce_loss_list' in self.config.keys() else []
+        train_recon_loss_list=self.config['train_recon_loss_list'] if 'train_recon_pose_loss_list' in self.config.keys() else []
+        train_kl_loss_list=self.config['train_kl_loss_list'] if 'train_kl_loss_list' in self.config.keys() else []
         eval_loss_list=self.config['eval_loss_list'] if 'eval_loss_list' in self.config.keys() else []
-        eval_ce_loss_list=self.config['eval_ce_loss_list'] if 'eval_ce_loss_list' in self.config.keys() else []
+        eval_recon_loss_list=self.config['eval_recon_loss_list'] if 'eval_pose_loss_list' in self.config.keys() else []
+        eval_kl_loss_list=self.config['eval_kl_loss_list'] if 'eval_kl_loss_list' in self.config.keys() else []
         test_loss_list=self.config['test_loss_list'] if 'test_loss_list' in self.config.keys() else []
-        test_ce_loss_list=self.config['test_ce_loss_list'] if 'test_ce_loss_list' in self.config.keys() else []
+        test_recon_loss_list=self.config['test_recon_loss_list'] if 'test_recon_loss_list' in self.config.keys() else []
+        test_kl_loss_list=self.config['test_kl_loss_list'] if 'test_kl_loss_list' in self.config.keys() else []
         save_path=self.config["save_path"]
         for epoch in range(self.config["init_epoch"], num_epochs):
+            #self.generate_scheduler(epoch)
             print(f"saved path:{save_path}")
             gc.collect()
             torch.cuda.empty_cache()
@@ -204,27 +212,31 @@ class Text2UnitsTrainer(BaseTrainer):
             print("--test--")
             test_loss = self.eval(model, criterion, test_loader, device)
             train_loss_list.append(train_loss['loss'])
-            train_ce_loss_list.append(train_loss['ce_loss'])
+            train_recon_loss_list.append(train_loss['recon_loss'])
+            train_kl_loss_list.append(train_loss['kl_loss'])
 
             eval_loss_list.append(eval_loss['loss'])
-            eval_ce_loss_list.append(eval_loss['ce_loss'])
+            eval_recon_loss_list.append(eval_loss['recon_loss'])
+            eval_kl_loss_list.append(eval_loss['kl_loss'])
 
             test_loss_list.append(test_loss['loss'])
-            test_ce_loss_list.append(test_loss['ce_loss'])
+            test_recon_loss_list.append(test_loss['recon_loss'])
+            test_kl_loss_list.append(test_loss['kl_loss'])
 
             print(f"Epoch {epoch+1}/{num_epochs})")
-            print(f"Train Loss: {train_loss['loss']:.4f}, CE Loss: {train_loss['ce_loss']:.4f}")
-            print(f"Eval Loss: {eval_loss['loss']:.4f}, CE Loss: {eval_loss['ce_loss']:.4f}")
-            print(f"Test Loss: {test_loss['loss']:.4f}, CE Loss: {test_loss['ce_loss']:.4f}")
-
+            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}")
+            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}")
+            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}")
             #eval_lossとtest_lossのkeyを変更
             eval_loss = {
                 "eval_loss": eval_loss['loss'],
-                "eval_ce_loss": eval_loss['ce_loss'],
+                "eval_recon_loss": eval_loss['recon_loss'],
+                "eval_kl_loss": eval_loss['kl_loss'],
             }
             test_loss = {
                 "test_loss": test_loss['loss'],
-                "test_ce_loss": test_loss['ce_loss'],
+                "test_recon_loss": test_loss['recon_loss'],
+                "test_kl_loss": test_loss['kl_loss'],
             }
             log_dict={**train_loss,**eval_loss,**test_loss}
             wandb.log(log_dict)
@@ -236,11 +248,14 @@ class Text2UnitsTrainer(BaseTrainer):
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "train_loss_list": train_loss_list,
-                "train_ce_loss_list": train_ce_loss_list,
+                "train_recon_loss_list": train_recon_loss_list,
+                "train_kl_loss_list": train_kl_loss_list,
                 "eval_loss_list": eval_loss_list,
-                "eval_ce_loss_list": eval_ce_loss_list,
+                "eval_recon_loss_list": eval_recon_loss_list,
+                "eval_kl_loss_list": eval_kl_loss_list,
                 "test_loss_list": test_loss_list,
-                "test_ce_loss_list": test_ce_loss_list,
+                "test_recon_loss_list": test_recon_loss_list,
+                "test_kl_loss_list": test_kl_loss_list,
                 'random': random.getstate(),
                 'np_random': np.random.get_state(),
                 'torch': torch.get_rng_state(),
@@ -251,11 +266,14 @@ class Text2UnitsTrainer(BaseTrainer):
                 {
                     "epoch": list(range(epoch + 1)),
                     "train_loss": train_loss_list,
-                    "train_ce_loss": train_ce_loss_list,
+                    "train_recon_loss": train_recon_loss_list,
+                    "train_kl_loss": train_kl_loss_list,
                     "eval_loss": eval_loss_list,
-                    "eval_ce_loss": eval_ce_loss_list,
+                    "eval_recon_loss": eval_recon_loss_list,
+                    "eval_kl_loss": eval_kl_loss_list,
                     "test_loss": test_loss_list,
-                    "test_ce_loss": test_ce_loss_list,
+                    "test_recon_loss": test_recon_loss_list,
+                    "test_kl_loss": test_kl_loss_list,
                 }
             )
             log_data.to_csv(f"{save_path}/log.csv")
@@ -276,22 +294,7 @@ class Text2UnitsTrainer(BaseTrainer):
         )
 
         return
-    def visualize(self,model,loader,device):
-        # 可視化用のディレクトリを作成
-        model.eval()
-        prev_hist=None
-        with torch.no_grad():
-            for batch in tqdm(loader, total=len(loader.dataset) // loader.batch_size):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, sequence = batch
-                padded_cod_data = padded_cod_data.float().to(device)
-                padded_mask = padded_mask.to(device)
-                input_length_tensor = input_length_tensor.to(device)
-                id_list = id_list.to(device)
-                sequence = sequence.to(device)
-                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list, sequence)
-                gt_units = model(sequence, padded_cod_data, input_length_tensor, padded_mask)['unit_tokens']
-                generate_units=model.generate(sequence)
-                print(f"GT Units: {gt_units[0].cpu().numpy()}")
-                print(f"Generated Units: {generate_units[0][1:]}")
-        return
 
+    def visualize(self, model, loader, device):
+        #TODO: 出力のposeを可視化する関数を実装
+        pass

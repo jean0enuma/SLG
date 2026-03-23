@@ -172,6 +172,8 @@ def build_coarse_from_mediapipe(
     hand_index_mcp_id=5,
     hand_middle_mcp_id=9,
     hand_pinky_mcp_id=17,
+    body_left_shoulder_id=11,
+    body_right_shoulder_id=12,
     use_middle_for_fallback=True,
     return_masks=True,
     add_hand_points=(4,5,8,9,12,13,16,17,20),
@@ -205,6 +207,10 @@ def build_coarse_from_mediapipe(
     pose_c = pose_xyz - mid[:, None, :]       # (T,33,3)
     left_c = left_hand - mid[:, None, :]      # (T,21,3)
     right_c = right_hand - mid[:, None, :]    # (T,21,3)
+    base_distance=_safe_norm(pose_c[:, body_left_shoulder_id, :2] - pose_c[:, body_right_shoulder_id, :2], axis=-1)  # (T,)
+    pose_c[:, :, :2] /= (base_distance + EPS)[:, None, :]  # normalize by shoulder distance in xy plane
+    left_c[:, :, :2] /= (base_distance + EPS)[:, None, :]
+    right_c[:, :, :2] /= (base_distance + EPS)[:, None, :]
 
     # ---- body 6 points: [0,11,12,13,14,mid] ----
     # note: after centering, mid becomes (0,0,0)
@@ -282,6 +288,71 @@ def build_coarse_from_mediapipe(
         }
         return coarse, masks
     return coarse
+def extract_sign_feature(
+        body_seq,
+        hand_seq,
+        origin_mode="shoulder_mid",   # fixed for this project
+        hand_wrist_id=0,
+        hand_index_mcp_id=5,
+        hand_middle_mcp_id=9,
+        hand_pinky_mcp_id=17,
+        shoulder_mid_idx=1,
+        left_shoulder_idx=2,
+        right_shoulder_idx=3,
+        is_3d=True,
+        use_middle_for_fallback=True,
+):
+    T,V,C=body_seq.shape
+    if is_3d==True:
+        c_limits_idx=3
+    else:
+        c_limits_idx=2
+    shoulder_dist=_safe_norm(body_seq[:, left_shoulder_idx, :c_limits_idx] - body_seq[:, right_shoulder_idx, :c_limits_idx], axis=-1)  # (T,)
+    shoulder_mid=(body_seq[:, left_shoulder_idx] + body_seq[:, right_shoulder_idx]) / 2  # (T,3)
+    left_hand=hand_seq[:,:21]  # (T,21,3)
+    right_hand=hand_seq[:,21:]  # (T,21,3)
+
+    left_valid=~np.all(left_hand == 0, axis=(1,2))  # (T,)
+    right_valid=~np.all(right_hand == 0, axis=(1,2))
+    mask={"left_valid": left_valid, "right_valid": right_valid}
+    #特徴量A: 位置
+    left_wrist=left_hand[:, hand_wrist_id]  # (T,3)
+    right_wrist=right_hand[:, hand_wrist_id]  # (T,3)
+    l_pos=(left_wrist-shoulder_mid)#/shoulder_dist
+    r_pos=(right_wrist-shoulder_mid)#/shoulder_dist
+    #特徴量B: 手形
+    l_hand_dist=_safe_norm(left_hand[:,hand_wrist_id]-left_hand[:,hand_index_mcp_id], axis=-1)[:,None]  # (T,1) 手のスケールとして、wrist-index_mcp距離を利用
+    r_hand_dist=_safe_norm(right_hand[:,hand_wrist_id]-right_hand[:,hand_index_mcp_id], axis=-1)[:,None]  # (T,1)
+    l_handshape=left_hand-left_wrist[:,None,:]#/(l_hand_dist+1e-8)  # (T,21,3)
+    r_handshape=right_hand-right_wrist[:,None,:]#/(r_hand_dist+1e-8)  # (T,21,3)
+    #特徴量C: 速度
+    l_mov=np.diff(left_wrist, axis=0, prepend=left_wrist[:1,:])  # (T,3)
+    r_mov=np.diff(right_wrist, axis=0, prepend=right_wrist[:1,:])  # (T,3)
+    #特徴量D: 手の向き（手の平の法線ベクトル）(3Dのみ)
+    if is_3d:
+        def compute_hand_normal(hand):
+            wrist = hand[:, hand_wrist_id, :]          # (T,3)
+            index_mcp = hand[:, hand_index_mcp_id, :]  # (T,3)
+            pinky_mcp = hand[:, hand_pinky_mcp_id, :]  # (T,3)
+
+            alt_axis = None
+            if use_middle_for_fallback:
+                middle_mcp = hand[:, hand_middle_mcp_id, :]
+                alt_axis = (middle_mcp - wrist)  # (T,3)
+
+            _, _, z, _ = _orthonormal_hand_frame(
+                wrist=wrist,
+                index_mcp=index_mcp,
+                pinky_mcp=pinky_mcp,
+                alt_axis=alt_axis,
+            )
+            return z  # (T,3)
+        l_normal=compute_hand_normal(left_hand)  # (T,3)
+        r_normal=compute_hand_normal(right_hand)  # (T,3)
+        features=np.concatenate([l_pos, r_pos, l_handshape.reshape(T,-1), r_handshape.reshape(T,-1), l_mov, r_mov, l_normal, r_normal], axis=-1)  # (T, 6 + 126 + 6 + 6 = 144)
+    else:
+        features=np.concatenate([l_pos, r_pos, l_handshape.reshape(T,-1), r_handshape.reshape(T,-1), l_mov, r_mov], axis=-1)  # (T, 6 + 126 + 6 = 138)
+    return features,mask
 
 # ------------------------------------------------------------
 # 既存の coarse(例: 36次元) に interaction/event を付け足す例

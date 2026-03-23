@@ -1,0 +1,56 @@
+dataset: "phoenixT"
+work_dir: "/home/caffe/work/SLG/"
+device: "cuda:1"
+dataset_parameters:
+  use_phoenix: False
+  use_phoenixT: True
+  use_how2sign: False
+  use_csl-daily: False
+  is_processed: True
+lr_parameters:
+  epoch: 100
+  learning_rate : 0.0001
+  min_lr: 0.00001
+  weight_decay: 0.001
+  milestones: [50,80]
+  dropout: 0.3
+  amp: True
+  display_step: 100
+  accumulation_step: 1
+  batch_size: 32
+  scheduler_timing: "epoch"
+  scheduler_type: "CosineAnnealingLR"
+  grad_clip_norm: 1.0
+  ema: False
+  ema_beta: 0.999
+  replacement_num_batches: 100
+loss_parameters:
+    recon_pos_weight: 1.0
+    recon_dir_weight: 0.0
+    vq_weight: 1.0
+    vel_weight: 0.00
+model:
+  kl_weight: 0.1
+  pose_dim: 96
+  z_dim: 128
+  text_cond: False
+  text_encoder_name: "google-bert/bert-base-multilingual-cased"
+  encoder:
+    q_input_dim: 96
+    kv_input_dim: 96
+    d_model: 512
+    nhead: 8
+    num_layers: 6
+    pose_num_layers: 4
+    pose_nhead: 8
+    ffn_mult: 4
+    dropout: 0.1
+    activation: "gelu"
+    window_size: 9
+  decoder:
+    d_model: 256
+    nhead: 8
+    num_layers: 2
+    ffn_mult: 4
+    dropout: 0.1
+    activation: "gelu"

@@ -2,14 +2,17 @@ dataset: "phoenixT"
 work_dir: "/home/caffe/work/SLG/"
 device: "cuda:0"
 dataset_parameters:
+  use_phoenix: False
   use_phoenixT: True
   use_how2sign: False
   use_csl-daily: False
+  is_processed: True
+
 lr_parameters:
-  epoch: 100
-  learning_rate : 0.0005
+  epoch: 50
+  learning_rate : 0.0001
   min_lr: 0
-  weight_decay: 0.01
+  weight_decay: 0.001
   milestones: [200,320]
   gamma: 0.2
   dropout: 0.3
@@ -33,16 +36,16 @@ loss_parameters:
 
 model:
   pose_dim: 96
-  text_encoder_name: "openai/clip-vit-base-patch32"
-  text_encoder_requires_grad: False
-  text_adapter: True
-  hidden_dim: 128
+  text_encoder_name: "google-bert/bert-base-multilingual-cased"
+  text_encoder_requires_grad: True
+  text_adapter: False
+  hidden_dim: 256
   pose_hidden_dim: 128
-  hand_hidden_dim: 128
+  hand_hidden_dim: 256
   extra_hidden_dim: 64
   ffn_mult: 4
   num_heads: 4
   dropout: 0.3
-  num_layers: 2
+  num_layers: 6
   activation: "gelu"
   trainable: True

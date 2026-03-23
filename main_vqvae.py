@@ -14,7 +14,7 @@ from torchvision.transforms.v2 import Compose, Resize, RandomCrop, CenterCrop, R
 import time
 from models.text2pose import Text2Pose
 from models.module.VQ_VAE import VQVAE1D,VQLossWeights
-from models.module.VQ_VAE_Transformer import VQVAETransformer1D,VQVAETransformer1DSeparated
+from models.module.VQ_VAE_Transformer import VQVAETransformer1D,VQVAETransformer1DSeparated,VQVAETransformer1DAggregated,VQVAETransformer1DAggregatedCategorical
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
 from loader import *
 from Parameter.Parameter import *
@@ -84,14 +84,24 @@ def main(config, mode, checkpoint):
         train_corpus[0] = phoenixT_train_corpus
         dev_corpus[0] = phoenixT_dev_corpus
         test_corpus[0] = phoenixT_test_corpus
+        if config['dataset_parameters']['is_processed']:
+            train_cod_root[0] = SKELETON_TRAIN_DATADIR_T_PROCESSED
+            dev_cod_root[0] = SKELETON_DEV_DATADIR_T_PROCESSED
+            test_cod_root[0] = SKELETON_TEST_DATADIR_T_PROCESSED
 
-        train_cod_root[0] = SKELETON_TRAIN_DATADIR_T_PROCESSED
-        dev_cod_root[0] = SKELETON_DEV_DATADIR_T_PROCESSED
-        test_cod_root[0] = SKELETON_TEST_DATADIR_T_PROCESSED
+            train_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
+            dev_face_root[0] = FACE_DEV_DATADIR_T_PROCESSED
+            test_face_root[0] = FACE_TEST_DATADIR_T_PROCESSED
+            is_3d=True
+        else:
+            train_cod_root[0] = SKELETON_TRAIN_DATADIR_T
+            dev_cod_root[0] = SKELETON_DEV_DATADIR_T
+            test_cod_root[0] = SKELETON_TEST_DATADIR_T
 
-        train_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
-        dev_face_root[0] = FACE_DEV_DATADIR_T_PROCESSED
-        test_face_root[0] = FACE_TEST_DATADIR_T_PROCESSED
+            train_face_root[0] = FACE_TRAIN_DATADIR_T
+            dev_face_root[0] = FACE_DEV_DATADIR_T
+            test_face_root[0] = FACE_TEST_DATADIR_T
+            is_3d=False
 
         train_data_path += integrate_path(0, phoenixT_train_path)
         dev_data_path += integrate_path(0, phoenixT_dev_path)
@@ -104,14 +114,24 @@ def main(config, mode, checkpoint):
         train_corpus[1] = csl_daily_train_corpus
         dev_corpus[1] = csl_daily_dev_corpus
         test_corpus[1] = csl_daily_test_corpus
+        if config['dataset_parameters']['is_processed']:
+            train_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
+            dev_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
+            test_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
 
-        train_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
-        dev_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
-        test_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
+            train_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
+            dev_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
+            test_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
+            is_3d=True
+        else:
+            train_cod_root[1] = SKELETON_CSL_DAILY_DATADIR
+            dev_cod_root[1] = SKELETON_CSL_DAILY_DATADIR
+            test_cod_root[1] = SKELETON_CSL_DAILY_DATADIR
 
-        train_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
-        dev_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
-        test_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
+            train_face_root[1] = FACE_CSL_DAILY_DATADIR
+            dev_face_root[1] = FACE_CSL_DAILY_DATADIR
+            test_face_root[1] = FACE_CSL_DAILY_DATADIR
+            is_3d=False
         train_data_path += integrate_path(1, csl_daily_train_path)
         dev_data_path += integrate_path(1, csl_daily_dev_path)
         test_data_path += integrate_path(1, csl_daily_test_path)
@@ -122,14 +142,24 @@ def main(config, mode, checkpoint):
         train_corpus[2] = how2sign_train_corpus
         dev_corpus[2] = how2sign_dev_corpus
         test_corpus[2] = how2sign_test_corpus
+        if config['dataset_parameters']['is_processed']:
+            train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR_PROCESSED
+            dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR_PROCESSED
+            test_cod_root[2] = SKELETON_HOW2SIGN_TEST_DATADIR_PROCESSED
 
-        train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR_PROCESSED
-        dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR_PROCESSED
-        test_cod_root[2] = SKELETON_HOW2SIGN_TEST_DATADIR_PROCESSED
+            train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR_PROCESSED
+            dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR_PROCESSED
+            test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR_PROCESSED
+            is_3d=True
+        else:
+            train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR
+            dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR
+            test_cod_root[2] = SKELETON_HOW2SIGN_TEST_DATADIR
 
-        train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR_PROCESSED
-        dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR_PROCESSED
-        test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR_PROCESSED
+            train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR
+            dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR
+            test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR
+            is_3d=False
 
         train_data_path += integrate_path(2, how2sign_train_path)
         dev_data_path += integrate_path(2, how2sign_dev_path)
@@ -141,14 +171,24 @@ def main(config, mode, checkpoint):
         train_corpus[3] = phoenix_train_corpus
         dev_corpus[3] = phoenix_dev_corpus
         test_corpus[3] = phoenix_test_corpus
+        if config['dataset_parameters']['is_processed']:
+            train_cod_root[3] = SKELETON_TRAIN_DATADIR_PROCESSED
+            dev_cod_root[3] = SKELETON_DEV_DATADIR_PROCESSED
+            test_cod_root[3] = SKELETON_TEST_DATADIR_PROCESSED
 
-        train_cod_root[3] = SKELETON_TRAIN_DATADIR_PROCESSED
-        dev_cod_root[3] = SKELETON_DEV_DATADIR_PROCESSED
-        test_cod_root[3] = SKELETON_TEST_DATADIR_PROCESSED
+            train_face_root[3] = FACE_TRAIN_DATADIR_PROCESSED
+            dev_face_root[3] = FACE_DEV_DATADIR_PROCESSED
+            test_face_root[3] = FACE_TEST_DATADIR_PROCESSED
+            is_3d=True
+        else:
+            train_cod_root[3] = SKELETON_TRAIN_DATADIR
+            dev_cod_root[3] = SKELETON_DEV_DATADIR
+            test_cod_root[3] = SKELETON_TEST_DATADIR
 
-        train_face_root[3] = FACE_TRAIN_DATADIR_PROCESSED
-        dev_face_root[3] = FACE_DEV_DATADIR_PROCESSED
-        test_face_root[3] = FACE_TEST_DATADIR_PROCESSED
+            train_face_root[3] = FACE_TRAIN_DATADIR
+            dev_face_root[3] = FACE_DEV_DATADIR
+            test_face_root[3] = FACE_TEST_DATADIR
+            is_3d=False
 
         train_data_path += integrate_path(3, phoenix_train_path)
         dev_data_path += integrate_path(3, phoenix_dev_path)
@@ -167,10 +207,10 @@ def main(config, mode, checkpoint):
     print("Datasets loaded.")
     print("---Loading tokenizer---")
     print("---Creating datasets---")
-    ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=False,is_processed=True,is_sg_filter=True,
+    ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False,
                                 trainable=True)
-    ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=False,is_processed=True,is_sg_filter=True)
-    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=False,is_processed=True,is_sg_filter=True)
+    ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
+    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
 
     if ds_train.is_3d or ds_train.is_processed:
         config['model']['pose_dim'] = int(config['model']['pose_dim']*1.5)  # 3Dの場合の入力サイズ
@@ -218,6 +258,7 @@ def main(config, mode, checkpoint):
         loss_w=loss_w
     ).float().to(device)
     """
+
     """
     model = VQVAETransformer1D(
         in_dim=config["model"]["in_dim"],
@@ -234,6 +275,7 @@ def main(config, mode, checkpoint):
         vq_beta=config["model"]["vq_beta"],
         loss_w=loss_w
     ).float().to(device)
+    """
     """
     model = VQVAETransformer1DSeparated(
         pose_d_model=config["model"]['separated_vae']['pose_d_model'],
@@ -261,6 +303,36 @@ def main(config, mode, checkpoint):
         vq_beta=config["model"]["vq_beta"],
         loss_w=loss_w
     ).float().to(device)
+    """
+    model = VQVAETransformer1DAggregatedCategorical(
+    n_codes=config['model']['n_codes'],
+    code_dim=config['model']['code_dim'],
+    pose_d_model=config["model"]['separated_vae']['pose_d_model'],
+    hand_d_model=config["model"]['separated_vae']['hand_d_model'],
+    extra_d_model=config["model"]['separated_vae']['extra_d_model'],
+    n_pose_layers_enc=config["model"]['separated_vae']['n_pose_layers_enc'],
+    n_hand_layers_enc=config["model"]['separated_vae']['n_hand_layers_enc'],
+    n_extra_layers_enc=config["model"]['separated_vae']['n_extra_layers_enc'],
+    n_pose_layers_dec=config["model"]['separated_vae']['n_pose_layers_dec'],
+    n_hand_layers_dec=config["model"]['separated_vae']['n_hand_layers_dec'],
+    n_extra_layers_dec=config["model"]['separated_vae']['n_extra_layers_dec'],
+    n_pose_heads=config["model"]['separated_vae']['n_pose_heads'],
+    n_hand_heads=config["model"]['separated_vae']['n_hand_heads'],
+    n_extra_heads=config["model"]['separated_vae']['n_extra_heads'],
+    pose_code_dim=config["model"]['separated_vae']['pose_code_dim'],
+    hand_code_dim=config["model"]['separated_vae']['hand_code_dim'],
+    extra_code_dim=config["model"]['separated_vae']['extra_code_dim'],
+    n_pose_codes=config["model"]['separated_vae']['n_pose_codes'],
+    n_hand_codes=config["model"]['separated_vae']['n_hand_codes'],
+    n_extra_codes=config["model"]['separated_vae']['n_extra_codes'],
+    stride=config["model"]["stride"],
+    ff_mult=config["model"]["ff_mult"],
+    dropout=config["model"]["dropout"],
+    rvq_stages=config["model"]["rvq_stages"],
+    vq_beta=config["model"]["vq_beta"],
+    tau=config["model"]["tau"],
+    loss_w=loss_w).float().to(device)
+
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
         model.load_state_dict(torch.load(checkpoint, weights_only=False, map_location=device)["model_state_dict"])
@@ -297,6 +369,7 @@ def main(config, mode, checkpoint):
     # 学習の実行
     print("---Starting training/evaluation---")
     trainer = VQVAESeparateTrainer(config, scheduler)
+    #trainer=VQVAETrainer(config, scheduler)
     if mode == "train":
         if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
             # id名を取得
@@ -312,7 +385,7 @@ def main(config, mode, checkpoint):
         trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
                     early_stopping=None)
     elif mode == "visualize":
-        trainer.visualize(model, dl_test)
+        trainer.visualize(model, dl_test, device)
     else:
         trainer.eval(model, None, dl_test, device)
     print("Training/evaluation finished.")
@@ -326,7 +399,7 @@ if __name__ == "__main__":
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
     mode = "train"
-    checkpoint =None
+    checkpoint = None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
@@ -341,10 +414,12 @@ if __name__ == "__main__":
         with open(f"{save_path}/config_vqvae.yaml", "r") as f:
             config = yaml.safe_load(f)
     else:
-        save_path = copy.deepcopy(SAVE_MODEL_DIR_KWT)
         while True:
+            dt_now = datetime.datetime.now()
+            save_path = copy.deepcopy(f"/media/caffe/data_storage/CSLR/keyword_models/train/{dt_now.strftime('%Y/%m%d/%H%M')}")
+            print("保存先のパス:", save_path)
             if os.path.exists(save_path):
-                time.sleep(60)  # もし保存先のディレクトリが既に存在していたら、1分待ってから再度確認する(他のプロセスが保存している可能性があるため)
+                time.sleep(10)  # もし保存先のディレクトリが既に存在していたら、1分待ってから再度確認する(他のプロセスが保存している可能性があるため)
             else:
                  break
         log_create_dir(save_path)

@@ -2,14 +2,15 @@ dataset: "phoenixT"
 work_dir: "/home/caffe/work/SLG/"
 device: "cuda:1"
 dataset_parameters:
-  use_phoenix: True
+  use_phoenix: False
   use_phoenixT: True
   use_how2sign: False
   use_csl-daily: False
+  is_processed: True
 lr_parameters:
-  epoch: 200
-  learning_rate : 0.001
-  min_lr: 0
+  epoch: 20
+  learning_rate : 0.0005
+  min_lr: 0.000001
   weight_decay: 0.01
   milestones: [50,80]
   dropout: 0.3
@@ -22,17 +23,18 @@ lr_parameters:
   grad_clip_norm: 1.0
   ema: False
   ema_beta: 0.999
+  replacement_num_batches: 100
 loss_parameters:
     recon_pos_weight: 1.0
-    recon_dir_weight: 1.0
+    recon_dir_weight: 0.0
     vq_weight: 1.0
-    vel_weight: 0.02
+    vel_weight: 0.00
 
 model:
   pose_dim: 96
-  in_dim: 38
-  hidden_dim: 256
-  code_dim: 128
+  in_dim: 96
+  hidden_dim: 128
+  code_dim: 64
   n_codes: 256
   stride: 1
   n_res_blocks: 4
@@ -43,11 +45,12 @@ model:
   n_layers_dec: 2
   n_heads: 8
   ff_mult: 4
+  tau: 1.0
   separated_vae:
-    pose_d_model: 128
+    pose_d_model: 64
     hand_d_model: 128
     extra_d_model: 64
-    n_pose_heads: 8
+    n_pose_heads: 4
     n_hand_heads: 4
     n_extra_heads: 4
     n_pose_layers_enc: 2
@@ -56,12 +59,12 @@ model:
     n_pose_layers_dec: 2
     n_hand_layers_dec: 2
     n_extra_layers_dec: 2
-    pose_code_dim: 128
-    hand_code_dim: 64
-    extra_code_dim: 32
-    n_pose_codes: 32
-    n_hand_codes: 128
-    n_extra_codes: 64
+    pose_code_dim: 64
+    hand_code_dim: 128
+    extra_code_dim: 64
+    n_pose_codes: 16
+    n_hand_codes: 64
+    n_extra_codes: 8
 tokenizer_parameters:
   k_bodyloc: 32
   k_loc: 64

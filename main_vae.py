@@ -14,14 +14,12 @@ from torchvision.transforms.v2 import Compose, Resize, RandomCrop, CenterCrop, R
 import time
 from models.text2pose import Text2Pose
 from models.module.VQ_VAE import VQVAE1D,VQLossWeights
-from models.text2units import Text2UnitsTimeEmbedding,Text2Units
+from models.module.VAE_Transformer import VAETransformerCond
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
 from loader import *
 from Parameter.Parameter import *
-from transformers import AutoTokenizer
-
-from trainer.Text2Units_trainer import Text2UnitsTrainer
-from loader.word_tokenizer import SimpleTokenizer
+from trainer.VQVAE_trainer import VQVAETrainer
+from trainer.VAE_trainer import VAETrainer
 import csv, json
 import wandb
 import copy
@@ -58,7 +56,7 @@ def integrate_path(id, path_list):
     return integrated_path
 
 
-def main(config, mode, checkpoint,vqvae_weights=None):
+def main(config, mode, checkpoint):
     save_path = config["save_path"]
     print("保存場所:", save_path)
     print("Is GPU available?:", torch.cuda.is_available())
@@ -94,7 +92,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
             dev_face_root[0] = FACE_DEV_DATADIR_T_PROCESSED
             test_face_root[0] = FACE_TEST_DATADIR_T_PROCESSED
-            is_3d = True
+            is_3d=True
         else:
             train_cod_root[0] = SKELETON_TRAIN_DATADIR_T
             dev_cod_root[0] = SKELETON_DEV_DATADIR_T
@@ -103,7 +101,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[0] = FACE_TRAIN_DATADIR_T
             dev_face_root[0] = FACE_DEV_DATADIR_T
             test_face_root[0] = FACE_TEST_DATADIR_T
-            is_3d = False
+            is_3d=False
 
         train_data_path += integrate_path(0, phoenixT_train_path)
         dev_data_path += integrate_path(0, phoenixT_dev_path)
@@ -124,7 +122,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
             dev_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
             test_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
-            is_3d = True
+            is_3d=True
         else:
             train_cod_root[1] = SKELETON_CSL_DAILY_DATADIR
             dev_cod_root[1] = SKELETON_CSL_DAILY_DATADIR
@@ -133,7 +131,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[1] = FACE_CSL_DAILY_DATADIR
             dev_face_root[1] = FACE_CSL_DAILY_DATADIR
             test_face_root[1] = FACE_CSL_DAILY_DATADIR
-            is_3d = False
+            is_3d=False
         train_data_path += integrate_path(1, csl_daily_train_path)
         dev_data_path += integrate_path(1, csl_daily_dev_path)
         test_data_path += integrate_path(1, csl_daily_test_path)
@@ -152,7 +150,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR_PROCESSED
             dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR_PROCESSED
             test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR_PROCESSED
-            is_3d = True
+            is_3d=True
         else:
             train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR
             dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR
@@ -161,7 +159,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR
             dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR
             test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR
-            is_3d = False
+            is_3d=False
 
         train_data_path += integrate_path(2, how2sign_train_path)
         dev_data_path += integrate_path(2, how2sign_dev_path)
@@ -181,7 +179,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[3] = FACE_TRAIN_DATADIR_PROCESSED
             dev_face_root[3] = FACE_DEV_DATADIR_PROCESSED
             test_face_root[3] = FACE_TEST_DATADIR_PROCESSED
-            is_3d = True
+            is_3d=True
         else:
             train_cod_root[3] = SKELETON_TRAIN_DATADIR
             dev_cod_root[3] = SKELETON_DEV_DATADIR
@@ -190,7 +188,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             train_face_root[3] = FACE_TRAIN_DATADIR
             dev_face_root[3] = FACE_DEV_DATADIR
             test_face_root[3] = FACE_TEST_DATADIR
-            is_3d = False
+            is_3d=False
 
         train_data_path += integrate_path(3, phoenix_train_path)
         dev_data_path += integrate_path(3, phoenix_dev_path)
@@ -208,37 +206,22 @@ def main(config, mode, checkpoint,vqvae_weights=None):
             print(f"Removed this path from train_path")
     print("Datasets loaded.")
     print("---Loading tokenizer---")
-    if config['model']['text_encoder_name'] == "word_embedding":
-        tokenizer=SimpleTokenizer()
-        # 全てのコーパスを結合してtokenizerに渡す(pandasのDataFrameのリストを結合してSeriesにする)
-        all_corpus = pd.concat([train_corpus[id] for id in train_corpus.keys()] + [dev_corpus[id] for id in dev_corpus.keys()] + [test_corpus[id] for id in test_corpus.keys()])
-        tokenizer.fit(all_corpus['annotation'])
-        config['model']['vocab_size'] = tokenizer.vocab_size
-        config['model']['pad_token_id'] = tokenizer.word2id[tokenizer.pad_token]
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(config["model"]["text_encoder_name"])
     print("---Creating datasets---")
-    ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,
-                                     is_processed=config['dataset_parameters']['is_processed'], is_sg_filter=True,
-                                     is_coarse=False,
-                                     trainable=True,tokenizer=tokenizer,texts_corpus=train_corpus)
-    ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False, is_3d=is_3d,
-                                   is_processed=config['dataset_parameters']['is_processed'], is_sg_filter=True,
-                                   is_coarse=False,tokenizer=tokenizer,texts_corpus=dev_corpus)
-    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root, trainable=False, is_3d=is_3d,
-                                    is_processed=config['dataset_parameters']['is_processed'], is_sg_filter=True,
-                                    is_coarse=False,tokenizer=tokenizer,texts_corpus=test_corpus)
-
+    ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False,
+                                trainable=True)
+    ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
+    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
 
     if ds_train.is_3d or ds_train.is_processed:
-        config['model']['pose_dim'] = int(config['model']['pose_dim']*1.5)  # 3Dの場合の入力サイズ
-        postfix = ""
-        if config["dataset_parameters"]["use_phoenixT"]:
-            postfix = "_phoenixT"
-        if config["dataset_parameters"]["use_csl-daily"]:
-            postfix += "_csl_daily"
-        if config["dataset_parameters"]["use_how2sign"]:
-            postfix += "_how2sign"
+        config['model']['encoder']['q_input_dim'] = int(config['model']['encoder']['q_input_dim']*1.5)  # 3Dの場合の入力サイズ
+        config['model']['encoder']['kv_input_dim'] = int(config['model']['encoder']['kv_input_dim']*1.5)  # 3Dの場合の出力サイズ
+    postfix = ""
+    if config["dataset_parameters"]["use_phoenixT"]:
+        postfix = "_phoenixT"
+    if config["dataset_parameters"]["use_csl-daily"]:
+        postfix += "_csl_daily"
+    if config["dataset_parameters"]["use_how2sign"]:
+        postfix += "_how2sign"
 
     #config['loss_parameters'][
     #    'max_length'] = ds_train.show_max_length() * 1.5  # loss_parametersのmax_lengthをデータセットの最大長の1.5倍に設定
@@ -257,19 +240,8 @@ def main(config, mode, checkpoint,vqvae_weights=None):
     print("DataLoaders created.")
     # モデルの作成
     print("---Creating model---")
-    #model = Text2Pose(config["model"]).float().to(device)
-    if vqvae_weights !=None:
-        vqvae_config_path=f"{'/'.join(vqvae_weights.split('/')[:-2])}/config_vqvae.yaml"
-        with open(vqvae_config_path, "r") as f:
-            vqvae_config = yaml.safe_load(f)
-        config['vqvae']=vqvae_config['model']
-        config['vqvae']['recon_pos_weight']=vqvae_config['loss_parameters']['recon_pos_weight']
-        config['vqvae']['recon_dir_weight']=vqvae_config['loss_parameters']['recon_dir_weight']
-        config['vqvae']['vq_weight']=vqvae_config['loss_parameters']['vq_weight']
-        model=Text2UnitsTimeEmbedding(config).float().to(device)
-        model.units_model.load_state_dict(torch.load(vqvae_weights, map_location=device))
-    else:
-        model = Text2UnitsTimeEmbedding(config).float().to(device)
+    config['model']['anchor_frame_path'] = ANCHOR_FRAME_PATH
+    model = VAETransformerCond(config["model"]).float().to(device)
 
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
@@ -306,7 +278,8 @@ def main(config, mode, checkpoint,vqvae_weights=None):
     print("Optimizer, criterion, and lr_scheduler created.")
     # 学習の実行
     print("---Starting training/evaluation---")
-    trainer = Text2UnitsTrainer(config,scheduler)
+    trainer = VAETrainer(config, scheduler)
+    #trainer=VQVAETrainer(config, scheduler)
     if mode == "train":
         if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
             # id名を取得
@@ -322,7 +295,7 @@ def main(config, mode, checkpoint,vqvae_weights=None):
         trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
                     early_stopping=None)
     elif mode == "visualize":
-        trainer.visualize(model, dl_test,device)
+        trainer.visualize(model, dl_test, device)
     else:
         trainer.eval(model, None, dl_test, device)
     print("Training/evaluation finished.")
@@ -336,36 +309,33 @@ if __name__ == "__main__":
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
     mode = "train"
-    checkpoint =None
-    vqvae_weights="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0318/1944/19/model_epoch19.pth"
+    checkpoint = None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
     print("Loading config...")
-    with open(f"/home/caffe/work/SLG/Parameter/config_text2units.yaml", "r") as f:
+    with open(f"/home/caffe/work/SLG/Parameter/config_vae.yaml", "r") as f:
         config = yaml.safe_load(f)
     print("Config loaded.")
     # logディレクトリにContinurous_Sign以下のディレクトリ，ファイルをコピー
     if checkpoint != None:
         save_path = checkpoint.split("/")[:-2]
         save_path = "/".join(save_path)
-        with open(f"{save_path}/config_text2units.yaml", "r") as f:
+        with open(f"{save_path}/config_vqvae.yaml", "r") as f:
             config = yaml.safe_load(f)
     else:
-        save_path = copy.deepcopy(SAVE_MODEL_DIR_KWT)
         while True:
             dt_now = datetime.datetime.now()
-            save_path = copy.deepcopy(
-                f"/media/caffe/data_storage/CSLR/keyword_models/train/{dt_now.strftime('%Y/%m%d/%H%M')}")
+            save_path = copy.deepcopy(f"/media/caffe/data_storage/CSLR/keyword_models/train/{dt_now.strftime('%Y/%m%d/%H%M')}")
             print("保存先のパス:", save_path)
             if os.path.exists(save_path):
                 time.sleep(10)  # もし保存先のディレクトリが既に存在していたら、1分待ってから再度確認する(他のプロセスが保存している可能性があるため)
             else:
-                break
+                 break
         log_create_dir(save_path)
         # copy_dir(PROJECT_DIR, save_path)
-        shutil.copy(f"/home/caffe/work/SLG/Parameter/config_text2units.yaml", f"{save_path}/config_text2units.yaml")
+        shutil.copy(f"/home/caffe/work/SLG/Parameter/config_vae.yaml", f"{save_path}/config_vae.yaml")
 
     config['save_path'] = save_path
-    main(config, mode, checkpoint=checkpoint, vqvae_weights=vqvae_weights)
+    main(config, mode, checkpoint=checkpoint)
     # print("Process time: ", time.time() - start)

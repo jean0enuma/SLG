@@ -120,6 +120,7 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
     # 10番目の点は11,12番目の中間点
     new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
     new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
+
     connection_indexes = connection_to_set(all_connections)
     hand_indexes = connection_to_set(hand_points)
     new_hand_data = new_data[:, :, hand_indexes]
@@ -143,6 +144,20 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
     new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
     new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
     new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
+    center_data=new_data[:, :, 1]
+    shoulder_length=np.sqrt((new_data[0,:,2]-new_data[0,:,3])**2+(new_data[1,:,2]-new_data[1,:,3])**2)
+    new_data=np.where(new_data==0,np.nan,new_data)
+    new_data-=center_data[:, :, np.newaxis]
+    new_data/=shoulder_length[np.newaxis,:, np.newaxis]
+    new_hand_data=np.where(new_hand_data==0,np.nan,new_hand_data)
+    new_hand_data-=center_data[:, :, np.newaxis]
+    new_hand_data/=shoulder_length[np.newaxis,:, np.newaxis]
+    new_body_data=np.where(new_body_data==0,np.nan,new_body_data)
+    new_body_data-=center_data[:, :, np.newaxis]
+    new_body_data/=shoulder_length[np.newaxis,:, np.newaxis]
+    new_data=np.where(np.isnan(new_data),0,new_data)
+    new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
+    new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
     if is_sg_filter:
         new_data=apply_savgol_filter(new_data)
         new_data_face=apply_savgol_filter(new_data_face)
@@ -197,6 +212,10 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
     new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
     new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
+    #z座標を0~1に正規化
+    new_data[2]=new_data[2]/np.max(np.abs(new_data[2])) if np.max(np.abs(new_data[2]))>0 else new_data[2]
+    new_hand_data=new_hand_data/np.max(np.abs(new_hand_data)) if np.max(np.abs(new_hand_data))>0 else new_hand_data
+    new_body_data=new_body_data/np.max(np.abs(new_body_data)) if np.max(np.abs(new_body_data))>0 else new_body_data
     if is_sg_filter:
         new_data=apply_savgol_filter(new_data)
         new_data_face=apply_savgol_filter(new_data_face)
