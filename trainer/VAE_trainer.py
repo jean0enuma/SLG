@@ -295,11 +295,19 @@ class VAETrainer(BaseTrainer):
 
         return
 
-    def visualize(self, model, dataset, device):
+    def visualize(self, model, dataset, device,is_3d=False):
         #TODO: 出力のposeを可視化する関数を実装
         #model: VAEモデル
         #dataset: 可視化に使用するデータセット
         #device: 使用するデバイス
+        # 可視化用のディレクトリを作成
+        #予測したポーズとGTポーズをそれぞれ256x256の白画像にプロットする
+        if os.path.exists(f"{self.config['save_path']}/visualize"):
+            shutil.rmtree(f"{self.config['save_path']}/visualize")
+        os.makedirs(f"{self.config['save_path']}/visualize",exist_ok=True)
+        #予測したポーズとGTポーズを保存するディレクトリを作成
+        os.makedirs(f"{self.config['save_path']}/visualize/GT",exist_ok=True)
+        os.makedirs(f"{self.config['save_path']}/visualize/Pred",exist_ok=True)
         model.eval()
         dataset.set_return_length()
         with torch.no_grad():
@@ -310,4 +318,44 @@ class VAETrainer(BaseTrainer):
                 input_length_tensor = input_length_tensor.to(device)
                 id_list = id_list.to(device)
                 batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
-                output = model(padded_cod_data, input_length_tensor)
+                output = model(padded_cod_data, input_length_tensor)['output']
+        output=output.cpu().numpy()
+        #outputを元のスケールに戻す
+        output=output*shoulder_length.cpu().numpy()[:,:,None]
+        output=output+center_data.cpu().numpy()[:,:,None]#(1,seq_len,J*C)
+        if is_3d:
+            B,T,JC=output.shape
+            J=JC//3
+            C=3
+        else:
+            B,T,JC=output.shape
+            J=JC//2
+            C=2
+        output=output.reshape(B,T,J,C)
+        padded_cod_data=padded_cod_data.cpu().numpy()
+        padded_cod_data=padded_cod_data.reshape(B,T,J,C)
+        #outputの点群を動画として保存
+        #同時に，元の動画も保存
+        base_frame = np.ones((256, 256, 3), dtype=np.uint8) * 255
+        for i in range(B):
+            base_frame = np.ones((256, 256, 3), dtype=np.uint8) * 255
+            base_frame_gt=np.ones((256, 256, 3), dtype=np.uint8) * 255
+            v_writer=cv2.VideoWriter(f"{self.config['save_path']}/visualize/Pred/pred_{id_list[i].item()}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
+            v_writer_gt=cv2.VideoWriter(f"{self.config['save_path']}/visualize/GT/gt_{id_list[i].item()}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
+            for t in range(T):
+                for j in range(J):
+                    x=int(output[i,t,j,0])
+                    y=int(output[i,t,j,1])
+                    x_gt=int(padded_cod_data[i,t,j,0])
+                    y_gt=int(padded_cod_data[i,t,j,1])
+                    pd_frame=cv2.circle(base_frame,(x,y),radius=5,color=(0,0,255),thickness=-1)
+                    gt_frame=cv2.circle(base_frame_gt,(x_gt,y_gt),radius=5,color=(0,255,0),thickness=-1)
+                    v_writer.write(pd_frame)
+                    v_writer_gt.write(gt_frame)
+            v_writer.release()
+            v_writer_gt.release()
+        return
+
+
+
+
