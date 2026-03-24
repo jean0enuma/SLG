@@ -30,9 +30,11 @@ class SLGText2UnitsDatasets(Dataset):
         self.is_sg_filter=is_sg_filter
         self.tokenizer=tokenizer
         self.is_coarse=is_coarse
-
+        self.return_length=False
     def __len__(self):
         return len(self.data_path)
+    def set_return_length(self):
+        self.return_length=True
     def show_max_length(self):
         length_list=[]
         for id,data_path in self.data_path:
@@ -42,36 +44,7 @@ class SLGText2UnitsDatasets(Dataset):
             length_list.append(cod_data.shape[0])
         print(f"Max length: {max(length_list)}, Min length: {min(length_list)}, Average length: {sum(length_list)/len(length_list)}")
         return max(length_list)
-    def hand_zero_list(self):
-        delete_path_list=[]
-        for id,data_path in self.data_path:
-            file_name = data_path.split("/")[-1].split(".mp4")[0]
-            face_data_path = f"{self.face_data_path_root[id]}/{file_name}.csv"
-            cod_data_path = f"{self.cod_data_path_root[id]}/{file_name}.csv"
-            face_data = np.loadtxt(f"{face_data_path}", delimiter=",", dtype=np.float32)
-            cod_data = np.loadtxt(f"{cod_data_path}", delimiter=",", dtype=np.float32)
 
-            # 座標データの前処理
-            try:
-                if self.is_3d:
-                    cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data, face_data,
-                                                                                                    is_face_connect=True,is_sg_filter=self.is_sg_filter)
-                else:
-                    cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess(cod_data, face_data,
-                                                                                                  is_face_connect=True,is_sg_filter=self.is_sg_filter)
-            except:
-                print(f"Error in coordinate_preprocess: {cod_data_path}, {face_data_path}")
-                raise ValueError("Error in coordinate_preprocess")
-            if cod_data.shape[1]<8:
-                delete_path_list.append(data_path)
-        return delete_path_list
-    def delete_data(self,delete_path_list):
-        new_data_path=[]
-        data_path=self.data_path
-        for id,data_path in data_path:
-            if data_path in delete_path_list:
-                self.data_path.remove((id,data_path))
-        return self.data_path
     def temporal_rescale(self,data):
         #data:(T,F)
         #動画のフレーム数をランダムに変更する
@@ -147,10 +120,22 @@ class SLGText2UnitsDatasets(Dataset):
             #座標データの前処理
             try:
                 if self.is_3d:
-                    cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data, face_data,
+                    if self.return_length:
+                        cod_data, face_cod_data, hand_cod_data, body_cod_data,center_data,shoulder_length = coordinate_preprocess_3d(cod_data,
+                                                                                                         face_data,
+                                                                                                         is_face_connect=True,
+                                                                                                         is_sg_filter=self.is_sg_filter,return_center_length=True)
+                    else:
+                        cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data, face_data,
                                                                                                     is_face_connect=True,is_sg_filter=self.is_sg_filter)
                 else:
-                    cod_data,face_cod_data,hand_cod_data,body_cod_data=coordinate_preprocess(cod_data,face_data,is_face_connect=True,is_sg_filter=self.is_sg_filter)
+                    if self.return_length:
+                        cod_data, face_cod_data, hand_cod_data, body_cod_data,center_data,shoulder_length=coordinate_preprocess(cod_data,
+                                                                                                         face_data,
+                                                                                                         is_face_connect=True,
+                                                                                                         is_sg_filter=self.is_sg_filter,return_center_length=True)
+                    else:
+                        cod_data,face_cod_data,hand_cod_data,body_cod_data=coordinate_preprocess(cod_data,face_data,is_face_connect=True,is_sg_filter=self.is_sg_filter)
             except Exception as e:
                 print(f"Exception in coordinate_preprocess: {e}")
                 print(f"Error in coordinate_preprocess: {cod_data_path}, {face_data_path}")
@@ -185,14 +170,24 @@ class SLGText2UnitsDatasets(Dataset):
         if self.tokenizer is not None and self.targets_corpus is not None:
             target_corpus = self.targets_corpus[id]
             sequence = target_corpus[target_corpus["id"] == file_name]["annotation"].values[0]
+            if self.return_length:
+                return pose_data,hand_mask,input_length,id,data_path,sequence,center_data,shoulder_length
             return pose_data,hand_mask,input_length,id,data_path,sequence
         else:
+            if self.return_length:
+                return pose_data,hand_mask,input_length,id,data_path,center_data,shoulder_length
             return pose_data,hand_mask,input_length,id,data_path
     def collate_fn(self,batch):
         if self.tokenizer is not None and self.targets_corpus is not None:
-            cod_data_list,hand_mask_list, input_length_list,id_list,path_list, sentence_list = zip(*batch)
+            if self.return_length:
+                cod_data_list,hand_mask_list, input_length_list,id_list,path_list, sentence_list,center_data_list,shoulder_length_list = zip(*batch)
+            else:
+                cod_data_list,hand_mask_list, input_length_list,id_list,path_list, sentence_list = zip(*batch)
         else:
-            cod_data_list,hand_mask_list, input_length_list,id_list,path_list = zip(*batch)
+            if self.return_length:
+                cod_data_list,hand_mask_list, input_length_list,id_list,path_list,center_data_list,shoulder_length_list = zip(*batch)
+            else:
+                cod_data_list,hand_mask_list, input_length_list,id_list,path_list = zip(*batch)
         # 座標データのパディング
         max_length = max([data.shape[0] for data in cod_data_list])
         padded_cod_data = []
@@ -217,7 +212,11 @@ class SLGText2UnitsDatasets(Dataset):
                 truncation=True,
                 return_tensors='pt'
             )
+            if self.return_length:
+                return padded_cod_data,padded_mask, input_length_tensor, id_list, path_list, padded_tokens_tensor,torch.tensor(center_data_list),torch.tensor(shoulder_length_list)
             return padded_cod_data,padded_mask, input_length_tensor, id_list, path_list, padded_tokens_tensor
         else:
+            if self.return_length:
+                return padded_cod_data,padded_mask, input_length_tensor, id_list, path_list, torch.tensor(center_data_list),torch.tensor(shoulder_length_list)
             return padded_cod_data,padded_mask, input_length_tensor, id_list, path_list
 

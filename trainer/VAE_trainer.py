@@ -295,6 +295,19 @@ class VAETrainer(BaseTrainer):
 
         return
 
-    def visualize(self, model, loader, device):
+    def visualize(self, model, dataset, device):
         #TODO: 出力のposeを可視化する関数を実装
-        pass
+        #model: VAEモデル
+        #dataset: 可視化に使用するデータセット
+        #device: 使用するデバイス
+        model.eval()
+        dataset.set_return_length()
+        with torch.no_grad():
+            for batch in tqdm(dataset, total=len(dataset)):
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,center_data,shoulder_length = batch
+                padded_cod_data = padded_cod_data.float().to(device)
+                padded_mask = padded_mask.to(device)
+                input_length_tensor = input_length_tensor.to(device)
+                id_list = id_list.to(device)
+                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
+                output = model(padded_cod_data, input_length_tensor)

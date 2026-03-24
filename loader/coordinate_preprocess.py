@@ -107,7 +107,7 @@ def coordinate_preprocess_face(data_face,is_face_connect=False):
         connection_indexes=connection_to_set(face_connections)
         new_data_face=new_data_face[:,:,connection_indexes]
     return new_data_face
-def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=False):
+def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=False,return_center_length=False):
     data = nan_interpolate(data)
     #data=nan_interpolate_zero(data)
     if np.isnan(data).any():
@@ -163,8 +163,11 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
         new_data_face=apply_savgol_filter(new_data_face)
         new_hand_data=apply_savgol_filter(new_hand_data)
         new_body_data=apply_savgol_filter(new_body_data)
-    return new_data, new_data_face, new_hand_data, new_body_data
-def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=False):
+    if return_center_length:
+        return new_data, new_data_face, new_hand_data, new_body_data, center_data, shoulder_length
+    else:
+        return new_data, new_data_face, new_hand_data, new_body_data
+def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=False,return_center_length=False):
     data = nan_interpolate(data)
     #data=nan_interpolate_zero(data)
     if np.isnan(data).any():
@@ -212,15 +215,29 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
     new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
     new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
-    #z座標を0~1に正規化
-    new_data[2]=new_data[2]/np.max(np.abs(new_data[2])) if np.max(np.abs(new_data[2]))>0 else new_data[2]
-    new_hand_data=new_hand_data/np.max(np.abs(new_hand_data)) if np.max(np.abs(new_hand_data))>0 else new_hand_data
-    new_body_data=new_body_data/np.max(np.abs(new_body_data)) if np.max(np.abs(new_body_data))>0 else new_body_data
+
+    center_data=new_data[:, :, 1]
+    shoulder_length=np.sqrt((new_data[0,:,2]-new_data[0,:,3])**2+(new_data[1,:,2]-new_data[1,:,3])**2+(new_data[2,:,2]-new_data[2,:,3])**2)
+    new_data = np.where(new_data == 0, np.nan, new_data)
+    new_data -= center_data[:, :, np.newaxis]
+    new_data /= shoulder_length[np.newaxis, :, np.newaxis]
+    new_hand_data = np.where(new_hand_data == 0, np.nan, new_hand_data)
+    new_hand_data -= center_data[:, :, np.newaxis]
+    new_hand_data /= shoulder_length[np.newaxis, :, np.newaxis]
+    new_body_data = np.where(new_body_data == 0, np.nan, new_body_data)
+    new_body_data -= center_data[:, :, np.newaxis]
+    new_body_data /= shoulder_length[np.newaxis, :, np.newaxis]
+    new_data = np.where(np.isnan(new_data), 0, new_data)
+    new_hand_data = np.where(np.isnan(new_hand_data), 0, new_hand_data)
+    new_body_data = np.where(np.isnan(new_body_data), 0, new_body_data)
+
     if is_sg_filter:
         new_data=apply_savgol_filter(new_data)
         new_data_face=apply_savgol_filter(new_data_face)
         new_hand_data=apply_savgol_filter(new_hand_data)
         new_body_data=apply_savgol_filter(new_body_data)
+    if return_center_length:
+        return new_data, new_data_face, new_hand_data, new_body_data, center_data, shoulder_length
     return new_data, new_data_face, new_hand_data, new_body_data
 def normalize_hand(data):
     data= np.where(data==0,np.nan,data)
