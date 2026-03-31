@@ -58,10 +58,6 @@ def integrate_path(id, path_list):
 
 def main(config, mode, checkpoint):
     save_path = config["save_path"]
-    print("保存場所:", save_path)
-    print("Is GPU available?:", torch.cuda.is_available())
-
-    device = config["device"] if torch.cuda.is_available() else "cpu"
     print("---Loading datasets---")
 
     # trainデータのパスを結合(id,pathのタプルorリスト)
@@ -205,6 +201,14 @@ def main(config, mode, checkpoint):
             train_data_path.remove((id, path))
             print(f"Removed this path from train_path")
     print("Datasets loaded.")
+    print("保存場所:", save_path)
+    print("Is GPU available?:", torch.cuda.is_available())
+
+    device = config["device"] if torch.cuda.is_available() else "cpu"
+    #deviceからgpuの名前を取得して表示
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(int(device[-1]))
+        print("GPU name:", gpu_name)
     print("---Loading tokenizer---")
     print("---Creating datasets---")
     ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False,
@@ -212,7 +216,7 @@ def main(config, mode, checkpoint):
     ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
     ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
 
-    if ds_train.is_3d or ds_train.is_processed:
+    if ds_train.is_3d:
         config['model']['encoder']['q_input_dim'] = int(config['model']['encoder']['q_input_dim']*1.5)  # 3Dの場合の入力サイズ
         config['model']['encoder']['kv_input_dim'] = int(config['model']['encoder']['kv_input_dim']*1.5)  # 3Dの場合の出力サイズ
     postfix = ""
@@ -295,7 +299,7 @@ def main(config, mode, checkpoint):
         trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
                     early_stopping=None)
     elif mode == "visualize":
-        trainer.visualize(model, dl_test, device)
+        trainer.visualize(model, ds_test, device,is_3d=is_3d)
     else:
         trainer.eval(model, None, dl_test, device)
     print("Training/evaluation finished.")
@@ -308,21 +312,23 @@ if __name__ == "__main__":
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
-    mode = "train"
-    checkpoint = None
+    mode = "visualize"  # Change this to "test" when you want to test
+    checkpoint ="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0331/1801/62/model_epoch62.pth"
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
     print("Loading config...")
     with open(f"/home/caffe/work/SLG/Parameter/config_vae.yaml", "r") as f:
         config = yaml.safe_load(f)
+    config['model']['text_cond'] = False
     print("Config loaded.")
     # logディレクトリにContinurous_Sign以下のディレクトリ，ファイルをコピー
     if checkpoint != None:
         save_path = checkpoint.split("/")[:-2]
         save_path = "/".join(save_path)
-        with open(f"{save_path}/config_vqvae.yaml", "r") as f:
+        with open(f"{save_path}/config_vae.yaml", "r") as f:
             config = yaml.safe_load(f)
+
     else:
         while True:
             dt_now = datetime.datetime.now()
@@ -335,6 +341,8 @@ if __name__ == "__main__":
         log_create_dir(save_path)
         # copy_dir(PROJECT_DIR, save_path)
         shutil.copy(f"/home/caffe/work/SLG/Parameter/config_vae.yaml", f"{save_path}/config_vae.yaml")
+        copy_dir(PROJECT_DIR, save_path)
+        shutil.rmtree(f"{save_path}/Continurous_Sign/wandb")  # wandbディレクトリはコピー後に削除(ログが混ざるのを防ぐため)
 
     config['save_path'] = save_path
     main(config, mode, checkpoint=checkpoint)

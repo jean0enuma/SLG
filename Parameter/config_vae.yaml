@@ -31,26 +31,35 @@ loss_parameters:
     vel_weight: 0.00
 model:
   kl_weight: 0.1
-  pose_dim: 96
-  z_dim: 128
+  pose_dim: 100
   text_cond: False
-  text_encoder_name: "google-bert/bert-base-multilingual-cased"
+  text_encoder_name: "dbmdz/bert-base-german-uncased"
+  body_weight: 1.0
+  hand_weight: 1.0
+  recon_weight: 1.0
+  length_weight: 1.0
+  embed_weight: 0.1
+  constractive_weight: 0.0
+  constractive_temp:  0.07
   encoder:
-    q_input_dim: 96
-    kv_input_dim: 96
-    d_model: 512
+    z_dim: 64
+    q_input_dim: 100
+    kv_input_dim: 100
+    d_model: 256
     nhead: 8
-    num_layers: 6
-    pose_num_layers: 4
+    num_layers: 4
+    pose_num_layers: 2
     pose_nhead: 8
     ffn_mult: 4
     dropout: 0.1
     activation: "gelu"
     window_size: 9
+    text_nhead: 4
+    text_num_layers: 3
   decoder:
-    d_model: 256
+    d_model: 128
     nhead: 8
     num_layers: 2
-    ffn_mult: 4
+    ffn_mult: 2
     dropout: 0.1
     activation: "gelu"

@@ -14,12 +14,13 @@ from torchvision.transforms.v2 import Compose, Resize, RandomCrop, CenterCrop, R
 import time
 from models.text2pose import Text2Pose
 from models.module.VQ_VAE import VQVAE1D,VQLossWeights
-from models.module.VQ_VAE_Transformer import VQVAETransformer1D,VQVAETransformer1DSeparated,VQVAETransformer1DAggregated,VQVAETransformer1DAggregatedCategorical
+from models.module.VAE_Transformer import VAETransformerCond
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
 from loader import *
 from Parameter.Parameter import *
 from trainer.VQVAE_trainer import VQVAETrainer
-from trainer.VQVAE_separate_trainer import VQVAESeparateTrainer
+from trainer.Text2VAE_trainer import Text2VAETrainer
+from transformers import AutoTokenizer
 import csv, json
 import wandb
 import copy
@@ -56,12 +57,8 @@ def integrate_path(id, path_list):
     return integrated_path
 
 
-def main(config, mode, checkpoint):
+def main(config, mode, vae_weights,checkpoint):
     save_path = config["save_path"]
-    print("保存場所:", save_path)
-    print("Is GPU available?:", torch.cuda.is_available())
-
-    device = config["device"] if torch.cuda.is_available() else "cpu"
     print("---Loading datasets---")
 
     # trainデータのパスを結合(id,pathのタプルorリスト)
@@ -205,15 +202,29 @@ def main(config, mode, checkpoint):
             train_data_path.remove((id, path))
             print(f"Removed this path from train_path")
     print("Datasets loaded.")
-    print("---Loading tokenizer---")
-    print("---Creating datasets---")
-    ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False,
-                                trainable=True)
-    ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
-    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=True,is_coarse=False)
+    print("保存場所:", save_path)
+    print("Is GPU available?:", torch.cuda.is_available())
 
-    if ds_train.is_3d or ds_train.is_processed:
-        config['model']['pose_dim'] = int(config['model']['pose_dim']*1.5)  # 3Dの場合の入力サイズ
+    device = config["device"] if torch.cuda.is_available() else "cpu"
+    #deviceからgpuの名前を取得して表示
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(int(device[-1]))
+        print("GPU name:", gpu_name)
+    print("---Loading tokenizer---")
+    tokenizer=AutoTokenizer.from_pretrained(config['model']['text_encoder_name'])
+    print("---Creating datasets---")
+    ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,
+                                trainable=True,tokenizer=tokenizer,texts_corpus=train_corpus)
+    ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,tokenizer=tokenizer,texts_corpus=dev_corpus)
+    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,tokenizer=tokenizer,texts_corpus=test_corpus)
+    vae_config_path = f"{'/'.join(vae_weights.split('/')[:-2])}/config_vae.yaml"
+    with open(vae_config_path, "r") as f:
+        vae_config = yaml.safe_load(f)
+    config['model']['encoder'] = vae_config['model']['encoder']
+    config['model']['decoder'] = vae_config['model']['decoder']
+    if ds_train.is_3d:
+        config['model']['encoder']['q_input_dim'] = int(config['model']['encoder']['q_input_dim']*1.5)  # 3Dの場合の入力サイズ
+        config['model']['encoder']['kv_input_dim'] = int(config['model']['encoder']['kv_input_dim']*1.5)  # 3Dの場合の出力サイズ
     postfix = ""
     if config["dataset_parameters"]["use_phoenixT"]:
         postfix = "_phoenixT"
@@ -239,100 +250,16 @@ def main(config, mode, checkpoint):
     print("DataLoaders created.")
     # モデルの作成
     print("---Creating model---")
-    #model = Text2Pose(config["model"]).float().to(device)
-    loss_w=VQLossWeights()
-    loss_w.recon_pos=config['loss_parameters']['recon_pos_weight']
-    loss_w.recon_dir=config['loss_parameters']['recon_dir_weight']
-    loss_w.vq=config['loss_parameters']['vq_weight']
-    """
-    model = VQVAE1D(
-        in_dim=config["model"]["in_dim"],
-        hidden=config["model"]["hidden_dim"],
-        code_dim=config["model"]["code_dim"],
-        n_codes=config["model"]["n_codes"],
-        stride=config["model"]["stride"],
-        n_res_blocks=config["model"]["n_res_blocks"],
-        dropout=config["model"]["dropout"],
-        rvq_stages=config["model"]["rvq_stages"],
-        vq_beta=config["model"]["vq_beta"],
-        loss_w=loss_w
-    ).float().to(device)
-    """
+    config['model']['anchor_frame_path'] = ANCHOR_FRAME_PATH
 
-    """
-    model = VQVAETransformer1D(
-        in_dim=config["model"]["in_dim"],
-        d_model=config["model"]["hidden_dim"],
-        n_heads=config["model"]["n_heads"],
-        code_dim=config["model"]["code_dim"],
-        n_codes=config["model"]["n_codes"],
-        stride=config["model"]["stride"],
-        n_layers_enc=config["model"]["n_layers_enc"],
-        n_layers_dec=config["model"]["n_layers_dec"],
-        ff_mult=config["model"]["ff_mult"],
-        dropout=config["model"]["dropout"],
-        rvq_stages=config["model"]["rvq_stages"],
-        vq_beta=config["model"]["vq_beta"],
-        loss_w=loss_w
-    ).float().to(device)
-    """
-    """
-    model = VQVAETransformer1DSeparated(
-        pose_d_model=config["model"]['separated_vae']['pose_d_model'],
-        hand_d_model=config["model"]['separated_vae']['hand_d_model'],
-        extra_d_model=config["model"]['separated_vae']['extra_d_model'],
-        n_pose_layers_enc=config["model"]['separated_vae']['n_pose_layers_enc'],
-        n_hand_layers_enc=config["model"]['separated_vae']['n_hand_layers_enc'],
-        n_extra_layers_enc=config["model"]['separated_vae']['n_extra_layers_enc'],
-        n_pose_layers_dec=config["model"]['separated_vae']['n_pose_layers_dec'],
-        n_hand_layers_dec=config["model"]['separated_vae']['n_hand_layers_dec'],
-        n_extra_layers_dec=config["model"]['separated_vae']['n_extra_layers_dec'],
-        n_pose_heads=config["model"]['separated_vae']['n_pose_heads'],
-        n_hand_heads=config["model"]['separated_vae']['n_hand_heads'],
-        n_extra_heads=config["model"]['separated_vae']['n_extra_heads'],
-        pose_code_dim=config["model"]['separated_vae']['pose_code_dim'],
-        hand_code_dim=config["model"]['separated_vae']['hand_code_dim'],
-        extra_code_dim=config["model"]['separated_vae']['extra_code_dim'],
-        n_pose_codes=config["model"]['separated_vae']['n_pose_codes'],
-        n_hand_codes=config["model"]['separated_vae']['n_hand_codes'],
-        n_extra_codes=config["model"]['separated_vae']['n_extra_codes'],
-        stride=config["model"]["stride"],
-        ff_mult=config["model"]["ff_mult"],
-        dropout=config["model"]["dropout"],
-        rvq_stages=config["model"]["rvq_stages"],
-        vq_beta=config["model"]["vq_beta"],
-        loss_w=loss_w
-    ).float().to(device)
-    """
-    model = VQVAETransformer1DAggregatedCategorical(
-    n_codes=config['model']['n_codes'],
-    code_dim=config['model']['code_dim'],
-    pose_d_model=config["model"]['separated_vae']['pose_d_model'],
-    hand_d_model=config["model"]['separated_vae']['hand_d_model'],
-    extra_d_model=config["model"]['separated_vae']['extra_d_model'],
-    n_pose_layers_enc=config["model"]['separated_vae']['n_pose_layers_enc'],
-    n_hand_layers_enc=config["model"]['separated_vae']['n_hand_layers_enc'],
-    n_extra_layers_enc=config["model"]['separated_vae']['n_extra_layers_enc'],
-    n_pose_layers_dec=config["model"]['separated_vae']['n_pose_layers_dec'],
-    n_hand_layers_dec=config["model"]['separated_vae']['n_hand_layers_dec'],
-    n_extra_layers_dec=config["model"]['separated_vae']['n_extra_layers_dec'],
-    n_pose_heads=config["model"]['separated_vae']['n_pose_heads'],
-    n_hand_heads=config["model"]['separated_vae']['n_hand_heads'],
-    n_extra_heads=config["model"]['separated_vae']['n_extra_heads'],
-    pose_code_dim=config["model"]['separated_vae']['pose_code_dim'],
-    hand_code_dim=config["model"]['separated_vae']['hand_code_dim'],
-    extra_code_dim=config["model"]['separated_vae']['extra_code_dim'],
-    n_pose_codes=config["model"]['separated_vae']['n_pose_codes'],
-    n_hand_codes=config["model"]['separated_vae']['n_hand_codes'],
-    n_extra_codes=config["model"]['separated_vae']['n_extra_codes'],
-    stride=config["model"]["stride"],
-    ff_mult=config["model"]["ff_mult"],
-    dropout=config["model"]["dropout"],
-    rvq_stages=config["model"]["rvq_stages"],
-    vq_beta=config["model"]["vq_beta"],
-    tau=config["model"]["tau"],
-    loss_w=loss_w).float().to(device)
-
+    model = VAETransformerCond(config["model"]).float().to(device)
+    if vae_weights!=None:
+        #model.text_encoderとmodel.is_text_cond以外をvae_weightsで初期化
+        model_dict = model.state_dict()
+        pretrained_dict = torch.load(vae_weights, map_location=device)
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and not k.startswith("text_encoder") and not k.startswith("is_text_cond") and not k.startswith("vae_transformer.input_predictor")}
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
         model.load_state_dict(torch.load(checkpoint, weights_only=False, map_location=device)["model_state_dict"])
@@ -350,7 +277,7 @@ def main(config, mode, checkpoint):
     print("Model created.")
     # optimizer,criterion,lr_schedulerの作成
     print("---Creating optimizer, criterion, and lr_scheduler---")
-    optimizer = optim.AdamW(model.parameters(), lr=config["lr_parameters"]['learning_rate'],
+    optimizer = optim.AdamW(model.text_encoder.parameters(), lr=config["lr_parameters"]['learning_rate'],
                            weight_decay=config["lr_parameters"]['weight_decay'])
 
     #criterion = Text2Pose_criterion(config['loss_parameters'])
@@ -368,7 +295,7 @@ def main(config, mode, checkpoint):
     print("Optimizer, criterion, and lr_scheduler created.")
     # 学習の実行
     print("---Starting training/evaluation---")
-    trainer = VQVAESeparateTrainer(config, scheduler)
+    trainer = Text2VAETrainer(config, scheduler)
     #trainer=VQVAETrainer(config, scheduler)
     if mode == "train":
         if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
@@ -385,7 +312,7 @@ def main(config, mode, checkpoint):
         trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
                     early_stopping=None)
     elif mode == "visualize":
-        trainer.visualize(model, dl_test, device)
+        trainer.visualize(model, ds_test, device,is_3d=is_3d)
     else:
         trainer.eval(model, None, dl_test, device)
     print("Training/evaluation finished.")
@@ -398,21 +325,25 @@ if __name__ == "__main__":
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
-    mode = "visualize"
-    checkpoint = None
+    mode = "visualize"  # Change this to "visualize" when you want to visualize
+    vae_weights ="/media/caffe/data_storage/CSLR/keyword_models/SLG/VAE/z_dim64/99/model_epoch99.pth"
+    checkpoint="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0331/1735/0/model_epoch0.pth"
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
     print("Loading config...")
-    with open(f"/home/caffe/work/SLG/Parameter/config_vqvae.yaml", "r") as f:
+
+    with open(f"/home/caffe/work/SLG/Parameter/config_vae.yaml", "r") as f:
         config = yaml.safe_load(f)
+
     print("Config loaded.")
     # logディレクトリにContinurous_Sign以下のディレクトリ，ファイルをコピー
     if checkpoint != None:
         save_path = checkpoint.split("/")[:-2]
         save_path = "/".join(save_path)
-        with open(f"{save_path}/config_vqvae.yaml", "r") as f:
+        with open(f"{save_path}/config_vae.yaml", "r") as f:
             config = yaml.safe_load(f)
+
     else:
         while True:
             dt_now = datetime.datetime.now()
@@ -424,8 +355,10 @@ if __name__ == "__main__":
                  break
         log_create_dir(save_path)
         # copy_dir(PROJECT_DIR, save_path)
-        shutil.copy(f"/home/caffe/work/SLG/Parameter/config_vqvae.yaml", f"{save_path}/config_vqvae.yaml")
-
+        shutil.copy(f"/home/caffe/work/SLG/Parameter/config_vae.yaml", f"{save_path}/config_vae.yaml")
+        copy_dir(PROJECT_DIR, save_path)
+        shutil.rmtree(f"{save_path}/Continurous_Sign/wandb")  # wandbディレクトリはコピー後に削除(ログが混ざるのを防ぐため)
+    config['model']['text_cond'] = True
     config['save_path'] = save_path
-    main(config, mode, checkpoint=checkpoint)
+    main(config, mode, vae_weights,checkpoint)
     # print("Process time: ", time.time() - start)

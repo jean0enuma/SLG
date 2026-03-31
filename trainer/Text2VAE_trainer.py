@@ -18,75 +18,7 @@ from models.module.EMA import EMA
 import matplotlib.pyplot as plt
 from loader.coordinate_preprocess import apply_savgol_filter,average_movint
 
-
-
-
-def save_code_usage_histogram(
-    hist_dict,
-    save_path,
-    top_k=None,
-    title="Code Usage Histogram"
-):
-    """
-    Save histogram (counts) to specified path.
-
-    hist_dict: output of model.code_usage_histogram()
-    save_path: full file path (e.g., "/mnt/data/hist.png")
-    top_k: if not None, save only top_k most frequent codes
-    """
-    counts = hist_dict["counts"].detach().cpu()
-
-    if top_k is not None:
-        values, indices = torch.topk(counts, k=top_k)
-        x = indices.numpy()
-        y = values.numpy()
-    else:
-        x = torch.arange(len(counts)).numpy()
-        y = counts.numpy()
-
-    plt.figure()
-    plt.bar(x, y)
-    plt.xlabel("Code Index")
-    plt.ylabel("Usage Count")
-    plt.title(title)
-
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    plt.savefig(save_path)
-    plt.close()
-
-
-def save_code_usage_probability(
-    hist_dict,
-    save_path,
-    top_k=None,
-    title="Code Usage Probability"
-):
-    """
-    Save probability histogram to specified path.
-    """
-    probs = hist_dict["probs"].detach().cpu()
-
-    if top_k is not None:
-        values, indices = torch.topk(probs, k=top_k)
-        x = indices.numpy()
-        y = values.numpy()
-    else:
-        x = torch.arange(len(probs)).numpy()
-        y = probs.numpy()
-
-    plt.figure()
-    plt.bar(x, y)
-    plt.xlabel("Code Index")
-    plt.ylabel("Probability")
-    plt.title(title)
-
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    plt.savefig(save_path)
-
-
-
-
-class VAETrainer(BaseTrainer):
+class Text2VAETrainer(BaseTrainer):
     def __init__(self,config,scheduler=None):
         self.config=config
         self.scheduler=scheduler
@@ -102,23 +34,26 @@ class VAETrainer(BaseTrainer):
         else:
             self.g_scheduler=scheduler(epoch)
     def compute_loss(self, batch, model, criterion):
-        padded_cod_data, padded_mask,input_length_tensor, id_list = batch
+        padded_cod_data, padded_mask,input_length_tensor, id_list,sequence = batch
 
-        loss = model(padded_cod_data,input_length_tensor)
+        loss = model(padded_cod_data,input_length_tensor,sequence)
         return loss
     def train(self, model, optimizer, criterion, train_loader, device,ema=False):
         model.train()
         total_loss = []
         total_recon_loss=[]
         total_kl_loss=[]
+        total_length_loss=[]
+        total_embed_loss=[]
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
         for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
-            padded_cod_data,padded_mask, input_length_tensor, id_list,data_path=batch
+            padded_cod_data,padded_mask, input_length_tensor, id_list,data_path,sequence=batch
             padded_cod_data=padded_cod_data.float().to(device)
             padded_mask=padded_mask.to(device)
             input_length_tensor=input_length_tensor.to(device)
             id_list=id_list.to(device)
-            batch = (padded_cod_data,padded_mask, input_length_tensor, id_list)
+            sequence=sequence.to(device)
+            batch = (padded_cod_data,padded_mask, input_length_tensor, id_list,sequence)
             optimizer.zero_grad(set_to_none=True)
             #g_prob = random.random()
             with torch.cuda.amp.autocast(dtype=torch.bfloat16,enabled=self.config["lr_parameters"]["amp"]):
@@ -127,6 +62,8 @@ class VAETrainer(BaseTrainer):
             loss = loss_dict['loss_total']
             recon_loss = loss_dict['recon_loss']
             kl_loss = loss_dict['kl_loss']
+            length_loss = loss_dict['length_loss']
+            embed_loss= loss_dict['embed_loss']
             scaler.scale(loss).backward()
             ##grad_clip
             if self.config["lr_parameters"]["grad_clip_norm"] is not None:
@@ -139,50 +76,68 @@ class VAETrainer(BaseTrainer):
             total_loss.append(loss.item())
             total_recon_loss.append(recon_loss.item())
             total_kl_loss.append(kl_loss.item())
+            total_length_loss.append(length_loss.item())
+            total_embed_loss.append(embed_loss.item())
 
             # codebook replacement
             if batch_idx % 100== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_loss)}")
                 tqdm.write(f"Avg KL Loss: {np.mean(total_kl_loss)}")
+                tqdm.write(f"Avg Length Loss: {np.mean(total_length_loss)}")
+                tqdm.write(f"Avg Embed Loss: {np.mean(total_embed_loss)}")
 
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
         kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
+        length_avg_loss = np.mean(total_length_loss).astype(np.float32)
+        embed_avg_loss = np.mean(total_embed_loss).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_loss": recon_avg_loss,
             "kl_loss": kl_avg_loss,
+            "length_loss": length_avg_loss,
+            'embed_loss': embed_avg_loss,
         }
     def eval(self, model, criterion, test_loader, device):
         model.eval()
         total_loss = []
-        total_loss = []
         total_recon_loss=[]
         total_kl_loss=[]
+        total_length_loss=[]
+        total_embed_loss=[]
         with torch.no_grad():
             for batch in tqdm(test_loader, total=len(test_loader.dataset) // test_loader.batch_size):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path = batch
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, sequence = batch
                 padded_cod_data = padded_cod_data.float().to(device)
                 padded_mask = padded_mask.to(device)
                 input_length_tensor = input_length_tensor.to(device)
                 id_list = id_list.to(device)
-                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
+                sequence=sequence.to(device)
+                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list, sequence)
                 with torch.cuda.amp.autocast(dtype=torch.bfloat16,enabled=self.config["lr_parameters"]["amp"]):
                     loss_dict = self.compute_loss(batch, model, criterion)
                 loss = loss_dict['loss_total']
                 recon_loss = loss_dict['recon_loss']
                 kl_loss = loss_dict['kl_loss']
+                length_loss= loss_dict['length_loss']
+                embed_loss= loss_dict['embed_loss']
                 total_loss.append(loss.item())
                 total_recon_loss.append(recon_loss.item())
                 total_kl_loss.append(kl_loss.item())
+                total_length_loss.append(length_loss.item())
+                total_embed_loss.append(embed_loss.item())
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
         kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
+        length_avg_loss = np.mean(total_length_loss).astype(np.float32)
+        embed_avg_loss = np.mean(total_embed_loss).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_loss": recon_avg_loss,
             "kl_loss": kl_avg_loss,
+            'length_loss': length_avg_loss,
+            'embed_loss': embed_avg_loss,
         }
     def fit(self,model,optimizer,scheduler,criterion,train_loader,eval_loader,test_loader,device,early_stopping=None):
         if self.config["lr_parameters"]["ema"]:
@@ -191,12 +146,18 @@ class VAETrainer(BaseTrainer):
         train_loss_list=self.config['train_loss_list'] if 'train_loss_list' in self.config.keys() else []
         train_recon_loss_list=self.config['train_recon_loss_list'] if 'train_recon_pose_loss_list' in self.config.keys() else []
         train_kl_loss_list=self.config['train_kl_loss_list'] if 'train_kl_loss_list' in self.config.keys() else []
+        train_length_loss_list=self.config['train_length_loss_list'] if 'train_length_loss_list' in self.config.keys() else []
+        train_embed_loss_list=self.config['train_embed_loss_list'] if 'train_embed_loss_list' in self.config.keys() else []
         eval_loss_list=self.config['eval_loss_list'] if 'eval_loss_list' in self.config.keys() else []
         eval_recon_loss_list=self.config['eval_recon_loss_list'] if 'eval_pose_loss_list' in self.config.keys() else []
         eval_kl_loss_list=self.config['eval_kl_loss_list'] if 'eval_kl_loss_list' in self.config.keys() else []
+        eval_embed_loss_list=self.config['eval_embed_loss_list'] if 'eval_embed_loss_list' in self.config.keys() else []
+        eval_length_loss_list=self.config['eval_length_loss_list'] if 'eval_length_loss_list' in self.config.keys() else []
         test_loss_list=self.config['test_loss_list'] if 'test_loss_list' in self.config.keys() else []
         test_recon_loss_list=self.config['test_recon_loss_list'] if 'test_recon_loss_list' in self.config.keys() else []
         test_kl_loss_list=self.config['test_kl_loss_list'] if 'test_kl_loss_list' in self.config.keys() else []
+        test_length_loss_list=self.config['test_length_loss_list'] if 'test_length_loss_list' in self.config.keys() else []
+        test_embed_loss_list=self.config['test_embed_loss_list'] if 'test_embed_loss_list' in self.config.keys() else []
         save_path=self.config["save_path"]
         for epoch in range(self.config["init_epoch"], num_epochs):
             #self.generate_scheduler(epoch)
@@ -215,29 +176,40 @@ class VAETrainer(BaseTrainer):
             train_loss_list.append(train_loss['loss'])
             train_recon_loss_list.append(train_loss['recon_loss'])
             train_kl_loss_list.append(train_loss['kl_loss'])
+            train_length_loss_list.append(train_loss['length_loss'])
+            train_embed_loss_list.append(train_loss['embed_loss'])
 
             eval_loss_list.append(eval_loss['loss'])
             eval_recon_loss_list.append(eval_loss['recon_loss'])
             eval_kl_loss_list.append(eval_loss['kl_loss'])
+            eval_length_loss_list.append(eval_loss['length_loss'])
+            eval_embed_loss_list.append(eval_loss['embed_loss'])
 
             test_loss_list.append(test_loss['loss'])
             test_recon_loss_list.append(test_loss['recon_loss'])
             test_kl_loss_list.append(test_loss['kl_loss'])
+            test_length_loss_list.append(test_loss['length_loss'])
+            test_embed_loss_list.append(test_loss['embed_loss'])
 
             print(f"Epoch {epoch+1}/{num_epochs})")
-            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}")
-            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}")
-            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}")
+            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}, Length Loss: {train_loss['length_loss']:.4f}",f"Embed Loss: {train_loss['embed_loss']:.4f}")
+            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}, Length Loss: {eval_loss['length_loss']:.4f}",f"Embed Loss: {eval_loss['embed_loss']:.4f}")
+            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}, Length Loss: {test_loss['length_loss']:.4f}",f"Embed Loss: {test_loss['embed_loss']:.4f}")
+
             #eval_lossとtest_lossのkeyを変更
             eval_loss = {
                 "eval_loss": eval_loss['loss'],
                 "eval_recon_loss": eval_loss['recon_loss'],
                 "eval_kl_loss": eval_loss['kl_loss'],
+                'eval_length_loss': eval_loss['length_loss'],
+                'eval_embed_loss': eval_loss['embed_loss'],
             }
             test_loss = {
                 "test_loss": test_loss['loss'],
                 "test_recon_loss": test_loss['recon_loss'],
                 "test_kl_loss": test_loss['kl_loss'],
+                'test_length_loss': test_loss['length_loss'],
+                'test_embed_loss': test_loss['embed_loss'],
             }
             log_dict={**train_loss,**eval_loss,**test_loss}
             wandb.log(log_dict)
@@ -251,12 +223,18 @@ class VAETrainer(BaseTrainer):
                 "train_loss_list": train_loss_list,
                 "train_recon_loss_list": train_recon_loss_list,
                 "train_kl_loss_list": train_kl_loss_list,
+                'train_length_loss_list': train_length_loss_list,
+                'train_embed_loss_list': train_embed_loss_list,
                 "eval_loss_list": eval_loss_list,
                 "eval_recon_loss_list": eval_recon_loss_list,
                 "eval_kl_loss_list": eval_kl_loss_list,
+                'eval_length_loss_list': eval_length_loss_list,
+                'eval_embed_loss_list': eval_embed_loss_list,
                 "test_loss_list": test_loss_list,
                 "test_recon_loss_list": test_recon_loss_list,
                 "test_kl_loss_list": test_kl_loss_list,
+                'test_length_loss_list': test_length_loss_list,
+                'test_embed_loss_list': test_embed_loss_list,
                 'random': random.getstate(),
                 'np_random': np.random.get_state(),
                 'torch': torch.get_rng_state(),
@@ -269,12 +247,18 @@ class VAETrainer(BaseTrainer):
                     "train_loss": train_loss_list,
                     "train_recon_loss": train_recon_loss_list,
                     "train_kl_loss": train_kl_loss_list,
+                    'train_length_loss': train_length_loss_list,
+                    'train_embed_loss': train_embed_loss_list,
                     "eval_loss": eval_loss_list,
                     "eval_recon_loss": eval_recon_loss_list,
                     "eval_kl_loss": eval_kl_loss_list,
+                    'eval_length_loss': eval_length_loss_list,
+                    'eval_embed_loss': eval_embed_loss_list,
                     "test_loss": test_loss_list,
                     "test_recon_loss": test_recon_loss_list,
                     "test_kl_loss": test_kl_loss_list,
+                    'test_length_loss': test_length_loss_list,
+                    'test_embed_loss': test_embed_loss_list,
                 }
             )
             log_data.to_csv(f"{save_path}/log.csv")
@@ -313,42 +297,46 @@ class VAETrainer(BaseTrainer):
         dataset.set_return_length()
         with torch.no_grad():
             for batch in tqdm(dataset, total=len(dataset)):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length = batch
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,sequence,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length = batch
                 padded_cod_data = padded_cod_data.float().unsqueeze(0).to(device)
                 padded_mask = padded_mask.unsqueeze(0).to(device)
                 input_length_tensor = input_length_tensor.unsqueeze(0).to(device)
+                sequence=sequence.to(device)
                 id_list = torch.tensor(id_list).to(device)
-                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
-                output = model(padded_cod_data, input_length_tensor)['output']
+                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list, sequence)
+                model_output = model(padded_cod_data, input_length_tensor,sequence)
+                output=model_output['output']
+                pd_length=model_output['pred_length'].int().item()
                 output=output.squeeze(0).cpu().numpy()
                 T,J,C=output.shape
                 #outputを元のスケールに戻す
                 output=output.reshape(T,J,C)
                 output[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
                 output[:,:8]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                output[:,8:29]*=shoulder_length.cpu().numpy()[:,None,None]/2
-                output[:,8:29]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                output[:,29:]*=shoulder_length.cpu().numpy()[:,None,None]/2
-                output[:,29:]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
-                output=apply_savgol_filter(output.transpose(1,0,2),window_size=7,poly_order=2).transpose(1,0,2)
-                #output[:,8:29]で，全てが0.01以下のときは，手が検出されなかったとして，0にする
-                hand_mask=(np.max(np.abs(output[:,8:29]),axis=2)<0.01)
-                output[:,8:29][hand_mask]=0.0
-                #output[:,29:]も同様
-                hand_mask=(np.max(np.abs(output[:,29:]),axis=2)<0.01)
-                output[:,29:][hand_mask]=0.0
+                output[:,8:29]*=left_length.cpu().numpy()[:,None,None]
+                output[:,8:29]+=left_center_data.cpu().transpose(0,1).numpy()[:,None,:]
+                output[:,29:]*=right_length.cpu().numpy()[:,None,None]
+                output[:,29:]+=right_center_data.cpu().transpose(0,1).numpy()[:,None,:]
+                #output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
+                output = apply_savgol_filter(output.transpose(1, 0, 2), window_size=7, poly_order=2).transpose(1, 0, 2)
+                # output[:,8:29]で，全てが0.01以下のときは，手が検出されなかったとして，0にする
+                hand_mask = (np.max(np.abs(output[:, 8:29]), axis=2) < 0.01)
+                output[:, 8:29][hand_mask] = 0.0
+                # output[:,29:]も同様
+                hand_mask = (np.max(np.abs(output[:, 29:]), axis=2) < 0.01)
+                output[:, 29:][hand_mask] = 0.0
 
                 padded_cod_data=padded_cod_data.squeeze(0).cpu().numpy()
                 padded_cod_data=padded_cod_data.reshape(T,J,C)
-                #padded_cod_data[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
+                padded_cod_data[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
                 padded_cod_data[:,:8]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                #padded_cod_data[:,8:29]*=left_length.cpu().numpy()[:,None,None]
+                padded_cod_data[:,8:29]*=left_length.cpu().numpy()[:,None,None]
                 padded_cod_data[:,8:29]+=left_center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                #padded_cod_data[:,29:]*=right_length.cpu().numpy()[:,None,None]
+                padded_cod_data[:,29:]*=right_length.cpu().numpy()[:,None,None]
                 padded_cod_data[:,29:]+=right_center_data.cpu().transpose(0,1).numpy()[:,None,:]
                 #outputの点群を動画として保存
                 #同時に，元の動画も保存
+                #J=8
 
                 v_writer=cv2.VideoWriter(f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
                 v_writer_gt=cv2.VideoWriter(f"{self.config['save_path']}/visualize/GT/gt_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))

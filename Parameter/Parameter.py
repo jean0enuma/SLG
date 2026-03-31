@@ -130,7 +130,7 @@ ASL_CITIZEN_TEXT_DATADIR="/media/caffe/data_storage/ASL_Citizen/ASL_Citizen/spli
 
 
 #このプロジェクトのパス
-PROJECT_DIR="/home/caffe/work/MAE_csr"
+PROJECT_DIR="/home/caffe/work/SLG"
 #損失関数
 LOSS_FUNCTION=nn.CrossEntropyLoss()
 #モデルの種類
