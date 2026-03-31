@@ -109,8 +109,8 @@ class VAETransformerDiffusion(nn.Module):
         self.mean_proj=nn.Linear(d_model,z_dim)
         self.logvar_proj=nn.Linear(d_model,z_dim)
         self.z_proj=nn.Linear(z_dim,dec_dmodel)
+        self.input_proj=nn.Linear(q_input_dim, d_model)
         self.output_fc=nn.Linear(dec_dmodel,kv_input_dim)
-        self.anchor_frame=nn.Parameter(torch.randn(1,1,d_model),requires_grad=True)  # (1,1,d_model)
         self.body_weight=config.get('body_weight',0.3)
         self.hand_weight=config.get('hand_weight',0.7)
     def reparameterize(self, mean, logvar):
@@ -135,12 +135,12 @@ class VAETransformerDiffusion(nn.Module):
         hand_coord = pose_input[:, :, 8:]
 
         # pose_input=pose_input.view(B,T,-1)  # (B, T, joint_num*coord_dim)
-        q = self.anchor_frame.expand(B, T, -1)
+        q = pose_input.reshape(B, T, -1)  # (B, T, joint_num*coord_dim)
 
         src_mask = create_slide_window_mask(T, window_size=self.config['encoder']['window_size'],
                                             device=q.device)  # (T, T)
         q_padding_mask = create_mask(pose_length, T)  # (B, T)
-
+        q=self.input_proj(q)  # (B, T, d_model)
         encoded=self.encoder.forward(q,src_mask=src_mask,q_padding_mask=q_padding_mask)
 
         mean=self.mean_proj(encoded)
