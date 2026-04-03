@@ -6,7 +6,7 @@ from torch import nn
 import torch.nn.functional as F
 from Parameter.Parameter import *
 import numpy as np
-import math
+import math,copy
 from transformers import AutoModel
 from transformers import CLIPTextModel
 def create_mask(target_length, max_len):
@@ -144,11 +144,8 @@ class TextEncoder(nn.Module):
         enc_layer=nn.TransformerEncoderLayer(d_model, config['encoder']['text_nhead'], d_model*config['encoder']['ffn_mult'], batch_first=True, norm_first=True)
         self.text_encoder=nn.TransformerEncoder(enc_layer, num_layers=config['encoder']['text_num_layers'])
         self.projection = nn.Linear(self.text_embedding.config.hidden_size, d_model)
-        self.query=nn.Parameter(torch.randn(1, 1, d_model), requires_grad=True)  # (1, 1, d_model)
+        self.input_predictor=nn.Linear(d_model, 1)
         dec_layer=nn.TransformerDecoderLayer(d_model, config['encoder']['text_nhead'], d_model*config['encoder']['ffn_mult'], batch_first=True, norm_first=True)
-        self.text_decoder=nn.TransformerDecoder(dec_layer, num_layers=config['encoder']['text_num_layers'])
-        #enc_length_layer=nn.TransformerEncoderLayer(d_model, config['encoder']['text_nhead'], d_model*config['encoder']['ffn_mult'], batch_first=True, norm_first=True)
-        self.length_predictor=nn.Linear(self.text_embedding.config.hidden_size,1)
     def position_embedding(self, seq_len, d_model, device):
         position = torch.arange(seq_len, device=device).unsqueeze(1)  # (seq_len, 1)
         div_term = torch.exp(torch.arange(0, d_model, 2, device=device) * (-math.log(10000.0) / d_model))  # (d_model/2,)
@@ -161,12 +158,8 @@ class TextEncoder(nn.Module):
         attention_mask=text_inputs['attention_mask']  # (B, seq_len)
         text_features = self.text_embedding(**text_inputs).last_hidden_state
         text_proj=self.projection(text_features)
-        pred_length=self.length_predictor(text_features.mean(1))  # (B, seq_len)
         text_features=self.text_encoder(text_proj, src_key_padding_mask=~attention_mask.bool())
-        T=torch.max(pose_length).item()
-        query=self.query.expand(text_features.size(0), T,-1)  # (B, T, d_model)
-        p_padding_mask=create_mask(pose_length, T).bool()  # (B, T)
-        text_features=self.text_decoder(query, text_features, tgt_key_padding_mask=p_padding_mask, memory_key_padding_mask=~attention_mask.bool())
+        pred_length=self.input_predictor(text_features.mean(dim=1)).squeeze(1)  # (B,)
         return text_features,pred_length
 class VAE_Transformer(nn.Module):
     def __init__(self,config):
@@ -200,6 +193,31 @@ class VAE_Transformer(nn.Module):
     def decode(self,z,src_mask=None,padding_mask=None):
         decoded=self.decoder(z,src_mask=src_mask,padding_mask=padding_mask)
         return decoded
+
+    @staticmethod
+    def gaussian_kl(mu_q, logvar_q, mu_p, logvar_p, mask=None):
+        """
+        KL( q || p ) for diagonal Gaussians
+        mu/logvar: (B, T, D)
+        mask: (B, T) with True for valid positions
+        """
+        var_q = torch.exp(logvar_q)
+        var_p = torch.exp(logvar_p)
+
+        kl = 0.5 * (
+                logvar_p - logvar_q +
+                (var_q + (mu_q - mu_p).pow(2)) / (var_p + 1e-8) - 1.0
+        )  # (B, T, D)
+
+        kl = kl.mean(dim=-1)  # (B, T)
+
+        if mask is not None:
+            kl = kl * mask.float()
+            kl = kl.sum() / (mask.float().sum() + 1e-8)
+        else:
+            kl = kl.mean()
+
+        return kl
     def forward(self,kv_embed,kv_padding_mask,pose_input,pose_length,pose_embed=None,pd_length=None):
         #kv_embed: (B, seq_len_kv, d_model)
         #kv_padding_mask: (B, seq_len_kv)
@@ -221,17 +239,14 @@ class VAE_Transformer(nn.Module):
             length_loss=F.l1_loss(pd_length, target_length)
         else:
             length_loss=torch.zeros(1).to(kv_embed.device)
-        if pose_embed!=None:
-            embed_loss=F.mse_loss(kv_embed, pose_embed.detach(), reduction='none').mean(-1)  # (B, seq_len, d_model)
-            embed_loss = (embed_loss*(~q_padding_mask.bool())).sum()/((~q_padding_mask.bool()).sum())
-        else:
-            embed_loss=torch.zeros(1).to(kv_embed.device)
 
 
-        encoded=self.encoder(q,kv_embed,src_mask=src_mask,q_padding_mask=q_padding_mask,kv_padding_mask=q_padding_mask)
+
+        encoded=self.encoder(q,kv_embed,src_mask=src_mask,q_padding_mask=q_padding_mask,kv_padding_mask=kv_padding_mask)
 
         mean=self.mean_proj(encoded)
         logvar=self.logvar_proj(encoded)
+
         z=self.reparameterize(mean,logvar)
         z=self.z_proj(z)
 
@@ -248,7 +263,14 @@ class VAE_Transformer(nn.Module):
         body_recon_loss = (body_recon_loss.mean(dim=[2,3])*q_padding_mask).sum()/q_padding_mask.sum()
         hand_recon_loss = (hand_recon_loss.mean(dim=[2,3])*q_padding_mask).sum()/q_padding_mask.sum()
         recon_loss=self.body_weight*body_recon_loss+self.hand_weight*hand_recon_loss
-        kl_loss = -0.5 * torch.mean(1 + logvar - mean.pow(2) - logvar.exp())
+        if pose_embed!=None:
+            pose_mean=pose_embed['mean'].detach()  # (B, seq_len, z_dim)
+            pose_logvar=pose_embed['logvar'].detach()  # (B, seq_len, z_dim)
+            kl_loss=self.gaussian_kl(mean, logvar, pose_mean, pose_logvar, mask=~q_padding_mask.bool())
+            embed_loss=F.mse_loss(mean, pose_mean)+F.mse_loss(logvar, pose_logvar)
+        else:
+            embed_loss=torch.zeros(1).to(kv_embed.device)
+            kl_loss = -0.5 * torch.mean(1 + logvar - mean.pow(2) - logvar.exp())
 
         loss = self.config.get('recon_weight',1.0)*recon_loss + self.config['kl_weight'] * kl_loss+ self.config.get('length_weight',0.0)*length_loss+ self.config.get('embed_weight',0.0)*embed_loss
 
@@ -260,6 +282,8 @@ class VAE_Transformer(nn.Module):
             'embed_loss': embed_loss,
             'output': output,
             'pred_length': pd_length,
+            'mean': mean,
+            'logvar': logvar
 
         }
 class VAETransformerCond(nn.Module):
@@ -271,13 +295,21 @@ class VAETransformerCond(nn.Module):
         self.pose_encoder=PoseEncoder(config)
         self.is_text_cond=config.get('text_cond',False)
         if self.is_text_cond:
-            for param in self.pose_encoder.parameters():
+            for param in self.text_encoder.parameters():
+                param.requires_grad=True
+            for param in self.text_encoder.text_embedding.parameters():
                 param.requires_grad=False
+            for param in self.vae_transformer.input_predictor.parameters():
+                param.requires_grad=True
         else:
             for param in self.text_encoder.parameters():
                 param.requires_grad=False
             for param in self.vae_transformer.input_predictor.parameters():
                 param.requires_grad=False
+    def set_old_vae(self):
+        self.old_vae=copy.deepcopy(self.vae_transformer)
+        for param in self.old_vae.parameters():
+            param.requires_grad=False
     def forward(self,pose_inputs,pose_length,text_inputs=None):
         if self.is_text_cond:
             kv_embed,pd_length=self.text_encoder(text_inputs,pose_length)
@@ -286,7 +318,10 @@ class VAETransformerCond(nn.Module):
             p_padding_mask = create_mask(pose_length, pose_inputs.size(1))  # (B, seq_len)
             p_embed = self.pose_encoder(pose_inputs, src_mask=None,
                                          padding_mask=p_padding_mask)  # (B, seq_len, d_model)
-            return self.vae_transformer(kv_embed, kv_padding_mask, pose_inputs, pose_length,p_embed,pd_length)
+            if hasattr(self,'old_vae'):
+                with torch.no_grad():
+                    old_kv_embed=self.old_vae(p_embed,p_padding_mask,pose_inputs,pose_length)
+            return self.vae_transformer(kv_embed, kv_padding_mask, pose_inputs, pose_length,pd_length=pd_length,pose_embed=old_kv_embed)
             # (B, seq_len)
         else:
             kv_padding_mask=create_mask(pose_length, pose_inputs.size(1))  # (B, seq_len)

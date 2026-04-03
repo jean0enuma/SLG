@@ -330,8 +330,10 @@ class VAETrainer(BaseTrainer):
                 output[:,8:29]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
                 output[:,29:]*=shoulder_length.cpu().numpy()[:,None,None]/2
                 output[:,29:]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
+                #output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
+                output=np.where(output==0,np.nan,output)
                 output=apply_savgol_filter(output.transpose(1,0,2),window_size=7,poly_order=2).transpose(1,0,2)
+                output=np.where(np.isnan(output),0,output)
                 #output[:,8:29]で，全てが0.01以下のときは，手が検出されなかったとして，0にする
                 hand_mask=(np.max(np.abs(output[:,8:29]),axis=2)<0.01)
                 output[:,8:29][hand_mask]=0.0
@@ -341,12 +343,12 @@ class VAETrainer(BaseTrainer):
 
                 padded_cod_data=padded_cod_data.squeeze(0).cpu().numpy()
                 padded_cod_data=padded_cod_data.reshape(T,J,C)
-                #padded_cod_data[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
+                padded_cod_data[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
                 padded_cod_data[:,:8]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                #padded_cod_data[:,8:29]*=left_length.cpu().numpy()[:,None,None]
-                padded_cod_data[:,8:29]+=left_center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                #padded_cod_data[:,29:]*=right_length.cpu().numpy()[:,None,None]
-                padded_cod_data[:,29:]+=right_center_data.cpu().transpose(0,1).numpy()[:,None,:]
+                padded_cod_data[:,8:29]*=shoulder_length.cpu().numpy()[:,None,None]/2
+                padded_cod_data[:,8:29]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
+                padded_cod_data[:,29:]*=shoulder_length.cpu().numpy()[:,None,None]/2
+                padded_cod_data[:,29:]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
                 #outputの点群を動画として保存
                 #同時に，元の動画も保存
 

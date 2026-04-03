@@ -14,7 +14,7 @@ from torchvision.transforms.v2 import Compose, Resize, RandomCrop, CenterCrop, R
 import time
 from models.text2pose import Text2Pose
 from models.module.VQ_VAE import VQVAE1D,VQLossWeights
-from models.module.VAE_Transformer import VAETransformerCond
+from models.module.CLIP_Skeleton import SkeletonTextCLIP
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
 from loader import *
 from Parameter.Parameter import *
@@ -74,70 +74,37 @@ def main(config, mode, checkpoint):
     dev_face_root = {}
     test_face_root = {}
     i = 0
-    if config['dataset_parameters']['use_phoenixT']:
-        phoenixT_train_path, phoenixT_dev_path, phoenixT_test_path, phoenixT_train_corpus, phoenixT_dev_corpus, phoenixT_test_corpus = datasets_loader_T(
-            "phoenixT")
-        train_corpus[0] = phoenixT_train_corpus
-        dev_corpus[0] = phoenixT_dev_corpus
-        test_corpus[0] = phoenixT_test_corpus
+    if config['dataset_parameters']['use_phoenixT'] or config['dataset_parameters']['use_phoenix']:
+        phoenixT_train_path,  phoenixT_test_path,phoenix_gloss2class, phoenix_class2gloss,phoenix_video2gloss= islr_datasets_loader("phoenix")
+        train_corpus[0] = phoenix_video2gloss
+        test_corpus[0] = phoenix_video2gloss
         if config['dataset_parameters']['is_processed']:
             train_cod_root[0] = SKELETON_TRAIN_DATADIR_T_PROCESSED
-            dev_cod_root[0] = SKELETON_DEV_DATADIR_T_PROCESSED
-            test_cod_root[0] = SKELETON_TEST_DATADIR_T_PROCESSED
+            test_cod_root[0] = SKELETON_TRAIN_DATADIR_T_PROCESSED
 
             train_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
-            dev_face_root[0] = FACE_DEV_DATADIR_T_PROCESSED
-            test_face_root[0] = FACE_TEST_DATADIR_T_PROCESSED
+            test_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
             is_3d=True
         else:
             train_cod_root[0] = SKELETON_TRAIN_DATADIR_T_3D
-            dev_cod_root[0] = SKELETON_DEV_DATADIR_T_3D
-            test_cod_root[0] = SKELETON_TEST_DATADIR_T_3D
+            test_cod_root[0] = SKELETON_TRAIN_DATADIR_T_3D
 
             train_face_root[0] = FACE_TRAIN_DATADIR_T_3D
-            dev_face_root[0] = FACE_DEV_DATADIR_T_3D
-            test_face_root[0] = FACE_TEST_DATADIR_T_3D
+            test_face_root[0] = FACE_TRAIN_DATADIR_T_3D
             is_3d=True
 
         train_data_path += integrate_path(0, phoenixT_train_path)
-        dev_data_path += integrate_path(0, phoenixT_dev_path)
         test_data_path += integrate_path(0, phoenixT_test_path)
         i += 1
-    if config['dataset_parameters']['use_csl-daily']:
-        csl_daily_train_path, csl_daily_dev_path, csl_daily_test_path, csl_daily_train_corpus, csl_daily_dev_corpus, csl_daily_test_corpus = datasets_loader_T(
-            "CSL-Daily")
-
-        train_corpus[1] = csl_daily_train_corpus
-        dev_corpus[1] = csl_daily_dev_corpus
-        test_corpus[1] = csl_daily_test_corpus
-        if config['dataset_parameters']['is_processed']:
-            train_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
-            dev_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
-            test_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_PROCESSED
-
-            train_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
-            dev_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
-            test_face_root[1] = FACE_CSL_DAILY_DATADIR_PROCESSED
-            is_3d=True
-        else:
-            train_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_3D
-            dev_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_3D
-            test_cod_root[1] = SKELETON_CSL_DAILY_DATADIR_3D
-
-            train_face_root[1] = FACE_CSL_DAILY_DATADIR_3D
-            dev_face_root[1] = FACE_CSL_DAILY_DATADIR_3D
-            test_face_root[1] = FACE_CSL_DAILY_DATADIR_3D
-            is_3d=True
-        train_data_path += integrate_path(1, csl_daily_train_path)
-        dev_data_path += integrate_path(1, csl_daily_dev_path)
-        test_data_path += integrate_path(1, csl_daily_test_path)
-        i += 1
-    if config['dataset_parameters']['use_how2sign']:
-        how2sign_train_path, how2sign_dev_path, how2sign_test_path, how2sign_train_corpus, how2sign_dev_corpus, how2sign_test_corpus = datasets_loader_T(
-            "how2sign")
-        train_corpus[2] = how2sign_train_corpus
-        dev_corpus[2] = how2sign_dev_corpus
-        test_corpus[2] = how2sign_test_corpus
+    if config['dataset_parameters']['use_csl']:
+        #TODO: csl ISLの手話動画データセットを取得する
+        pass
+    if config['dataset_parameters']['use_asl']:
+        asl_train_path,  asl_test_path, asl_gloss2class, asl_class2gloss,asl_video2gloss = islr_datasets_loader(
+            "ASL_Citizen")
+        train_corpus[2] = asl_video2gloss
+        dev_corpus[2] = asl_video2gloss
+        test_corpus[2] = asl_video2gloss
         if config['dataset_parameters']['is_processed']:
             train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR_PROCESSED
             dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR_PROCESSED
@@ -157,38 +124,8 @@ def main(config, mode, checkpoint):
             test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR_3D
             is_3d=True
 
-        train_data_path += integrate_path(2, how2sign_train_path)
-        dev_data_path += integrate_path(2, how2sign_dev_path)
-        test_data_path += integrate_path(2, how2sign_test_path)
-        i += 1
-    if config['dataset_parameters']['use_phoenix']:
-        phoenix_train_path, phoenix_dev_path, phoenix_test_path, phoenix_train_corpus, phoenix_dev_corpus, phoenix_test_corpus = datasets_loader_T(
-            "phoenix")
-        train_corpus[3] = phoenix_train_corpus
-        dev_corpus[3] = phoenix_dev_corpus
-        test_corpus[3] = phoenix_test_corpus
-        if config['dataset_parameters']['is_processed']:
-            train_cod_root[3] = SKELETON_TRAIN_DATADIR_PROCESSED
-            dev_cod_root[3] = SKELETON_DEV_DATADIR_PROCESSED
-            test_cod_root[3] = SKELETON_TEST_DATADIR_PROCESSED
-
-            train_face_root[3] = FACE_TRAIN_DATADIR_PROCESSED
-            dev_face_root[3] = FACE_DEV_DATADIR_PROCESSED
-            test_face_root[3] = FACE_TEST_DATADIR_PROCESSED
-            is_3d=True
-        else:
-            train_cod_root[3] = SKELETON_TRAIN_DATADIR
-            dev_cod_root[3] = SKELETON_DEV_DATADIR
-            test_cod_root[3] = SKELETON_TEST_DATADIR
-
-            train_face_root[3] = FACE_TRAIN_DATADIR
-            dev_face_root[3] = FACE_DEV_DATADIR
-            test_face_root[3] = FACE_TEST_DATADIR
-            is_3d=False
-
-        train_data_path += integrate_path(3, phoenix_train_path)
-        dev_data_path += integrate_path(3, phoenix_dev_path)
-        test_data_path += integrate_path(3, phoenix_test_path)
+        train_data_path += integrate_path(2, asl_train_path)
+        test_data_path += integrate_path(2, asl_test_path)
         i += 1
     if i == 0:
         raise ValueError("At least one dataset must be selected.")
@@ -245,7 +182,7 @@ def main(config, mode, checkpoint):
     # モデルの作成
     print("---Creating model---")
     config['model']['anchor_frame_path'] = ANCHOR_FRAME_PATH
-    model = VAETransformerCond(config["model"]).float().to(device)
+    model = SkeletonTextCLIP(config["model"]).float().to(device)
 
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":

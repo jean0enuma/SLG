@@ -260,6 +260,7 @@ def main(config, mode, vae_weights,checkpoint):
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and not k.startswith("text_encoder") and not k.startswith("is_text_cond") and not k.startswith("vae_transformer.input_predictor")}
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
+    model.set_old_vae()
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
         model.load_state_dict(torch.load(checkpoint, weights_only=False, map_location=device)["model_state_dict"])
@@ -277,7 +278,7 @@ def main(config, mode, vae_weights,checkpoint):
     print("Model created.")
     # optimizer,criterion,lr_schedulerの作成
     print("---Creating optimizer, criterion, and lr_scheduler---")
-    optimizer = optim.AdamW(model.text_encoder.parameters(), lr=config["lr_parameters"]['learning_rate'],
+    optimizer = optim.AdamW(model.parameters(), lr=config["lr_parameters"]['learning_rate'],
                            weight_decay=config["lr_parameters"]['weight_decay'])
 
     #criterion = Text2Pose_criterion(config['loss_parameters'])
@@ -325,9 +326,9 @@ if __name__ == "__main__":
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
-    mode = "visualize"  # Change this to "visualize" when you want to visualize
-    vae_weights ="/media/caffe/data_storage/CSLR/keyword_models/SLG/VAE/z_dim64/99/model_epoch99.pth"
-    checkpoint="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0331/1735/0/model_epoch0.pth"
+    mode = "train"  # Change this to "visualize" when you want to visualize
+    vae_weights ="/media/caffe/data_storage/CSLR/keyword_models/SLG/VAE/z_dim64_shoulder_length_norm/99/model_epoch99.pth"
+    checkpoint=None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()

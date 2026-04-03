@@ -36,9 +36,9 @@ def create_corpus_gsl(train_iso, dev_iso, test_iso):
     gloss2class={gloss: i for i, gloss in enumerate(gloss_list)}
     class2gloss = {i: gloss for gloss, i in gloss2class.items()}
     path2class = {path: gloss2class[gloss] for path, gloss in path2gloss.items()}
-    return gloss2class, class2gloss, path2class
+    return gloss2class, class2gloss, path2class,path2gloss
 
-def create_video2class_from_datapath(data_path, gloss2class):
+def create_video2gloss_from_datapath(data_path, gloss2class):
     """
     データパスからvideo2glossを作成する
     :param data_path: データパス
@@ -48,9 +48,9 @@ def create_video2class_from_datapath(data_path, gloss2class):
     for path in data_path:
         key = path.split("/")[-1]
         gloss= path.split("/")[-2]
-        video2gloss[key] = gloss2class[gloss]
+        video2gloss[key] = gloss
     return video2gloss
-def create_video2class_from_datapath_phoenix(data_path, gloss2class):
+def create_video2gloss_from_datapath_phoenix(data_path, gloss2class):
     """
     データパスからvideo2glossを作成する
     :param data_path: データパス
@@ -61,7 +61,7 @@ def create_video2class_from_datapath_phoenix(data_path, gloss2class):
         key = path.split("/")[-2:]
         key = "/".join(key)
         gloss= path.split("/")[-2]
-        video2gloss[key] = gloss2class[gloss]
+        video2gloss[key] = gloss
     return video2gloss
 def Data_loader(file_path:list,segment_list:dict):
     """
@@ -366,13 +366,13 @@ def islr_datasets_loader(dataset:str):
         data_path=train_path + dev_path + test_path
 
         gloss2class,class2gloss= create_corpus(data_path)
-        video2class= create_video2class_from_datapath(data_path, gloss2class)
+        video2gloss= create_video2gloss_from_datapath(data_path, gloss2class)
     elif dataset=="WLASL":
         data_path = sorted(glob.glob(f"{WLASL2000_DATADIR}/*/*.mp4"))
         gloss2class, class2gloss = create_corpus(data_path)
         train_path, test_path = train_test_split(data_path, test_size=0.2, random_state=42)
         #test_path, dev_path = train_test_split(test_path, test_size=0.5, random_state=42)
-        video2class = create_video2class_from_datapath(data_path, gloss2class)
+        video2gloss = create_video2gloss_from_datapath(data_path, gloss2class)
     elif dataset=="ASL_Citizen":
         #data_path= sorted(glob.glob(f"{ASL_CITIZEN_DATADIR}/*.mp4"))
         #data_path=preprocess_from_frames(data_path)
@@ -397,7 +397,6 @@ def islr_datasets_loader(dataset:str):
             if gloss not in gloss2class:
                 gloss2class[gloss] = len(gloss2class)
         class2gloss= {v: k for k, v in gloss2class.items()}
-        video2class={k: gloss2class[v] for k, v in video2gloss.items()}
         train_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_train.keys()])
         train_path= preprocess_from_video(train_path)
         test_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_dev.keys()])
@@ -409,12 +408,12 @@ def islr_datasets_loader(dataset:str):
         data_path=sorted(glob.glob(f"{LSA64_DATADIR}/*/*.mp4"))
         gloss2class, class2gloss = create_corpus(data_path)
         train_path, test_path = train_test_split(data_path, test_size=0.2, random_state=42)
-        video2class= create_video2class_from_datapath(data_path, gloss2class)
+        video2gloss= create_video2gloss_from_datapath(data_path, gloss2class)
     elif dataset=="GSL":
         train_iso= pd.read_csv(f"{GSL_ISR_TARGET_DATADIR}/train_greek_iso.csv", delimiter="|",header=None)
         dev_iso= pd.read_csv(f"{GSL_ISR_TARGET_DATADIR}/dev_greek_iso.csv", delimiter="|",header=None)
         test_iso= pd.read_csv(f"{GSL_ISR_TARGET_DATADIR}/test_greek_iso.csv", delimiter="|",header=None)
-        gloss2class, class2gloss, video2class = create_corpus_gsl(train_iso,dev_iso,test_iso)
+        gloss2class, class2gloss, video2class,video2gloss = create_corpus_gsl(train_iso,dev_iso,test_iso)
         data_path = sorted(glob.glob(f"{GSL_ISR_DATADIR}/*/*"))
         train_path= []
         dev_path= []
@@ -457,11 +456,11 @@ def islr_datasets_loader(dataset:str):
                     data_path.append(file_path)
         gloss2class, class2gloss = create_corpus(data_path)
         train_path, test_path = train_test_split(data_path, test_size=0.2, random_state=42)
-        video2class = create_video2class_from_datapath_phoenix(data_path, gloss2class)
+        video2gloss = create_video2gloss_from_datapath_phoenix(data_path, gloss2class)
     else:
         raise ValueError("dataset is not defined")
 
-    return train_path,  test_path,gloss2class, class2gloss,video2class
+    return train_path,  test_path,gloss2class, class2gloss,video2gloss
 if __name__=="__main__":
     import glob
     from Parameter.Parameter import *

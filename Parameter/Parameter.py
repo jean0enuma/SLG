@@ -106,6 +106,10 @@ SKELETON_HOW2SIGN_TRAIN_DATADIR="/media/caffe/data_storage/How2Sign/train/mediap
 SKELETON_HOW2SIGN_DEV_DATADIR="/media/caffe/data_storage/How2Sign/val/mediapipe_output"
 SKELETON_HOW2SIGN_TEST_DATADIR="/media/caffe/data_storage/How2Sign/test/mediapipe_output"
 
+SKELETON_HOW2SIGN_TRAIN_DATADIR_3D="/media/caffe/data_storage/How2Sign/train/mediapipe_output_3D"
+SKELETON_HOW2SIGN_DEV_DATADIR_3D="/media/caffe/data_storage/How2Sign/val/mediapipe_output_3D"
+SKELETON_HOW2SIGN_TEST_DATADIR_3D="/media/caffe/data_storage/How2Sign/test/mediapipe_output_3D"
+
 SKELETON_HOW2SIGN_TRAIN_DATADIR_PROCESSED="/media/caffe/data_storage/How2Sign/train/mediapipe_output_processed"
 SKELETON_HOW2SIGN_DEV_DATADIR_PROCESSED="/media/caffe/data_storage/How2Sign/val/mediapipe_output_processed"
 SKELETON_HOW2SIGN_TEST_DATADIR_PROCESSED="/media/caffe/data_storage/How2Sign/test/mediapipe_output_processed"
@@ -113,6 +117,10 @@ SKELETON_HOW2SIGN_TEST_DATADIR_PROCESSED="/media/caffe/data_storage/How2Sign/tes
 FACE_HOW2SIGN_TRAIN_DATADIR="/media/caffe/data_storage/How2Sign/train/mediapipe_output_face"
 FACE_HOW2SIGN_DEV_DATADIR="/media/caffe/data_storage/How2Sign/val/mediapipe_output_face"
 FACE_HOW2SIGN_TEST_DATADIR="/media/caffe/data_storage/How2Sign/test/mediapipe_output_face"
+
+FACE_HOW2SIGN_TRAIN_DATADIR_3D="/media/caffe/data_storage/How2Sign/train/mediapipe_output_face_3D"
+FACE_HOW2SIGN_DEV_DATADIR_3D="/media/caffe/data_storage/How2Sign/val/mediapipe_output_face_3D"
+FACE_HOW2SIGN_TEST_DATADIR_3D="/media/caffe/data_storage/How2Sign/test/mediapipe_output_face_3D"
 
 FACE_HOW2SIGN_TRAIN_DATADIR_PROCESSED="/media/caffe/data_storage/How2Sign/train/mediapipe_output_face_processed"
 FACE_HOW2SIGN_DEV_DATADIR_PROCESSED="/media/caffe/data_storage/How2Sign/val/mediapipe_output_face_processed"
@@ -200,8 +208,10 @@ LSA_T_KEYDIR="/media/caffe/data_storage/LSA-T/keypoints.h5"
 CSL_NEWS_DATADIR="/media/caffe/data_storage/CSL_news"
 CSL_DAILY_DATADIR="/media/caffe/data_storage/CSL-Daily/sentence/frames_512x512"
 SKELETON_CSL_DAILY_DATADIR="/media/caffe/data_storage/CSL-Daily/sentence/pose_512x512"
+SKELETON_CSL_DAILY_DATADIR_3D="/media/caffe/data_storage/CSL-Daily/sentence/pose_512x512_3D"
 SKELETON_CSL_DAILY_DATADIR_PROCESSED="/media/caffe/data_storage/CSL-Daily/sentence/pose_512x512_processed"
 FACE_CSL_DAILY_DATADIR="/media/caffe/data_storage/CSL-Daily/sentence/pose_face_512x512"
+FACE_CSL_DAILY_DATADIR_3D="/media/caffe/data_storage/CSL-Daily/sentence/pose_512x512_face_3D"
 FACE_CSL_DAILY_DATADIR_PROCESSED="/media/caffe/data_storage/CSL-Daily/sentence/pose_face_512x512_processed"
 CSL_DAILY_LABELS="/media/caffe/data_storage/CSL-Daily/sentence_label"
 AUTSL_NUM_CLASS=226

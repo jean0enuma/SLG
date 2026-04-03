@@ -13,8 +13,21 @@ class SLGText2UnitsDatasets(Dataset):
     input_length:入力データの長さ(torch.tensor, [batch_size])
     target_length:ラベル系列の長さ(torch.tensor, [batch_size])
     """
-    def __init__(self, data_path, cod_data_path_root, face_data_path_root, trainable=True,
-                 is_processed=False, is_sg_filter=True, is_3d=False, is_coarse=True,scale_ratio=(0.8, 1.2), min_frame=16, max_frame=300, tokenizer=None, texts_corpus=None):
+    def __init__(self,
+                 data_path,
+                 cod_data_path_root,
+                 face_data_path_root,
+                 trainable=True,
+                 is_processed=False,
+                 is_sg_filter=True,
+                 is_3d=False,
+                 is_coarse=True,
+                 scale_ratio=(0.8, 1.2),
+                 min_frame=16,
+                 max_frame=300,
+                 tokenizer=None,
+                 texts_corpus=None,
+                 is_islr=False):
         super().__init__()
         self.data_path = data_path
         self.face_data_path_root=face_data_path_root
@@ -31,6 +44,7 @@ class SLGText2UnitsDatasets(Dataset):
         self.tokenizer=tokenizer
         self.is_coarse=is_coarse
         self.return_length=False
+        self.is_islr=is_islr
     def __len__(self):
         return len(self.data_path)
     def set_return_length(self):
@@ -96,6 +110,7 @@ class SLGText2UnitsDatasets(Dataset):
         if id==3:
             data_path="/".join(data_path.split("/")[:-1])
         file_name=data_path.split("/")[-1].split(".mp4")[0]
+        video_name=data_path.split("/")[-1]
 
         face_data_path=f"{self.face_data_path_root[id]}/{file_name}.csv"
         cod_data_path=f"{self.cod_data_path_root[id]}/{file_name}.csv"
@@ -130,53 +145,48 @@ class SLGText2UnitsDatasets(Dataset):
             body_cod_data=torch.tensor(body_cod_data).float()
         else:
             #座標データの前処理
-            try:
-                if self.is_3d:
-                    cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data,
-                                                                                                         face_data,
-                                                                                                         is_face_connect=True,
-                                                                                                         is_sg_filter=self.is_sg_filter)
-                else:
-                    cod_data, face_cod_data, hand_cod_data, body_cod_data=coordinate_preprocess(cod_data,
-                                                                                                face_data,
-                                                                                                is_face_connect=True,
-                                                                                                is_sg_filter=self.is_sg_filter)
-                T, JC = cod_data.shape
-                cod_data = torch.tensor(cod_data).reshape(T, -1, 3).permute(2, 0, 1)  # (3,T,JC)
-                face_data = torch.tensor(face_data).reshape(T, -1, 2).permute(2, 0, 1)  # (3,T,FC)
-                center_data = cod_data[:, :, 1].clone()  # (3,T)
-                shoulder_length = torch.sqrt(
-                    (cod_data[0, :, 2] - cod_data[0, :, 3]) ** 2 + (cod_data[1, :, 2] - cod_data[1, :, 3]) ** 2 + (
-                                cod_data[2, :, 2] - cod_data[2, :, 3]) ** 2)  # (T,)
-                # cod_data-=center_data.unsqueeze(2)#(3,T,JC)
-                # cod_data/=shoulder_length.unsqueeze(0).unsqueeze(2)#(3,T,JC)
-                hand_cod_data = cod_data[:, :, 6:]
-                body_cod_data = cod_data[:, :, :6]
-                body_cod_data = torch.cat([body_cod_data, hand_cod_data[:, :, 0:1], hand_cod_data[:, :, 21:22]], dim=2)
-                body_cod_data -= center_data.unsqueeze(2)
-                body_cod_data /= shoulder_length.unsqueeze(0).unsqueeze(2)
-                left_center_data = hand_cod_data[:, :, 0].clone()
-                right_center_data = hand_cod_data[:, :, 21].clone()
-                left_length = torch.sqrt((hand_cod_data[0, :, 0] - hand_cod_data[0, :, 5]) ** 2 + (
-                            hand_cod_data[1, :, 0] - hand_cod_data[1, :, 5]) ** 2 + (
-                                                     hand_cod_data[2, :, 0] - hand_cod_data[2, :, 5]) ** 2)  # (T,)
-                right_length = torch.sqrt((hand_cod_data[0, :, 21] - hand_cod_data[0, :, 26]) ** 2 + (
-                            hand_cod_data[1, :, 21] - hand_cod_data[1, :, 26]) ** 2 + (
-                                                      hand_cod_data[2, :, 21] - hand_cod_data[2, :, 26]) ** 2)  # (T,)
-                hand_cod_data[:, :, :21] -= left_center_data.unsqueeze(2)
-                hand_cod_data[:, :, 21:] -= right_center_data.unsqueeze(2)
-                hand_cod_data[:, :, :21] /= left_length.unsqueeze(0).unsqueeze(2)
-                hand_cod_data[:, :, 21:] /= right_length.unsqueeze(0).unsqueeze(2)
-                cod_data = torch.cat([body_cod_data, hand_cod_data], dim=2)
-                cod_data = torch.tensor(cod_data).float()
-                face_cod_data = torch.tensor(face_data).float()
-                hand_cod_data = torch.tensor(hand_cod_data).float()
-                body_cod_data = torch.tensor(body_cod_data).float()
-            except Exception as e:
-                print(f"Exception in coordinate_preprocess: {e}")
-                print(f"Error in coordinate_preprocess: {cod_data_path}, {face_data_path}")
-                raise ValueError("Error in coordinate_preprocess")
-
+            if self.is_3d:
+                cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data,
+                                                                                                     face_data,
+                                                                                                     is_face_connect=True,
+                                                                                                     is_sg_filter=self.is_sg_filter)
+            else:
+                cod_data, face_cod_data, hand_cod_data, body_cod_data=coordinate_preprocess(cod_data,
+                                                                                            face_data,
+                                                                                            is_face_connect=True,
+                                                                                            is_sg_filter=self.is_sg_filter)
+            # face_cod_data=coordinate_preprocess_face(face_data)
+            C,T,J = cod_data.shape
+            cod_data = torch.tensor(cod_data)  # (3,T,JC)
+            face_data = torch.tensor(face_data) # (3,T,FC)
+            center_data = cod_data[:, :, 1].clone()  # (3,T)
+            shoulder_length = torch.sqrt(
+                (cod_data[0, :, 2] - cod_data[0, :, 3]) ** 2 + (cod_data[1, :, 2] - cod_data[1, :, 3]) ** 2 + (
+                            cod_data[2, :, 2] - cod_data[2, :, 3]) ** 2)  # (T,)
+            # cod_data-=center_data.unsqueeze(2)#(3,T,JC)
+            # cod_data/=shoulder_length.unsqueeze(0).unsqueeze(2)#(3,T,JC)
+            hand_cod_data = cod_data[:, :, 6:]
+            body_cod_data = cod_data[:, :, :6]
+            body_cod_data = torch.cat([body_cod_data, hand_cod_data[:, :, 0:1], hand_cod_data[:, :, 21:22]], dim=2)
+            body_cod_data -= center_data.unsqueeze(2)
+            body_cod_data /= shoulder_length.unsqueeze(0).unsqueeze(2)
+            left_center_data = hand_cod_data[:, :, 0].clone()
+            right_center_data = hand_cod_data[:, :, 21].clone()
+            left_length = torch.sqrt((hand_cod_data[0, :, 0] - hand_cod_data[0, :, 5]) ** 2 + (
+                        hand_cod_data[1, :, 0] - hand_cod_data[1, :, 5]) ** 2 + (
+                                                 hand_cod_data[2, :, 0] - hand_cod_data[2, :, 5]) ** 2)  # (T,)
+            right_length = torch.sqrt((hand_cod_data[0, :, 21] - hand_cod_data[0, :, 26]) ** 2 + (
+                        hand_cod_data[1, :, 21] - hand_cod_data[1, :, 26]) ** 2 + (
+                                                  hand_cod_data[2, :, 21] - hand_cod_data[2, :, 26]) ** 2)  # (T,)
+            hand_cod_data[:, :, :21] -= center_data.unsqueeze(2)
+            hand_cod_data[:, :, 21:] -= center_data.unsqueeze(2)
+            hand_cod_data[:, :, :21] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)
+            hand_cod_data[:, :, 21:] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)
+            cod_data = torch.cat([body_cod_data, hand_cod_data], dim=2)
+            cod_data = torch.tensor(cod_data).float()
+            face_cod_data = torch.tensor(face_data).float()
+            hand_cod_data = torch.tensor(hand_cod_data).float()
+            body_cod_data = torch.tensor(body_cod_data).float()
         left_data=hand_cod_data[:, :, :21].permute(1, 2, 0)#(2,T,21)
         right_data=hand_cod_data[:, :, 21:].permute(1, 2, 0)
         pose_data=cod_data.permute(1,2,0) #(T,JC,2or3)
@@ -195,6 +205,8 @@ class SLGText2UnitsDatasets(Dataset):
         # ラベル系列の取得
         if self.tokenizer is not None and self.targets_corpus is not None:
             target_corpus = self.targets_corpus[id]
+            if self.is_islr==True:
+                sequence=target_corpus[video_name]
             sequence = target_corpus[target_corpus["id"] == file_name]["annotation"].values[0]
             if self.return_length:
                 sequence=self.tokenizer(sequence, padding=False, truncation=True, return_tensors='pt')

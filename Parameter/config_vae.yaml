@@ -1,12 +1,12 @@
 dataset: "phoenixT"
 work_dir: "/home/caffe/work/SLG/"
-device: "cuda:1"
+device: "cuda:0"
 dataset_parameters:
   use_phoenix: False
-  use_phoenixT: True
-  use_how2sign: False
+  use_phoenixT: False
+  use_how2sign: True
   use_csl-daily: False
-  is_processed: True
+  is_processed: False
 lr_parameters:
   epoch: 100
   learning_rate : 0.0001
@@ -34,11 +34,11 @@ model:
   pose_dim: 100
   text_cond: False
   text_encoder_name: "dbmdz/bert-base-german-uncased"
-  body_weight: 1.0
-  hand_weight: 1.0
+  body_weight: 0.3
+  hand_weight: 0.7
   recon_weight: 1.0
-  length_weight: 1.0
-  embed_weight: 0.1
+  length_weight: 0.0
+  embed_weight: 0.0
   constractive_weight: 0.0
   constractive_temp:  0.07
   encoder:

@@ -201,21 +201,6 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
     new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
 
-    center_data=new_data[:, :, 1]
-    shoulder_length=np.sqrt((new_data[0,:,2]-new_data[0,:,3])**2+(new_data[1,:,2]-new_data[1,:,3])**2+(new_data[2,:,2]-new_data[2,:,3])**2)
-    new_data = np.where(new_data == 0, np.nan, new_data)
-    new_data -= center_data[:, :, np.newaxis]
-    new_data /= shoulder_length[np.newaxis, :, np.newaxis]
-    new_hand_data = np.where(new_hand_data == 0, np.nan, new_hand_data)
-    new_hand_data -= center_data[:, :, np.newaxis]
-    new_hand_data /= shoulder_length[np.newaxis, :, np.newaxis]
-    new_body_data = np.where(new_body_data == 0, np.nan, new_body_data)
-    new_body_data -= center_data[:, :, np.newaxis]
-    new_body_data /= shoulder_length[np.newaxis, :, np.newaxis]
-    new_data = np.where(np.isnan(new_data), 0, new_data)
-    new_hand_data = np.where(np.isnan(new_hand_data), 0, new_hand_data)
-    new_body_data = np.where(np.isnan(new_body_data), 0, new_body_data)
-
     if is_sg_filter:
         new_data=apply_savgol_filter(new_data)
         new_data_face=apply_savgol_filter(new_data_face)
