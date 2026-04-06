@@ -250,8 +250,8 @@ if __name__ == "__main__":
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
-    mode = "visualize"  # Change this to "test" when you want to test
-    checkpoint ="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0402/1756/99/model_epoch99.pth"  #model_epoch9.cpt or model_epoch9.pth or None
+    mode = "train"  # Change this to "test" when you want to test
+    checkpoint =None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()

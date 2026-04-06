@@ -135,6 +135,9 @@ HOW2SIGN_TEXT_TEST_PATH_OLD="/media/caffe/data_storage/How2Sign/how2sign_test.cs
 #ASL-Citizenのデータのパス
 ASL_CITIZEN_DATADIR="/media/caffe/data_storage/ASL_Citizen/ASL_Citizen/videos"
 ASL_CITIZEN_TEXT_DATADIR="/media/caffe/data_storage/ASL_Citizen/ASL_Citizen/splits"
+SKELETON_ASL_CITIZEN_TRAIN_DATADIR_3D="/media/caffe/data_storage/ASL_Citizen/ASL_Citizen/skeletons/train"
+SKELETON_ASL_CITIZEN_DEV_DATADIR_3D="/media/caffe/data_storage/ASL_Citizen/ASL_Citizen/skeletons/val"
+SKELETON_ASL_CITIZEN_TEST_DATADIR_3D="/media/caffe/data_storage/ASL_Citizen/ASL_Citizen/skeletons/test"
 
 
 #このプロジェクトのパス
