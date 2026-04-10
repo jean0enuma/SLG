@@ -210,8 +210,8 @@ class SkeletonTextCLIP(nn.Module):
         skeleton_d_model=config["skeleton_d_model"]
         skeleton_nhead=config["skeleton_nhead"]
         skeleton_num_layers=config["skeleton_num_layers"]
-        skeleton_ff_dim=config["skeleton_ff_dim"]
-        bert_name=config["bert_name"]
+        skeleton_ff_dim=skeleton_d_model*config["skeleton_ffn_mult"]
+        text_encoer_name=config["text_encoder_name"]
         proj_dim=config["proj_dim"]
         dropout=config.get("dropout", 0.1)
         text_pooling=config.get("text_pooling", "cls")
@@ -227,7 +227,7 @@ class SkeletonTextCLIP(nn.Module):
             proj_dim=proj_dim,
         )
         self.text_encoder = TextBertEncoder(
-            bert_name=bert_name,
+            bert_name=text_encoer_name,
             proj_dim=proj_dim,
             dropout=dropout,
             pooling=text_pooling,
@@ -258,7 +258,29 @@ class SkeletonTextCLIP(nn.Module):
         loss_s2t = F.cross_entropy(logits, labels)
         loss_t2s = F.cross_entropy(logits.t(), labels)
         return 0.5 * (loss_s2t + loss_t2s)
-
+    def encode_skeleton(
+        self,
+        skeleton: torch.Tensor,
+        skeleton_mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        sk_out = self.skeleton_encoder(
+            skeleton=skeleton,
+            skeleton_mask=skeleton_mask,
+            return_sequence=True,
+        )
+        return sk_out
+    def encode_text(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        token_type_ids: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        tx_out = self.text_encoder(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+        )
+        return tx_out
     def forward(
         self,
         skeleton: torch.Tensor,

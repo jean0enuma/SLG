@@ -3,8 +3,8 @@ work_dir: "/home/caffe/work/SLG/"
 device: "cuda:0"
 dataset_parameters:
   use_phoenix: False
-  use_phoenixT: False
-  use_how2sign: True
+  use_phoenixT: True
+  use_how2sign: False
   use_csl-daily: False
   is_processed: False
 lr_parameters:

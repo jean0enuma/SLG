@@ -146,10 +146,16 @@ class SLGText2UnitsDatasets(Dataset):
         else:
             #座標データの前処理
             if self.is_3d:
-                cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data,
-                                                                                                     face_data,
-                                                                                                     is_face_connect=True,
-                                                                                                     is_sg_filter=self.is_sg_filter)
+                try:
+                    cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data,
+                                                                                                         face_data,
+                                                                                                         is_face_connect=True,
+                                                                                                         is_sg_filter=self.is_sg_filter)
+                except Exception as e:
+                    print(f"Error in coordinate_preprocess_3d: {e}")
+                    print(f"cod_data shape: {cod_data.shape}, face_data shape: {face_data.shape}")
+                    print(data_path)
+                    raise ValueError("Error in coordinate_preprocess_3d",data_path)
             else:
                 cod_data, face_cod_data, hand_cod_data, body_cod_data=coordinate_preprocess(cod_data,
                                                                                             face_data,
@@ -169,7 +175,7 @@ class SLGText2UnitsDatasets(Dataset):
             body_cod_data = cod_data[:, :, :6]
             body_cod_data = torch.cat([body_cod_data, hand_cod_data[:, :, 0:1], hand_cod_data[:, :, 21:22]], dim=2)
             body_cod_data -= center_data.unsqueeze(2)
-            body_cod_data /= shoulder_length.unsqueeze(0).unsqueeze(2)
+            body_cod_data /= (shoulder_length.unsqueeze(0).unsqueeze(2))+1e-8
             left_center_data = hand_cod_data[:, :, 0].clone()
             right_center_data = hand_cod_data[:, :, 21].clone()
             left_length = torch.sqrt((hand_cod_data[0, :, 0] - hand_cod_data[0, :, 5]) ** 2 + (
@@ -180,8 +186,8 @@ class SLGText2UnitsDatasets(Dataset):
                                                   hand_cod_data[2, :, 21] - hand_cod_data[2, :, 26]) ** 2)  # (T,)
             hand_cod_data[:, :, :21] -= center_data.unsqueeze(2)
             hand_cod_data[:, :, 21:] -= center_data.unsqueeze(2)
-            hand_cod_data[:, :, :21] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)
-            hand_cod_data[:, :, 21:] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)
+            hand_cod_data[:, :, :21] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)+1e-8
+            hand_cod_data[:, :, 21:] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)+1e-8
             cod_data = torch.cat([body_cod_data, hand_cod_data], dim=2)
             cod_data = torch.tensor(cod_data).float()
             face_cod_data = torch.tensor(face_data).float()
@@ -207,9 +213,10 @@ class SLGText2UnitsDatasets(Dataset):
             target_corpus = self.targets_corpus[id]
             if self.is_islr==True:
                 sequence=target_corpus[video_name]
-            sequence = target_corpus[target_corpus["id"] == file_name]["annotation"].values[0]
+            else:
+                sequence = target_corpus[target_corpus["id"] == file_name]["annotation"].values[0]
             if self.return_length:
-                sequence=self.tokenizer(sequence, padding=False, truncation=True, return_tensors='pt')
+                sequence=self.tokenizer([sequence], padding=False, truncation=True, return_tensors='pt')
                 return pose_data,hand_mask,input_length,id,data_path,sequence,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length
             return pose_data,hand_mask,input_length,id,data_path,sequence
         else:

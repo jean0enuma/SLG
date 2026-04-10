@@ -127,6 +127,9 @@ class VAETrainer(BaseTrainer):
             loss = loss_dict['loss_total']
             recon_loss = loss_dict['recon_loss']
             kl_loss = loss_dict['kl_loss']
+            if np.isinf(loss.item()) or np.isnan(loss.item()):
+                print(f"Warning: Loss is {loss.item()} at batch {batch_idx}. Skipping this batch.")
+                continue
             scaler.scale(loss).backward()
             ##grad_clip
             if self.config["lr_parameters"]["grad_clip_norm"] is not None:
@@ -351,17 +354,17 @@ class VAETrainer(BaseTrainer):
                 padded_cod_data[:,29:]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
                 #outputの点群を動画として保存
                 #同時に，元の動画も保存
-
-                v_writer=cv2.VideoWriter(f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
-                v_writer_gt=cv2.VideoWriter(f"{self.config['save_path']}/visualize/GT/gt_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
+                video_size=(1024,1024)
+                v_writer=cv2.VideoWriter(f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)
+                v_writer_gt=cv2.VideoWriter(f"{self.config['save_path']}/visualize/GT/gt_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)
                 for t in range(T):
-                    base_frame = np.ones((256, 256, 3), dtype=np.uint8) * 255
-                    base_frame_gt = np.ones((256, 256, 3), dtype=np.uint8) * 255
+                    base_frame = np.ones((video_size[0], video_size[1], 3), dtype=np.uint8) * 255
+                    base_frame_gt = np.ones((video_size[0], video_size[1], 3), dtype=np.uint8) * 255
                     for j in range(J):
-                        x=int(output[t,j,0]*256)
-                        y=int(output[t,j,1]*256)
-                        x_gt=int(padded_cod_data[t,j,0]*256)
-                        y_gt=int(padded_cod_data[t,j,1]*256)
+                        x=int(output[t,j,0]*video_size[0])
+                        y=int(output[t,j,1]*video_size[1])
+                        x_gt=int(padded_cod_data[t,j,0]*video_size[0])
+                        y_gt=int(padded_cod_data[t,j,1]*video_size[1])
                         pd_frame=cv2.circle(base_frame,(x,y),radius=3,color=(0,0,255),thickness=-1)
                         gt_frame=cv2.circle(base_frame_gt,(x_gt,y_gt),radius=3,color=(0,255,0),thickness=-1)
                     v_writer.write(pd_frame)

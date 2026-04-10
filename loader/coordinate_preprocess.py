@@ -206,6 +206,10 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
         new_data_face=apply_savgol_filter(new_data_face)
         new_hand_data=apply_savgol_filter(new_hand_data)
         new_body_data=apply_savgol_filter(new_body_data)
+    new_data=np.where(np.isnan(new_data),0,new_data)
+    new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
+    new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
+    new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
     return new_data, new_data_face, new_hand_data, new_body_data
 def normalize_hand(data):
     data= np.where(data==0,np.nan,data)

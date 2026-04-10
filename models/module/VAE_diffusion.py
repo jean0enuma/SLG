@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 # 例:
 from models.module.CLIP_Skeleton import SkeletonTextCLIP
+from models.module.DiffusionTransformer import AdaLN
 def create_mask(target_length, max_len):
     # target_length: (batch_size,)
     batch_size = target_length.size(0)
@@ -40,7 +41,7 @@ class DenoiserBlock(nn.Module):
     """
     self-attn -> text cross-attn -> FFN
     """
-    def __init__(self, d_model, nhead, dropout=0.1):
+    def __init__(self, d_model,cond_dim, nhead, dropout=0.1,adaln_apply=(True, True, False)):
         super().__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, batch_first=True, dropout=dropout)
         self.cross_text = nn.MultiheadAttention(d_model, nhead, batch_first=True, dropout=dropout)
@@ -52,37 +53,45 @@ class DenoiserBlock(nn.Module):
             nn.Linear(d_model * 4, d_model)
         )
 
-        self.norm1 = nn.LayerNorm(d_model)
+        self.norm1 = AdaLN(d_model,cond_dim,scale_shft_gate=adaln_apply)
         self.norm2 = nn.LayerNorm(d_model)
-        self.norm3 = nn.LayerNorm(d_model)
+        self.norm3 = AdaLN(d_model,cond_dim,scale_shft_gate=adaln_apply)
         self.dropout = nn.Dropout(dropout)
 
     def forward(
         self,
         x,
         text,
+        time_embed,
         x_padding_mask=None,
         text_padding_mask=None,
         src_mask=None,
     ):
-        x = x + self.dropout(
+        res = x
+        x,gate=self.norm1.forward(x,time_embed)
+        x = self.dropout(
             self.self_attn(
-                self.norm1(x), self.norm1(x), self.norm1(x),
+                x,x,x,
                 attn_mask=src_mask,
                 key_padding_mask=x_padding_mask,
                 need_weights=False
             )[0]
         )
-
-        x = x + self.dropout(
+        x=res+gate*x if gate is not None else x+res
+        res=x
+        x=self.norm2(x)
+        x = self.dropout(
             self.cross_text(
-                self.norm2(x), text, text,
+                x, text, text,
                 key_padding_mask=text_padding_mask,
                 need_weights=False
             )[0]
         )
-
-        x = x + self.dropout(self.ffn(self.norm3(x)))
+        x=x+res
+        res=x
+        x,gate=self.norm3.forward(x,time_embed)
+        x = self.dropout(self.ffn(x))
+        x=res+gate*x if gate is not None else x+res
         return x
 
 
@@ -91,6 +100,7 @@ class DiffusionDenoiser(nn.Module):
         self,
         latent_dim,
         model_dim,
+        time_dim,
         nhead,
         num_layers,
         text_cond_dim,
@@ -103,14 +113,14 @@ class DiffusionDenoiser(nn.Module):
         self.text_proj = nn.Linear(text_cond_dim, model_dim)
 
         self.time_mlp = nn.Sequential(
-            SinusoidalTimeEmbedding(model_dim),
-            nn.Linear(model_dim, model_dim * 4),
+            SinusoidalTimeEmbedding(time_dim),
+            nn.Linear(time_dim, time_dim * 4),
             nn.SiLU(),
-            nn.Linear(model_dim * 4, model_dim),
+            nn.Linear(time_dim * 4, time_dim),
         )
 
         self.blocks = nn.ModuleList([
-            DenoiserBlock(model_dim, nhead, dropout=dropout)
+            DenoiserBlock(model_dim,time_dim, nhead, dropout=dropout,adaln_apply=(True,True,True))
             for _ in range(num_layers)
         ])
 
@@ -136,14 +146,15 @@ class DiffusionDenoiser(nn.Module):
     ):
         x = self.in_proj(x_t)
         x = x + self.position_embedding(x.size(1), x.size(2), x.device)
-        x = x + self.time_mlp(t).unsqueeze(1)
-
+        #x = x + self.time_mlp(t).unsqueeze(1)
+        time_embed=self.time_mlp(t)
         text = self.text_proj(text_tokens)
 
         for block in self.blocks:
             x = block(
                 x=x,
                 text=text,
+                time_embed=time_embed,
                 x_padding_mask=x_padding_mask,
                 text_padding_mask=text_padding_mask,
                 src_mask=src_mask,
@@ -165,12 +176,15 @@ class DiffusionModel(nn.Module):
         super().__init__()
         self.config = config
         diff_cfg = config.get("diffusion_config", {})
+        self.is_text_cond=diff_cfg.get("is_text_cond", True)
 
         self.z_dim = config["encoder"]["z_dim"]
         self.model_dim = diff_cfg.get("model_dim", 256)
         self.nhead = diff_cfg.get("nhead", 8)
         self.num_layers = diff_cfg.get("num_layers", 4)
         self.dropout = diff_cfg.get("dropout", 0.1)
+        self.time_dim= diff_cfg.get("time_dim", 128)
+        self.pred_type=diff_cfg.get("pred_type","eps") # "eps" or "v"
 
         self.num_train_steps = diff_cfg.get("num_train_steps", 1000)
         self.sampling_steps = diff_cfg.get("sampling_steps", 50)
@@ -190,7 +204,7 @@ class DiffusionModel(nn.Module):
             for p in self.clip_model.text_encoder.parameters():
                 p.requires_grad = False
 
-        text_cond_dim = self.clip_model.text_encoder.bert.config.hidden_size
+        text_cond_dim = self.clip_model.text_encoder.bert.config.hidden_size if self.is_text_cond else self.clip_model.skeleton_encoder.d_model
 
         # 学習可能 null token
         self.null_text = nn.Parameter(torch.randn(1, 1, text_cond_dim) * 0.02)
@@ -198,6 +212,7 @@ class DiffusionModel(nn.Module):
         self.denoiser = DiffusionDenoiser(
             latent_dim=self.z_dim,
             model_dim=self.model_dim,
+            time_dim=self.time_dim,
             nhead=self.nhead,
             num_layers=self.num_layers,
             text_cond_dim=text_cond_dim,
@@ -244,7 +259,14 @@ class DiffusionModel(nn.Module):
         sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
         sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
         return (x_t - sqrt_om * eps) / (sqrt_ac + 1e-8)
-
+    def predict_v0_from_eps(self,x_t,t,eps):
+        sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
+        sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
+        return sqrt_ac * eps + sqrt_om * x_t
+    def predict_x0_from_v(self,x_t,t,v):
+        sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
+        sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
+        return sqrt_ac * x_t - sqrt_om * v
     def encode_text_condition(self, text_inputs):
         tx_out = self.clip_model.text_encoder(
             input_ids=text_inputs["input_ids"],
@@ -254,6 +276,15 @@ class DiffusionModel(nn.Module):
         text_tokens = tx_out["token_features"]                         # (B,L,H)
         text_padding_mask = (text_inputs["attention_mask"] == 0)      # True=pad
         return text_tokens, text_padding_mask
+    def encode_pose_condition(self,pose_inputs,pose_padding_mask):
+        pose_out=self.clip_model.skeleton_encoder(
+            skeleton=pose_inputs,
+            skeleton_mask=pose_padding_mask,
+            return_sequence=True,
+        )
+        pose_tokens=pose_out['sequence_features']
+        pose_padding_mask=pose_padding_mask
+        return pose_tokens,pose_padding_mask
 
     def get_null_text_tokens(self, batch_size, seq_len, device):
         tokens = self.null_text.expand(batch_size, seq_len, -1).to(device)
@@ -317,11 +348,14 @@ class DiffusionModel(nn.Module):
         self,
         z0,
         text_inputs,
+        pose_inputs,
+        pose_padding_mask,
         padding_mask=None,
         src_mask=None,
     ):
         """
         z0: (B,T,z_dim)
+        #TODO: text_tokensとtext_padding_maskはposeを使う可能性があるので命名を変えたほうがいいかも
         """
         B = z0.size(0)
         device = z0.device
@@ -329,11 +363,21 @@ class DiffusionModel(nn.Module):
         t = torch.randint(0, self.num_train_steps, (B,), device=device, dtype=torch.long)
         noise = torch.randn_like(z0)
         x_t = self.q_sample(z0, t, noise=noise)
-
-        text_tokens, text_padding_mask = self.encode_text_condition(text_inputs)
-        text_tokens, text_padding_mask = self.random_replace_text_with_partial_null(
-            text_tokens, text_padding_mask
-        )
+        if self.is_text_cond is False:
+            text_tokens, text_padding_mask = self.encode_pose_condition(pose_inputs, pose_padding_mask)
+        else:
+            if text_inputs is None:
+                # 条件なし学習: 学習可能 null token のみを条件として使う
+                text_tokens, text_padding_mask = self.get_null_text_tokens(
+                    batch_size=B,
+                    seq_len=self.config["diffusion_config"].get("null_text_seq_len", 64),
+                    device=device
+                )
+            else:
+                text_tokens, text_padding_mask = self.encode_text_condition(text_inputs)
+                text_tokens, text_padding_mask = self.random_replace_text_with_partial_null(
+                    text_tokens, text_padding_mask
+                )
 
         eps_pred = self.denoise_once(
             x_t=x_t,
@@ -343,10 +387,17 @@ class DiffusionModel(nn.Module):
             x_padding_mask=padding_mask,
             src_mask=src_mask,
         )
-
+        if self.pred_type:
+            v_pred=self.predict_v0_from_eps(x_t,t,eps_pred)
+            return {
+                "pred": v_pred,
+                "target": self.predict_v0_from_eps(x_t,t,noise),
+                "t": t,
+                "x_t": x_t,
+            }
         return {
-            "eps_pred": eps_pred,
-            "eps_target": noise,
+            "pred": eps_pred,
+            "target": noise,
             "t": t,
             "x_t": x_t,
         }
@@ -436,99 +487,143 @@ class DiffusionModel(nn.Module):
         eps_cfg = eps_uncond + cfg_scale_text * (eps_text - eps_uncond)
         return eps_cfg
 
+    def _prepare_condition(self, batch_size, device, text_inputs=None, cfg_scale_text=None):
+        """
+        サンプリング用の条件トークンを準備する。
+        戻り値: (text_tokens, text_padding_mask, use_cfg, cfg_scale)
+        """
+        if cfg_scale_text is None:
+            cfg_scale_text = self.cfg_scale_text
+
+        null_seq_len = self.config["diffusion_config"].get("null_text_seq_len", 32)
+        null_tokens, null_mask = self.get_null_text_tokens(batch_size, null_seq_len, device)
+
+        if self.is_text_cond and text_inputs is not None:
+            text_tokens, text_mask = self.encode_text_condition(text_inputs)
+            use_cfg = cfg_scale_text > 1.0
+            return text_tokens, text_mask, null_tokens, null_mask, use_cfg, cfg_scale_text
+        else:
+            # unconditional: null tokensのみ使用
+            return null_tokens, null_mask, null_tokens, null_mask, False, 1.0
+
+    def _predict_eps(self, x_t, t, text_tokens, text_mask, null_tokens, null_mask,
+                     use_cfg, cfg_scale, padding_mask, src_mask):
+        """CFGありなしでノイズを予測する。"""
+        eps_uncond = self.denoise_once(
+            x_t=x_t, t=t,
+            text_tokens=null_tokens, text_padding_mask=null_mask,
+            x_padding_mask=padding_mask, src_mask=src_mask,
+        )
+        if not use_cfg:
+            return eps_uncond
+
+        eps_cond = self.denoise_once(
+            x_t=x_t, t=t,
+            text_tokens=text_tokens, text_padding_mask=text_mask,
+            x_padding_mask=padding_mask, src_mask=src_mask,
+        )
+        return eps_uncond + cfg_scale * (eps_cond - eps_uncond)
+
     @torch.no_grad()
     def ddim_sample(
         self,
-        text_inputs,
-        num_steps=None,
-        seq_len=None,
-        device=None,
+        seq_len,
+        device,
+        batch_size=1,
+        text_inputs=None,
         padding_mask=None,
         src_mask=None,
+        num_steps=None,
         cfg_scale_text=None,
     ):
+        """
+        DDIMサンプリング。
+        - text_inputs=None かつ is_text_cond=False → unconditional
+        - text_inputs あり かつ is_text_cond=True  → CFG付きtext条件生成
+        """
         if num_steps is None:
             num_steps = self.sampling_steps
-        if device is None:
-            device = text_inputs["input_ids"].device
-        if seq_len is None:
-            raise ValueError("seq_len must be provided.")
 
-        B = text_inputs["input_ids"].size(0)
-        x = torch.randn(B, seq_len, self.z_dim, device=device)
+        # 条件トークンをループ前に一度だけエンコード
+        text_tokens, text_mask, null_tokens, null_mask, use_cfg, cfg_scale = \
+            self._prepare_condition(batch_size, device, text_inputs, cfg_scale_text)
 
-        time_pairs = torch.linspace(self.num_train_steps - 1, 0, num_steps, device=device).long()
+        x = torch.randn(batch_size, seq_len, self.z_dim, device=device)
 
-        for i, t_now in enumerate(time_pairs):
-            t = torch.full((B,), t_now, device=device, dtype=torch.long)
+        # T-1 → 0 の等間隔なタイムステップ列
+        timesteps = torch.linspace(self.num_train_steps - 1, 0, num_steps, device=device).long()
 
-            eps = self.predict_eps_cfg(
-                x_t=x,
-                t=t,
-                text_inputs=text_inputs,
-                x_padding_mask=padding_mask,
-                src_mask=src_mask,
-                cfg_scale_text=cfg_scale_text,
+        for i, t_now in enumerate(timesteps):
+            t = torch.full((batch_size,), t_now, device=device, dtype=torch.long)
+
+            eps = self._predict_eps(
+                x, t, text_tokens, text_mask, null_tokens, null_mask,
+                use_cfg, cfg_scale, padding_mask, src_mask,
             )
 
             alpha_bar = self._extract(self.alphas_cumprod, t, x.shape)
-            x0_pred = self.predict_x0_from_eps(x, t, eps).clamp(-3.0, 3.0)
+            x0_pred = self.predict_x0_from_eps(x, t, eps).clamp(-5.0, 5.0)
 
-            if i == len(time_pairs) - 1:
+            # 最終ステップはx0をそのまま返す
+            if i == len(timesteps) - 1:
                 x = x0_pred
                 break
 
-            t_next = torch.full((B,), time_pairs[i + 1], device=device, dtype=torch.long)
-            alpha_bar_next = self._extract(self.alphas_cumprod, t_next, x.shape)
+            t_prev = torch.full((batch_size,), timesteps[i + 1], device=device, dtype=torch.long)
+            alpha_bar_prev = self._extract(self.alphas_cumprod, t_prev, x.shape)
 
+            # DDIM更新式 (Song et al. 2020, Eq.12)
+            # σ = η * sqrt((1-ᾱ_prev)/(1-ᾱ)) * sqrt(1 - ᾱ/ᾱ_prev)
             sigma = self.ddim_eta * torch.sqrt(
-                ((1 - alpha_bar_next) / (1 - alpha_bar)) * (1 - alpha_bar / alpha_bar_next)
+                (1 - alpha_bar_prev) / (1 - alpha_bar) * (1 - alpha_bar / alpha_bar_prev)
             ).clamp(min=0.0)
 
-            noise = torch.randn_like(x)
-            dir_xt = torch.sqrt((1 - alpha_bar_next - sigma ** 2).clamp(min=0.0)) * eps
-            x = torch.sqrt(alpha_bar_next) * x0_pred + dir_xt + sigma * noise
+            dir_xt = torch.sqrt((1 - alpha_bar_prev - sigma ** 2).clamp(min=0.0)) * eps
+            noise = torch.randn_like(x) if self.ddim_eta > 0.0 else torch.zeros_like(x)
+            x = torch.sqrt(alpha_bar_prev) * x0_pred + dir_xt + sigma * noise
 
         return x
 
     @torch.no_grad()
     def ddpm_sample(
         self,
-        text_inputs,
         seq_len,
-        device=None,
+        device,
+        batch_size=1,
+        text_inputs=None,
         padding_mask=None,
         src_mask=None,
         cfg_scale_text=None,
     ):
-        if device is None:
-            device = text_inputs["input_ids"].device
+        """
+        DDPMサンプリング（全T=1000ステップ）。
+        - text_inputs=None かつ is_text_cond=False → unconditional
+        - text_inputs あり かつ is_text_cond=True  → CFG付きtext条件生成
+        """
+        # 条件トークンをループ前に一度だけエンコード
+        text_tokens, text_mask, null_tokens, null_mask, use_cfg, cfg_scale = \
+            self._prepare_condition(batch_size, device, text_inputs, cfg_scale_text)
 
-        B = text_inputs["input_ids"].size(0)
-        x = torch.randn(B, seq_len, self.z_dim, device=device)
+        x = torch.randn(batch_size, seq_len, self.z_dim, device=device)
 
         for step in reversed(range(self.num_train_steps)):
-            t = torch.full((B,), step, device=device, dtype=torch.long)
+            t = torch.full((batch_size,), step, device=device, dtype=torch.long)
 
-            eps = self.predict_eps_cfg(
-                x_t=x,
-                t=t,
-                text_inputs=text_inputs,
-                x_padding_mask=padding_mask,
-                src_mask=src_mask,
-                cfg_scale_text=cfg_scale_text,
+            eps = self._predict_eps(
+                x, t, text_tokens, text_mask, null_tokens, null_mask,
+                use_cfg, cfg_scale, padding_mask, src_mask,
             )
 
             beta_t = self._extract(self.betas, t, x.shape)
             sqrt_one_minus_ac = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x.shape)
             sqrt_recip_alpha = self._extract(self.sqrt_recip_alphas, t, x.shape)
 
+            # DDPM平均 (Ho et al. 2020, Eq.11)
             model_mean = sqrt_recip_alpha * (x - beta_t / (sqrt_one_minus_ac + 1e-8) * eps)
 
             if step > 0:
                 posterior_variance_t = self._extract(self.posterior_variance, t, x.shape)
-                noise = torch.randn_like(x)
-                x = model_mean + torch.sqrt(posterior_variance_t) * noise
+                x = model_mean + torch.sqrt(posterior_variance_t) * torch.randn_like(x)
             else:
                 x = model_mean
 
@@ -537,7 +632,6 @@ class EncoderLayer(nn.Module):
     def __init__(self, d_model, nhead, dim_feedforward, activation):
         super(EncoderLayer, self).__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, batch_first=True)
-        self.cross_attn = nn.MultiheadAttention(d_model, nhead, batch_first=True)
         self.ffn=nn.Sequential(
             nn.Linear(d_model, dim_feedforward),
             nn.ReLU() if activation == 'relu' else nn.GELU(),
@@ -545,29 +639,25 @@ class EncoderLayer(nn.Module):
         )
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
-        self.norm3=nn.LayerNorm(d_model)
         self.dropout1 = nn.Dropout(0.1)
         self.dropout2 = nn.Dropout(0.1)
-        self.dropout3=nn.Dropout(0.1)
 
-    def forward(self, q,kv, src_mask=None,q_padding_mask=None,kv_padding_mask=None):
+    def forward(self, q,src_mask=None,q_padding_mask=None,kv_padding_mask=None):
         # q: (batch_size, seq_len_q, d_model)
         # kv: (batch_size, seq_len_kv, d_model)
         # src_mask: (seq_len_q, seq_len_kv) or (batch_size, seq_len_q, seq_len_kv)
         # q_padding_mask: (batch_size, seq_len_q)
         # kv_padding_mask: (batch_size, seq_len_kv)
         # 1. 自己注意
+        res=q
         q=self.norm1(q)
         attn_output, _ = self.self_attn(q, q, q, attn_mask=src_mask, key_padding_mask=q_padding_mask)
-        q = q + self.dropout1(attn_output)
+        q = res + self.dropout1(attn_output)
+        res=q
         q = self.norm2(q)
-        # 2. クロス注意
-        attn_output, _ = self.cross_attn(q, kv, kv, attn_mask=None, key_padding_mask=kv_padding_mask)
-        q = q + self.dropout2(attn_output)
-        q = self.norm3(q)
         # 3. FFN
         ffn_output = self.ffn(q)
-        q = q + self.dropout3(ffn_output)
+        q = res + self.dropout2(ffn_output)
 
         return q
 class Encoder(nn.Module):
@@ -587,10 +677,10 @@ class Encoder(nn.Module):
         pe[:, 0::2] = torch.sin(position * div_term)  # 偶数次元にsin
         pe[:, 1::2] = torch.cos(position * div_term)  # 奇数次元にcos
         return pe.unsqueeze(0)  # (1, seq_len, d_model)
-    def forward(self,q,kv,src_mask=None,q_padding_mask=None,kv_padding_mask=None):
+    def forward(self,q,src_mask=None,q_padding_mask=None,kv_padding_mask=None):
         q=q+self.position_embedding(q.size(1), q.size(2), q.device)
         for layer in self.encoder:
-            q=layer(q,kv,src_mask=src_mask,q_padding_mask=q_padding_mask,kv_padding_mask=kv_padding_mask)
+            q=layer(q,src_mask=src_mask,q_padding_mask=q_padding_mask,kv_padding_mask=kv_padding_mask)
         return q
 class Decoder(nn.Module):
     def __init__(self,config):
@@ -625,7 +715,8 @@ class VAETransformerDiffusion(nn.Module):
         d_model = config['encoder']['d_model']
         z_dim = config['encoder']['z_dim']
         dec_dmodel = config['decoder']['d_model']
-        self.is_diffusion = config.get('diffusion', False)
+        self.config=config
+        self.is_diffusion = config.get('is_diffusion', False)
 
         self.encoder = Encoder(config)
         self.decoder = Decoder(config)
@@ -646,8 +737,21 @@ class VAETransformerDiffusion(nn.Module):
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mean + eps * std
+    def requres_vae_grad(self):
+        for param in self.parameters():
+            param.requires_grad = True
+        if self.is_diffusion:
+            for param in self.diffusion.parameters():
+                param.requires_grad = False
+    def requires_diffusion_grad(self):
+        for param in self.parameters():
+            param.requires_grad = False
+        for param in self.diffusion.parameters():
+            param.requires_grad = True
+        for param in self.diffusion.clip_model.text_encoder.bert.parameters():
+            param.requires_grad = False
 
-    def forward(self, pose_input, pose_length, text_inputs, cond_pose, cond_pose_length):
+    def forward(self, pose_input, pose_length, text_inputs=None):
         B, T, J, C = pose_input.size()
 
         body_coord = pose_input[:, :, :8]
@@ -659,27 +763,30 @@ class VAETransformerDiffusion(nn.Module):
             window_size=self.config['encoder']['window_size'],
             device=q.device
         )
+        src_mask=None
         q_padding_mask = create_mask(pose_length, T).bool()
-        cond_pose_mask = create_mask(cond_pose_length, cond_pose.size(1)).bool()
+        cond_pose_mask = create_mask(pose_length, pose_input.size(1)).bool()
 
         q = self.input_proj(q)
-        encoded = self.encoder(q, src_mask=src_mask, q_padding_mask=q_padding_mask)
+        encoded = self.encoder(q, src_mask=src_mask,q_padding_mask=q_padding_mask)
 
         mean = self.mean_proj(encoded)
-        logvar = self.logvar_proj(encoded)
+        logvar = self.logvar_proj(encoded).clamp(-30.0, 20.0)
         z = self.reparameterize(mean, logvar)
 
         diffusion_loss = None
         if self.is_diffusion:
-            diff_out = self.diffusion(
+            diff_out = self.diffusion.forward(
                 z0=z,
                 text_inputs=text_inputs,
-                cond_pose=cond_pose,
-                cond_pose_mask=cond_pose_mask,
+                pose_inputs=pose_input,
+                pose_padding_mask=cond_pose_mask,
                 padding_mask=q_padding_mask,
                 src_mask=src_mask
             )
-            diffusion_loss = F.mse_loss(diff_out["eps_pred"], diff_out["eps_target"])
+            valid_mask = (~q_padding_mask).float().unsqueeze(-1)  # (B, T, 1)
+            diffusion_loss = (F.mse_loss(diff_out["pred"], diff_out["target"],
+                                         reduction='none') * valid_mask).mean(-1).sum() / valid_mask.sum().clamp(min=1)
 
         z_dec = self.z_proj(z)
         decoded = self.decoder(z_dec, src_mask=src_mask, padding_mask=q_padding_mask)
@@ -710,6 +817,7 @@ class VAETransformerDiffusion(nn.Module):
             'kl_loss': kl_loss,
             'output': output,
             'z': z,
+            'length_loss':torch.zeros(1, device=pose_input.device)  # ダミーの長さ損失
         }
         if diffusion_loss is not None:
             out['diffusion_loss'] = diffusion_loss
@@ -730,14 +838,13 @@ class VAETransformerDiffusion(nn.Module):
             window_size=self.config['encoder']['window_size'],
             device=device
         )
+        src_mask=None
         q_padding_mask = create_mask(pose_length, T).bool()
         cond_pose_mask = create_mask(cond_pose_length, cond_pose.size(1)).bool()
 
         if use_ddim:
             z = self.diffusion.ddim_sample(
-                text_inputs=text_inputs,
-                cond_pose=cond_pose,
-                cond_pose_mask=cond_pose_mask,
+                text_inputs=cond_pose,
                 num_steps=num_steps,
                 seq_len=T,
                 device=device,
@@ -747,8 +854,6 @@ class VAETransformerDiffusion(nn.Module):
         else:
             z = self.diffusion.ddpm_sample(
                 text_inputs=text_inputs,
-                cond_pose=cond_pose,
-                cond_pose_mask=cond_pose_mask,
                 seq_len=T,
                 device=device,
                 padding_mask=q_padding_mask,
@@ -757,5 +862,5 @@ class VAETransformerDiffusion(nn.Module):
 
         z_dec = self.z_proj(z)
         decoded = self.decoder(z_dec, src_mask=src_mask, padding_mask=q_padding_mask)
-        output = self.output_fc(decoded).view(B, T, -1, 3)
+        output = self.output_fc(decoded).view(B, T,-1)
         return output

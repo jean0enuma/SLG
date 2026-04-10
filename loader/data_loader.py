@@ -211,11 +211,36 @@ def datasets_loader_T(dataset:str):
     #phoenixは画像の連番となっている
     if dataset=="how2sign":
         train_path =  sorted(glob.glob(f"{HOW2SIGN_TRAIN_DATADIR}/front_clip/*"))
-        #train_path=preprocess_from_video(train_path, threshold_min_frame=16, threshold_max_frame=1000000)
+        for path in train_path:
+            try:
+                print(path)
+            except UnicodeEncodeError:
+                print("UnicodeEncodeError! Removing...")
+                train_path.remove(path)
+                print(f"Removed this path from train_path")
+        skeleton_train_path=SKELETON_HOW2SIGN_TRAIN_DATADIR_3D
+        train_path=preprocess_from_video_with_skeleton(train_path,skeleton_train_path, threshold_min_frame=32, threshold_max_frame=350)
+
         dev_path = sorted(glob.glob(f"{HOW2SIGN_DEV_DATADIR}/front_clip/*"))
-        #dev_path=preprocess_from_video(dev_path, threshold_min_frame=16, threshold_max_frame=1000000)
+        for path in dev_path:
+            try:
+                print(path)
+            except UnicodeEncodeError:
+                print("UnicodeEncodeError! Removing...")
+                train_path.remove(path)
+                print(f"Removed this path from train_path")
+        skeleton_dev_path=SKELETON_HOW2SIGN_DEV_DATADIR_3D
+        dev_path=preprocess_from_video_with_skeleton(dev_path,skeleton_dev_path, threshold_min_frame=32, threshold_max_frame=350)
         test_path = sorted(glob.glob(f"{HOW2SIGN_TEST_DATADIR}/front_clip/*"))
-        #test_path=preprocess_from_video(test_path, threshold_min_frame=16, threshold_max_frame=1000000)
+        for path in test_path:
+            try:
+                print(path)
+            except UnicodeEncodeError:
+                print("UnicodeEncodeError! Removing...")
+                train_path.remove(path)
+                print(f"Removed this path from train_path")
+        skeleton_test_path=SKELETON_HOW2SIGN_TEST_DATADIR_3D
+        test_path=preprocess_from_video_with_skeleton(test_path,skeleton_test_path, threshold_min_frame=32, threshold_max_frame=350)
         train_corpus = how2sign_load_corpus(HOW2SIGN_TEXT_TRAIN_PATH_OLD).rename(columns={"SENTENCE": "annotation", "SENTENCE_NAME": "id"})
         dev_corpus = how2sign_load_corpus(HOW2SIGN_TEXT_DEV_PATH_OLD).rename(columns={"SENTENCE": "annotation", "SENTENCE_NAME": "id"})
         test_corpus = how2sign_load_corpus(HOW2SIGN_TEXT_TEST_PATH_OLD).rename(columns={"SENTENCE": "annotation", "SENTENCE_NAME": "id"})
@@ -229,12 +254,13 @@ def datasets_loader_T(dataset:str):
         #test_corpus["duration"]=test_corpus["END_REALIGNED"].astype(float)-test_corpus["START_REALIGNED"].astype(float)
         test_corpus["duration"]=test_corpus["END"].astype(float)-test_corpus["START"].astype(float)
 
-        train_corpus=train_corpus[train_corpus["duration"]>=16/23]
-        dev_corpus=dev_corpus[dev_corpus["duration"]>=16/23]
-        test_corpus=test_corpus[test_corpus["duration"]>=16/23]
+        #train_corpus=train_corpus[train_corpus["duration"]>=32/24]
+        #dev_corpus=dev_corpus[dev_corpus["duration"]>=32/24]
+        #test_corpus=test_corpus[test_corpus["duration"]>=32/24]
+        #train_corpus=train_corpus[train_corpus["duration"]<=300/24]
         train_path=[f"{HOW2SIGN_TRAIN_DATADIR}/front_clip/{row['id']}" for _, row in train_corpus.iterrows() if row['id'] in [path.split("/")[-1].split('.mp4')[0] for path in train_path]]
-        dev_path=[f"{HOW2SIGN_DEV_DATADIR}/front_clip/{row['id']}" for _, row in dev_corpus.iterrows() if row['id'] in [path.split("/")[-1] for path in dev_path]]
-        test_path=[f"{HOW2SIGN_TEST_DATADIR}/front_clip/{row['id']}" for _, row in test_corpus.iterrows() if row['id'] in [path.split("/")[-1] for path in test_path]]
+        dev_path=[f"{HOW2SIGN_DEV_DATADIR}/front_clip/{row['id']}" for _, row in dev_corpus.iterrows() if row['id'] in [path.split("/")[-1].split('.mp4')[0]  for path in dev_path]]
+        test_path=[f"{HOW2SIGN_TEST_DATADIR}/front_clip/{row['id']}" for _, row in test_corpus.iterrows() if row['id'] in [path.split("/")[-1].split('.mp4')[0]  for path in test_path]]
     elif dataset=="phoenixT":
         train_path = sorted(glob.glob(f"{TRAIN_DATADIR_T}/*"))
         dev_path = sorted(glob.glob(f"{DEV_DATADIR_T}/*"))
@@ -340,6 +366,31 @@ def preprocess_from_video(video_path, threshold_min_frame=8, threshold_max_frame
     if len(new_video_path)==0:
         raise ValueError("No video found after preprocessing")
     return new_video_path
+def preprocess_from_video_with_skeleton(video_path,skeleton_path, threshold_min_frame=8, threshold_max_frame=96):
+    """
+    動画のフレームを読み込み，前処理を行う
+    :param video_path: 動画のパス
+    :return: 前処理後の動画のフレーム
+    """
+    new_video_path=[]
+    for v_path in video_path:
+        id=v_path.split("/")[-1].split(".mp4")[0]
+        skeleton_file=f"{skeleton_path}/{id}.csv"
+        skeleton_data=np.loadtxt(skeleton_file,delimiter=",",dtype=np.float32)
+
+        if len(skeleton_data.shape)==1:
+            continue
+        skeleton_hand_data=skeleton_data[:, -126:]
+        #hand_dataが全てnanのときはcontinue
+        if np.isnan(skeleton_hand_data).all():
+            continue
+        total_frame=skeleton_data.shape[0]
+        if total_frame < threshold_min_frame or total_frame > threshold_max_frame:
+            continue
+        new_video_path.append(v_path)
+    if len(new_video_path)==0:
+        raise ValueError("No video found after preprocessing")
+    return new_video_path
 def preprocess_from_frames(video_path, threshold_min_frame=8, threshold_max_frame=96,ext="png"):
     """
     動画のフレームを読み込み，前処理を行う
@@ -356,6 +407,7 @@ def preprocess_from_frames(video_path, threshold_min_frame=8, threshold_max_fram
         raise ValueError("No video found after preprocessing")
     return new_video_path
 def islr_datasets_loader(dataset:str):
+    dev_path=None
     if dataset=="AUTSL":
         train_path = sorted(glob.glob(f"{AUTSL_TRAIN_DATADIR}/*/*.mp4"))
         train_path=preprocess_from_video(train_path)
@@ -398,11 +450,14 @@ def islr_datasets_loader(dataset:str):
                 gloss2class[gloss] = len(gloss2class)
         class2gloss= {v: k for k, v in gloss2class.items()}
         train_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_train.keys()])
-        train_path= preprocess_from_video(train_path)
+        skeleton_train_pat=SKELETON_ASL_CITIZEN_TRAIN_DATADIR_3D
+        train_path= preprocess_from_video_with_skeleton(train_path,skeleton_train_pat, threshold_min_frame=16, threshold_max_frame=96)
+        dev_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_dev.keys()])
+        skeleton_dev_pat=SKELETON_ASL_CITIZEN_DEV_DATADIR_3D
+        dev_path= preprocess_from_video_with_skeleton(dev_path,skeleton_dev_pat, threshold_min_frame=16, threshold_max_frame=96)
         test_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_dev.keys()])
-        test_path= preprocess_from_video(test_path)
-        #test_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_test.keys()])
-        #test_path= preprocess_from_frames(test_path)
+        skeleton_test_pat=SKELETON_ASL_CITIZEN_TEST_DATADIR_3D
+        test_path= preprocess_from_video_with_skeleton(test_path,skeleton_test_pat, threshold_min_frame=16, threshold_max_frame=96)
 
     elif dataset=="LSA64":
         data_path=sorted(glob.glob(f"{LSA64_DATADIR}/*/*.mp4"))
@@ -459,8 +514,7 @@ def islr_datasets_loader(dataset:str):
         video2gloss = create_video2gloss_from_datapath_phoenix(data_path, gloss2class)
     else:
         raise ValueError("dataset is not defined")
-
-    return train_path,  test_path,gloss2class, class2gloss,video2gloss
+    return train_path, dev_path, test_path, gloss2class, class2gloss, video2gloss
 if __name__=="__main__":
     import glob
     from Parameter.Parameter import *

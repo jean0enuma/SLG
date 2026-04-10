@@ -2,50 +2,96 @@ dataset: "phoenixT"
 work_dir: "/home/caffe/work/SLG/"
 device: "cuda:0"
 dataset_parameters:
-  use_phoenixT: True
-  use_how2sign: False
+  use_phoenix: False
+  use_phoenixT: False
+  use_how2sign: True
   use_csl-daily: False
+  is_processed: False
 lr_parameters:
-  epoch: 600
-  learning_rate : 0.00005
-  min_lr: 0
-  weight_decay: 0.01
-  milestones: [200,320]
-  gamma: 0.2
+  epoch: 500
+  learning_rate : 0.0001
+  min_lr: 0.00001
+  weight_decay: 0.0001
+  milestones: [50,80]
   dropout: 0.3
   amp: True
   display_step: 100
   accumulation_step: 1
   batch_size: 32
-  scheduler_timing: "epoch"
+  scheduler_timing: "step"
   scheduler_type: "CosineAnnealingLR"
   grad_clip_norm: 1.0
   ema: False
   ema_beta: 0.999
+  replacement_num_batches: 100
 loss_parameters:
-    pose_loss_weight: 1.0
-    stop_loss_weight: 0.0
-    bone_loss_weight: 0.0
-    velocity_loss_weight: 0.1
-    max_length: 300
-    pose_weights: 0.1
-    hand_weights: 0.9
-
+    recon_pos_weight: 1.0
+    recon_dir_weight: 0.0
+    vq_weight: 1.0
+    vel_weight: 0.00
 model:
-  text_encoder_name: "openai/clip-vit-base-patch32"
-  text_encoder_requires_grad: False
-  time_embedding_dim: 64
-  text_adapter: True
-  diffusion_timesteps: 1000
-  decoder_hidden_dim: 512
-  decoder_ffn_dim: 2048
-  pose_dim: 96
-  hand_dim: 42
-  body_dim: 12
-  decoder_num_heads: 4
-  decoder_dropout: 0.3
-  decoder_num_layers: 2
-  decoder_num_lang: 1
-  decoder_m_lang: False
-  pred_type: "x0"
-  trainable: True
+  kl_weight: 0.2
+  pose_dim: 100
+  text_cond: True
+  is_diffusion: True
+  text_encoder_name: "google-bert/bert-base-multilingual-uncased"
+  body_weight: 0.3
+  hand_weight: 0.7
+  recon_weight: 0.0
+  length_weight: 0.0
+  diffusion_weight: 1.0
+  constractive_weight: 0.0
+  constractive_temp:  0.07
+  encoder:
+    z_dim: 64
+    q_input_dim: 100
+    kv_input_dim: 100
+    d_model: 256
+    nhead: 8
+    num_layers: 4
+    pose_num_layers: 2
+    pose_nhead: 8
+    ffn_mult: 4
+    dropout: 0.1
+    activation: "gelu"
+    window_size: 13
+    text_nhead: 4
+    text_num_layers: 3
+  decoder:
+    d_model: 128
+    nhead: 8
+    num_layers: 2
+    ffn_mult: 2
+    dropout: 0.1
+    activation: "gelu"
+  diffusion_config:
+    is_text_cond: False
+    model_dim: 512
+    nhead: 8
+    num_layers: 6
+    ffn_mult: 4
+    dropout: 0.1
+    num_train_steps: 1000
+    sampling_steps: 50
+    ddim_eta: 0.0
+    text_drop_prob: 0.1
+    cfg_scale_text: 3.0
+    freeze_text_encoder: True
+    time_dim: 256
+    pred_type: "eps"
+  clip_text:
+    num_joints: 50
+    joint_dim: 3
+    skeleton_d_model: 256
+    skeleton_nhead: 8
+    skeleton_num_layers: 4
+    skeleton_ffn_mult: 4
+    text_encoder_name: "google-bert/bert-base-multilingual-uncased"
+    proj_dim: 128
+    dropout: 0.1
+    text_pooling: "mean"
+    init_temperature: 0.07
+    null_text_seq_len: 32
+
+
+

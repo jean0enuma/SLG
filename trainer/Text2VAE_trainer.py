@@ -44,7 +44,7 @@ class Text2VAETrainer(BaseTrainer):
         total_recon_loss=[]
         total_kl_loss=[]
         total_length_loss=[]
-        total_embed_loss=[]
+        total_diffusion_loss=[]
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
         for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
             padded_cod_data,padded_mask, input_length_tensor, id_list,data_path,sequence=batch
@@ -63,7 +63,7 @@ class Text2VAETrainer(BaseTrainer):
             recon_loss = loss_dict['recon_loss']
             kl_loss = loss_dict['kl_loss']
             length_loss = loss_dict['length_loss']
-            embed_loss= loss_dict['embed_loss']
+            diffusion_loss= loss_dict['diffusion_loss']
             scaler.scale(loss).backward()
             ##grad_clip
             if self.config["lr_parameters"]["grad_clip_norm"] is not None:
@@ -77,7 +77,13 @@ class Text2VAETrainer(BaseTrainer):
             total_recon_loss.append(recon_loss.item())
             total_kl_loss.append(kl_loss.item())
             total_length_loss.append(length_loss.item())
-            total_embed_loss.append(embed_loss.item())
+            total_diffusion_loss.append(diffusion_loss.item())
+            if self.config['lr_parameters']["scheduler_timing"] == "step":
+                if self.config["lr_parameters"]["scheduler_type"] == "cosinewarmup":
+                    self.scheduler.step(self.step)
+                else:
+                    self.scheduler.step()
+                self.step+=1
 
             # codebook replacement
             if batch_idx % 100== 0:
@@ -85,19 +91,19 @@ class Text2VAETrainer(BaseTrainer):
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_loss)}")
                 tqdm.write(f"Avg KL Loss: {np.mean(total_kl_loss)}")
                 tqdm.write(f"Avg Length Loss: {np.mean(total_length_loss)}")
-                tqdm.write(f"Avg Embed Loss: {np.mean(total_embed_loss)}")
+                tqdm.write(f"Avg Diffusion Loss: {np.mean(total_diffusion_loss)}")
 
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
         kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
         length_avg_loss = np.mean(total_length_loss).astype(np.float32)
-        embed_avg_loss = np.mean(total_embed_loss).astype(np.float32)
+        diffusion_avg_loss = np.mean(total_diffusion_loss).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_loss": recon_avg_loss,
             "kl_loss": kl_avg_loss,
             "length_loss": length_avg_loss,
-            'embed_loss': embed_avg_loss,
+            'diffusion_loss': diffusion_avg_loss,
         }
     def eval(self, model, criterion, test_loader, device):
         model.eval()
@@ -105,7 +111,7 @@ class Text2VAETrainer(BaseTrainer):
         total_recon_loss=[]
         total_kl_loss=[]
         total_length_loss=[]
-        total_embed_loss=[]
+        total_diffusion_loss=[]
         with torch.no_grad():
             for batch in tqdm(test_loader, total=len(test_loader.dataset) // test_loader.batch_size):
                 padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, sequence = batch
@@ -121,23 +127,23 @@ class Text2VAETrainer(BaseTrainer):
                 recon_loss = loss_dict['recon_loss']
                 kl_loss = loss_dict['kl_loss']
                 length_loss= loss_dict['length_loss']
-                embed_loss= loss_dict['embed_loss']
+                diffusion_loss= loss_dict['diffusion_loss']
                 total_loss.append(loss.item())
                 total_recon_loss.append(recon_loss.item())
                 total_kl_loss.append(kl_loss.item())
                 total_length_loss.append(length_loss.item())
-                total_embed_loss.append(embed_loss.item())
+                total_diffusion_loss.append(diffusion_loss.item())
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
         kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
         length_avg_loss = np.mean(total_length_loss).astype(np.float32)
-        embed_avg_loss = np.mean(total_embed_loss).astype(np.float32)
+        diffusion_avg_loss = np.mean(total_diffusion_loss).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_loss": recon_avg_loss,
             "kl_loss": kl_avg_loss,
             'length_loss': length_avg_loss,
-            'embed_loss': embed_avg_loss,
+            'diffusion_loss': diffusion_avg_loss,
         }
     def fit(self,model,optimizer,scheduler,criterion,train_loader,eval_loader,test_loader,device,early_stopping=None):
         if self.config["lr_parameters"]["ema"]:
@@ -147,17 +153,17 @@ class Text2VAETrainer(BaseTrainer):
         train_recon_loss_list=self.config['train_recon_loss_list'] if 'train_recon_pose_loss_list' in self.config.keys() else []
         train_kl_loss_list=self.config['train_kl_loss_list'] if 'train_kl_loss_list' in self.config.keys() else []
         train_length_loss_list=self.config['train_length_loss_list'] if 'train_length_loss_list' in self.config.keys() else []
-        train_embed_loss_list=self.config['train_embed_loss_list'] if 'train_embed_loss_list' in self.config.keys() else []
+        train_diffusion_loss_list=self.config['train_diffusion_loss_list'] if 'train_diffusion_loss_list' in self.config.keys() else []
         eval_loss_list=self.config['eval_loss_list'] if 'eval_loss_list' in self.config.keys() else []
         eval_recon_loss_list=self.config['eval_recon_loss_list'] if 'eval_pose_loss_list' in self.config.keys() else []
         eval_kl_loss_list=self.config['eval_kl_loss_list'] if 'eval_kl_loss_list' in self.config.keys() else []
-        eval_embed_loss_list=self.config['eval_embed_loss_list'] if 'eval_embed_loss_list' in self.config.keys() else []
         eval_length_loss_list=self.config['eval_length_loss_list'] if 'eval_length_loss_list' in self.config.keys() else []
+        eval_diffusion_loss_list=self.config['eval_diffusion_loss_list'] if 'eval_diffusion_loss_list' in self.config.keys() else []
         test_loss_list=self.config['test_loss_list'] if 'test_loss_list' in self.config.keys() else []
         test_recon_loss_list=self.config['test_recon_loss_list'] if 'test_recon_loss_list' in self.config.keys() else []
         test_kl_loss_list=self.config['test_kl_loss_list'] if 'test_kl_loss_list' in self.config.keys() else []
         test_length_loss_list=self.config['test_length_loss_list'] if 'test_length_loss_list' in self.config.keys() else []
-        test_embed_loss_list=self.config['test_embed_loss_list'] if 'test_embed_loss_list' in self.config.keys() else []
+        test_diffusion_loss_list=self.config['test_diffusion_loss_list'] if 'test_diffusion_loss_list' in self.config.keys() else []
         save_path=self.config["save_path"]
         for epoch in range(self.config["init_epoch"], num_epochs):
             #self.generate_scheduler(epoch)
@@ -177,24 +183,24 @@ class Text2VAETrainer(BaseTrainer):
             train_recon_loss_list.append(train_loss['recon_loss'])
             train_kl_loss_list.append(train_loss['kl_loss'])
             train_length_loss_list.append(train_loss['length_loss'])
-            train_embed_loss_list.append(train_loss['embed_loss'])
+            train_diffusion_loss_list.append(train_loss['diffusion_loss'])
 
             eval_loss_list.append(eval_loss['loss'])
             eval_recon_loss_list.append(eval_loss['recon_loss'])
             eval_kl_loss_list.append(eval_loss['kl_loss'])
             eval_length_loss_list.append(eval_loss['length_loss'])
-            eval_embed_loss_list.append(eval_loss['embed_loss'])
+            eval_diffusion_loss_list.append(eval_loss['diffusion_loss'])
 
             test_loss_list.append(test_loss['loss'])
             test_recon_loss_list.append(test_loss['recon_loss'])
             test_kl_loss_list.append(test_loss['kl_loss'])
             test_length_loss_list.append(test_loss['length_loss'])
-            test_embed_loss_list.append(test_loss['embed_loss'])
+            test_diffusion_loss_list.append(test_loss['diffusion_loss'])
 
             print(f"Epoch {epoch+1}/{num_epochs})")
-            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}, Length Loss: {train_loss['length_loss']:.4f}",f"Embed Loss: {train_loss['embed_loss']:.4f}")
-            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}, Length Loss: {eval_loss['length_loss']:.4f}",f"Embed Loss: {eval_loss['embed_loss']:.4f}")
-            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}, Length Loss: {test_loss['length_loss']:.4f}",f"Embed Loss: {test_loss['embed_loss']:.4f}")
+            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}, Length Loss: {train_loss['length_loss']:.4f}, Diffusion Loss: {train_loss['diffusion_loss']:.4f}")
+            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}, Length Loss: {eval_loss['length_loss']:.4f}, Diffusion Loss: {eval_loss['diffusion_loss']:.4f}")
+            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}, Length Loss: {test_loss['length_loss']:.4f}, Diffusion Loss: {test_loss['diffusion_loss']:.4f}")
 
             #eval_lossとtest_lossのkeyを変更
             eval_loss = {
@@ -202,14 +208,14 @@ class Text2VAETrainer(BaseTrainer):
                 "eval_recon_loss": eval_loss['recon_loss'],
                 "eval_kl_loss": eval_loss['kl_loss'],
                 'eval_length_loss': eval_loss['length_loss'],
-                'eval_embed_loss': eval_loss['embed_loss'],
+                'eval_diffusion_loss': eval_loss['diffusion_loss'],
             }
             test_loss = {
                 "test_loss": test_loss['loss'],
                 "test_recon_loss": test_loss['recon_loss'],
                 "test_kl_loss": test_loss['kl_loss'],
                 'test_length_loss': test_loss['length_loss'],
-                'test_embed_loss': test_loss['embed_loss'],
+                'test_diffusion_loss': test_loss['diffusion_loss'],
             }
             log_dict={**train_loss,**eval_loss,**test_loss}
             wandb.log(log_dict)
@@ -224,17 +230,17 @@ class Text2VAETrainer(BaseTrainer):
                 "train_recon_loss_list": train_recon_loss_list,
                 "train_kl_loss_list": train_kl_loss_list,
                 'train_length_loss_list': train_length_loss_list,
-                'train_embed_loss_list': train_embed_loss_list,
+                'train_diffusion_loss_list': train_diffusion_loss_list,
                 "eval_loss_list": eval_loss_list,
                 "eval_recon_loss_list": eval_recon_loss_list,
                 "eval_kl_loss_list": eval_kl_loss_list,
                 'eval_length_loss_list': eval_length_loss_list,
-                'eval_embed_loss_list': eval_embed_loss_list,
+                'eval_diffusion_loss_list': eval_diffusion_loss_list,
                 "test_loss_list": test_loss_list,
                 "test_recon_loss_list": test_recon_loss_list,
                 "test_kl_loss_list": test_kl_loss_list,
                 'test_length_loss_list': test_length_loss_list,
-                'test_embed_loss_list': test_embed_loss_list,
+                'test_diffusion_loss_list': test_diffusion_loss_list,
                 'random': random.getstate(),
                 'np_random': np.random.get_state(),
                 'torch': torch.get_rng_state(),
@@ -248,17 +254,17 @@ class Text2VAETrainer(BaseTrainer):
                     "train_recon_loss": train_recon_loss_list,
                     "train_kl_loss": train_kl_loss_list,
                     'train_length_loss': train_length_loss_list,
-                    'train_embed_loss': train_embed_loss_list,
+                    'train_diffusion_loss': train_diffusion_loss_list,
                     "eval_loss": eval_loss_list,
                     "eval_recon_loss": eval_recon_loss_list,
                     "eval_kl_loss": eval_kl_loss_list,
                     'eval_length_loss': eval_length_loss_list,
-                    'eval_embed_loss': eval_embed_loss_list,
+                    'eval_diffusion_loss': eval_diffusion_loss_list,
                     "test_loss": test_loss_list,
                     "test_recon_loss": test_recon_loss_list,
                     "test_kl_loss": test_kl_loss_list,
                     'test_length_loss': test_length_loss_list,
-                    'test_embed_loss': test_embed_loss_list,
+                    'test_diffusion_loss': test_diffusion_loss_list,
                 }
             )
             log_data.to_csv(f"{save_path}/log.csv")
@@ -281,44 +287,44 @@ class Text2VAETrainer(BaseTrainer):
         return
 
     def visualize(self, model, dataset, device,is_3d=False):
-        #TODO: 出力のposeを可視化する関数を実装
-        #model: VAEモデル
-        #dataset: 可視化に使用するデータセット
-        #device: 使用するデバイス
+        # TODO: 出力のposeを可視化する関数を実装
+        # model: VAEモデル
+        # dataset: 可視化に使用するデータセット
+        # device: 使用するデバイス
         # 可視化用のディレクトリを作成
-        #予測したポーズとGTポーズをそれぞれ256x256の白画像にプロットする
+        # 予測したポーズとGTポーズをそれぞれ256x256の白画像にプロットする
         if os.path.exists(f"{self.config['save_path']}/visualize"):
             shutil.rmtree(f"{self.config['save_path']}/visualize")
-        os.makedirs(f"{self.config['save_path']}/visualize",exist_ok=True)
-        #予測したポーズとGTポーズを保存するディレクトリを作成
-        os.makedirs(f"{self.config['save_path']}/visualize/GT",exist_ok=True)
-        os.makedirs(f"{self.config['save_path']}/visualize/Pred",exist_ok=True)
+        os.makedirs(f"{self.config['save_path']}/visualize", exist_ok=True)
+        # 予測したポーズとGTポーズを保存するディレクトリを作成
+        os.makedirs(f"{self.config['save_path']}/visualize/GT", exist_ok=True)
+        os.makedirs(f"{self.config['save_path']}/visualize/Pred", exist_ok=True)
         model.eval()
         dataset.set_return_length()
         with torch.no_grad():
             for batch in tqdm(dataset, total=len(dataset)):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,sequence,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length = batch
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,sequence, center_data, shoulder_length, left_center_data, left_length, right_center_data, right_length = batch
                 padded_cod_data = padded_cod_data.float().unsqueeze(0).to(device)
                 padded_mask = padded_mask.unsqueeze(0).to(device)
                 input_length_tensor = input_length_tensor.unsqueeze(0).to(device)
-                sequence=sequence.to(device)
                 id_list = torch.tensor(id_list).to(device)
-                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list, sequence)
-                model_output = model(padded_cod_data, input_length_tensor,sequence)
-                output=model_output['output']
-                pd_length=model_output['pred_length'].int().item()
-                output=output.squeeze(0).cpu().numpy()
-                T,J,C=output.shape
-                #outputを元のスケールに戻す
-                output=output.reshape(T,J,C)
-                output[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
-                output[:,:8]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                output[:,8:29]*=left_length.cpu().numpy()[:,None,None]
-                output[:,8:29]+=left_center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                output[:,29:]*=right_length.cpu().numpy()[:,None,None]
-                output[:,29:]+=right_center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                #output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
+                sequence=sequence.to(device)
+                batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
+                output = model.sample(input_length_tensor,sequence,padded_cod_data,input_length_tensor)
+                output = output.squeeze(0).cpu().numpy()
+                T, J, C = output.shape
+                # outputを元のスケールに戻す
+                output = output.reshape(T, J, C)
+                output[:, :8] *= shoulder_length.cpu().numpy()[:, None, None]
+                output[:, :8] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                output[:, 8:29] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                output[:, 8:29] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                output[:, 29:] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                output[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                # output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
+                output = np.where(output == 0, np.nan, output)
                 output = apply_savgol_filter(output.transpose(1, 0, 2), window_size=7, poly_order=2).transpose(1, 0, 2)
+                output = np.where(np.isnan(output), 0, output)
                 # output[:,8:29]で，全てが0.01以下のときは，手が検出されなかったとして，0にする
                 hand_mask = (np.max(np.abs(output[:, 8:29]), axis=2) < 0.01)
                 output[:, 8:29][hand_mask] = 0.0
@@ -326,30 +332,33 @@ class Text2VAETrainer(BaseTrainer):
                 hand_mask = (np.max(np.abs(output[:, 29:]), axis=2) < 0.01)
                 output[:, 29:][hand_mask] = 0.0
 
-                padded_cod_data=padded_cod_data.squeeze(0).cpu().numpy()
-                padded_cod_data=padded_cod_data.reshape(T,J,C)
-                padded_cod_data[:,:8]*=shoulder_length.cpu().numpy()[:,None,None]
-                padded_cod_data[:,:8]+=center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                padded_cod_data[:,8:29]*=left_length.cpu().numpy()[:,None,None]
-                padded_cod_data[:,8:29]+=left_center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                padded_cod_data[:,29:]*=right_length.cpu().numpy()[:,None,None]
-                padded_cod_data[:,29:]+=right_center_data.cpu().transpose(0,1).numpy()[:,None,:]
-                #outputの点群を動画として保存
-                #同時に，元の動画も保存
-                #J=8
-
-                v_writer=cv2.VideoWriter(f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
-                v_writer_gt=cv2.VideoWriter(f"{self.config['save_path']}/visualize/GT/gt_{os.path.basename(data_path)}.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (256, 256))
+                padded_cod_data = padded_cod_data.squeeze(0).cpu().numpy()
+                padded_cod_data = padded_cod_data.reshape(T, J, C)
+                padded_cod_data[:, :8] *= shoulder_length.cpu().numpy()[:, None, None]
+                padded_cod_data[:, :8] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                padded_cod_data[:, 8:29] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                padded_cod_data[:, 8:29] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                padded_cod_data[:, 29:] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                padded_cod_data[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                # outputの点群を動画として保存
+                # 同時に，元の動画も保存
+                video_size = (1024, 1024)
+                v_writer = cv2.VideoWriter(
+                    f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4",
+                    cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)
+                v_writer_gt = cv2.VideoWriter(
+                    f"{self.config['save_path']}/visualize/GT/gt_{os.path.basename(data_path)}.mp4",
+                    cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)
                 for t in range(T):
-                    base_frame = np.ones((256, 256, 3), dtype=np.uint8) * 255
-                    base_frame_gt = np.ones((256, 256, 3), dtype=np.uint8) * 255
+                    base_frame = np.ones((video_size[0], video_size[1], 3), dtype=np.uint8) * 255
+                    base_frame_gt = np.ones((video_size[0], video_size[1], 3), dtype=np.uint8) * 255
                     for j in range(J):
-                        x=int(output[t,j,0]*256)
-                        y=int(output[t,j,1]*256)
-                        x_gt=int(padded_cod_data[t,j,0]*256)
-                        y_gt=int(padded_cod_data[t,j,1]*256)
-                        pd_frame=cv2.circle(base_frame,(x,y),radius=3,color=(0,0,255),thickness=-1)
-                        gt_frame=cv2.circle(base_frame_gt,(x_gt,y_gt),radius=3,color=(0,255,0),thickness=-1)
+                        x = int(output[t, j, 0] * video_size[0])
+                        y = int(output[t, j, 1] * video_size[1])
+                        x_gt = int(padded_cod_data[t, j, 0] * video_size[0])
+                        y_gt = int(padded_cod_data[t, j, 1] * video_size[1])
+                        pd_frame = cv2.circle(base_frame, (x, y), radius=3, color=(0, 0, 255), thickness=-1)
+                        gt_frame = cv2.circle(base_frame_gt, (x_gt, y_gt), radius=3, color=(0, 255, 0), thickness=-1)
                     v_writer.write(pd_frame)
                     v_writer_gt.write(gt_frame)
                 v_writer.release()
