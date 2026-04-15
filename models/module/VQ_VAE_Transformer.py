@@ -446,7 +446,6 @@ class VQLossWeights:
     recon_pos: float = 1.0
     recon_dir: float = 1.0
     vq: float = 1.0
-    vel: float = 0.05  # small
 
 
 # -------------------------
@@ -462,7 +461,7 @@ class VQVAETransformer1D(nn.Module):
     """
     def __init__(
         self,
-        in_dim: int = 36,
+        in_dim: int = 50,
         d_model: int = 256,
         n_heads: int = 8,
         n_layers_enc: int = 2,
@@ -476,8 +475,6 @@ class VQVAETransformer1D(nn.Module):
         vq_beta: float = 0.25,
         loss_w: VQLossWeights = VQLossWeights(),
         # coarse split indices (same meaning as in previous code)
-        pos_idx: Tuple[slice, ...] = (slice(0, 12), slice(12, 14), slice(54, 56)),  # body + Lwrist + Rwrist
-            dir_idx: Tuple[slice, ...] = (slice(12, 54),slice(54, 96)),  # L(x,z) + R(x,z)
     ):
         super().__init__()
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
@@ -487,14 +484,26 @@ class VQVAETransformer1D(nn.Module):
         self.n_codes = n_codes
         self.stride = stride
         self.loss_w = loss_w
-        self.pos_idx = pos_idx
-        self.dir_idx = dir_idx
 
         self.pos_emb = SinusoidalPosEmb(d_model)
 
         # ---- Encoder ----
         self.in_proj = nn.Linear(in_dim, d_model)
-        self.enc_ln_in = nn.LayerNorm(d_model)
+        self.encoder=nn.ModuleList()
+        self.down=nn.ModuleList()
+        if stride>1:
+            for i in range(stride%2):
+                enc_layer = nn.TransformerEncoderLayer(
+                    d_model=d_model,
+                    nhead=n_heads,
+                    dim_feedforward=ff_mult * d_model,
+                    dropout=dropout,
+                    activation="gelu",
+                    batch_first=True,
+                    norm_first=True,
+                )
+                self.encoder.append(nn.TransformerEncoder(enc_layer, num_layers=n_layers_enc))
+                self.down.append(nn.Conv1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2))
 
         enc_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
@@ -505,19 +514,13 @@ class VQVAETransformer1D(nn.Module):
             batch_first=True,
             norm_first=True,
         )
-        self.encoder = nn.TransformerEncoder(enc_layer, num_layers=n_layers_enc)
-
-        # downsample in time (learned)
-        # (B,T,d_model) -> (B,d_model,T) -> Conv1d stride -> (B,d_model,K)
-        if stride > 1:
-            self.down = nn.Conv1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2)
-        else:
-            self.down = nn.Identity()
+        self.encoder.append(nn.TransformerEncoder(enc_layer, num_layers=n_layers_enc))
+        self.down.append(nn.Identity())
         self.to_code = nn.Linear(d_model, code_dim)
 
         # ---- Quantizer ----
         if rvq_stages <= 1:
-            self.quant = NoiseSubstitutionVQ(n_codes=n_codes, code_dim=code_dim, beta=vq_beta)
+            self.quant = VectorQuantizerWithRestart(n_codes=n_codes, code_dim=code_dim, beta=vq_beta)
             self.is_rvq = False
         else:
             self.quant = ResidualVectorQuantizer(n_codes=n_codes, code_dim=code_dim, stages=rvq_stages, beta=vq_beta)
@@ -525,12 +528,21 @@ class VQVAETransformer1D(nn.Module):
 
         # ---- Decoder ----
         self.from_code = nn.Linear(code_dim, d_model)
+        self.decoder = nn.ModuleList()
+        self.up=nn.ModuleList()
         if stride > 1:
-            self.up = nn.ConvTranspose1d(
-                d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2, output_padding=stride % 2
-            )
-        else:
-            self.up = nn.Identity()
+            for i in range(stride%2):
+                dec_layer = nn.TransformerEncoderLayer(
+                    d_model=d_model,
+                    nhead=n_heads,
+                    dim_feedforward=ff_mult * d_model,
+                    dropout=dropout,
+                    activation="gelu",
+                    batch_first=True,
+                    norm_first=True,
+                )
+                self.decoder.append(nn.TransformerEncoder(dec_layer, num_layers=n_layers_dec))
+                self.up.append(nn.ConvTranspose1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2, output_padding=stride % 2))
 
         dec_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
@@ -541,7 +553,8 @@ class VQVAETransformer1D(nn.Module):
             batch_first=True,
             norm_first=True,
         )
-        self.decoder = nn.TransformerEncoder(dec_layer, num_layers=n_layers_dec)
+        self.decoder.append(nn.TransformerEncoder(dec_layer, num_layers=n_layers_dec))
+        self.up.append(nn.Identity())
 
         self.dec_ln_out = nn.LayerNorm(d_model)
         self.out_proj = nn.Linear(d_model, in_dim)
@@ -593,9 +606,10 @@ class VQVAETransformer1D(nn.Module):
             hand_valid_mask=hand_valid_mask,
             input_length=input_length,
             return_recon=False,
+            no_return_loss=True,
         )
         codes = out["codes"]  # (B,K) or (B,S,K)
-        predicted_poses = out["predicted_poses"]  # (B,T,in_dim)
+        predicted_poses = out["x_hat"]  # (B,T,in_dim)
 
         # latent mask (B,K) to ignore padded frames if input_length is provided
         if input_length is not None:
@@ -686,10 +700,6 @@ class VQVAETransformer1D(nn.Module):
             return F.pad(x, (0, 0, 0, T - T_hat))
         return x
 
-    def _gather_slices(self, x: torch.Tensor, slices: Tuple[slice, ...]) -> torch.Tensor:
-        parts = [x[..., s] for s in slices]
-        return torch.cat(parts, dim=-1) if len(parts) > 1 else parts[0]
-
     # ---------- encode/decode ----------
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -698,17 +708,14 @@ class VQVAETransformer1D(nn.Module):
         """
         B, T, _ = x.shape
         h = self.in_proj(x)  # (B,T,d_model)
-        h = self.enc_ln_in(h)
-
         pe = self.pos_emb(T, device=h.device, dtype=h.dtype)  # (1,T,d_model)
         h = h + pe
-
-        h = self.encoder(h)  # (B,T,d_model)
+        for enc, down in zip(self.encoder, self.down):
+            h = enc(h)  # (B,T,d_model)
+            h=down(h.transpose(1, 2)).transpose(1, 2).contiguous()  # (B,T//stride,d_model) or (B,T,d_model) if stride=1
 
         # downsample
-        h_t = h.transpose(1, 2).contiguous()   # (B,d_model,T)
-        h_k = self.down(h_t).transpose(1, 2).contiguous()  # (B,K,d_model)
-        z_e = self.to_code(h_k)                # (B,K,code_dim)
+        z_e = self.to_code(h)                # (B,K,code_dim)
         return z_e
 
     def decode(self, z_q: torch.Tensor, T_out: int) -> torch.Tensor:
@@ -719,16 +726,11 @@ class VQVAETransformer1D(nn.Module):
         h = self.from_code(z_q)  # (B,K,d_model)
 
         # upsample
-        h_t = h.transpose(1, 2).contiguous()     # (B,d_model,K)
-        h_up = self.up(h_t).transpose(1, 2).contiguous()  # (B,T_hat,d_model)
+        for dec, up in zip(self.decoder, self.up):
+            h = dec(h)  # (B,K,d_model)
+            h = up(h.transpose(1, 2)).transpose(1, 2).contiguous()  # (B,T,d_model) or (B,K,d_model) if stride=1
 
-        h_up = self._safe_crop_or_pad_time(h_up, T_out)
-
-        # add positional embedding at target length
-        pe = self.pos_emb(T_out, device=h_up.device, dtype=h_up.dtype)
-        h_up = h_up + pe
-
-        h_up = self.decoder(h_up)
+        h_up=self._safe_crop_or_pad_time(h, T_out)  # (B,T,d_model)
         h_up = self.dec_ln_out(h_up)
         x_hat = self.out_proj(h_up)
         return x_hat
@@ -736,15 +738,16 @@ class VQVAETransformer1D(nn.Module):
     # ---------- forward & losses ----------
     def forward(
         self,
-        x: torch.Tensor,  # (B,T,36)
+        x: torch.Tensor,  # (B,T,J,C)
         *,
         hand_valid_mask: Optional[torch.Tensor] = None,  # (B,T,2) bool
         input_length: Optional[int] = None,  # if provided, will crop/pad input to this length
         return_recon: bool = True,
         no_return_loss: bool = False,  # if True, skip loss computation and return empty dict (for inference)
     ) -> Dict[str, torch.Tensor]:
-        B, T, C = x.shape
-        assert C == self.in_dim
+        B, T, J,C = x.shape
+        assert J*C== self.in_dim
+        x=x.reshape(B,T,J*C)
 
         z_e = self.encode(x)               # (B,K,code_dim)
         if input_length is not None:
@@ -760,47 +763,32 @@ class VQVAETransformer1D(nn.Module):
             return {"x_hat": x_hat, "codes": q["codes"],"perplexity": q["perplexity"].detach(), "loss_vq": q["loss_vq"]}
 
         # ---- losses: pos (L1/Huber), dir (cos), vel (small), vq ----
-        x_pos = self._gather_slices(x, self.pos_idx)
-        h_pos = self._gather_slices(x_hat, self.pos_idx)
-        loss_recon_pos = F.smooth_l1_loss(h_pos, x_pos, reduction='none').mean(dim=-1)  # (B,T)
+        x=x.reshape(B,T,J,C)
+        x_hat=x_hat.reshape(B,T,J,C)
+        x_pos = x[:,:,:8]# (B,T,8,C)
+        h_pos = x_hat[:,:,:8]# (B,T,8,C)
+        loss_recon_pos = F.smooth_l1_loss(h_pos, x_pos.detach(), reduction='none').mean(dim=[-1,-2])  # (B,T)
 
+        x_hand= x[:,:,8:]
+        h_hand= x_hat[:,:,8:]
+        loss_recon_hand=F.smooth_l1_loss(h_hand,x_hand.detach(),reduction='none').mean(dim=[-1,-2])   # (B,T)
+        mask=~(mask.bool())
         loss_recon_pos=(loss_recon_pos*mask).sum()/mask.sum()
-        x_dir = self._gather_slices(x, self.dir_idx)
-        h_dir = self._gather_slices(x_hat, self.dir_idx)
+        loss_recon_hand=(loss_recon_hand*mask).sum()/mask.sum()
 
-        # cosine distance per vector, then mean over vectors
-        loss_recon_dir=F.smooth_l1_loss(h_dir, x_dir, reduction='none')# (B,T,dir_dim)3
-        left_loss_recon_dir=loss_recon_dir[..., :x_dir.shape[-1]//2].mean(dim=-1) #(B,T)
-        right_loss_recon_dir=loss_recon_dir[..., x_dir.shape[-1]//2:].mean(dim=-1) #(B,T)
-        dir_loss_per=torch.cat([left_loss_recon_dir.unsqueeze(-1), right_loss_recon_dir.unsqueeze(-1)], dim=-1) #(B,T,2)
-        if hand_valid_mask is not None:
-            # mask: (B,T,2) -> (B,T,4) for [Lx,Lz,Rx,Rz]
-            mL = hand_valid_mask[..., 0].float()
-            mR = hand_valid_mask[..., 1].float()
-            m = torch.stack([mL,mR], dim=-1)  # (B,T,2)
-            loss_recon_dir = (dir_loss_per * m).sum() / m.sum().clamp_min(1.0)
-        else:
-            loss_recon_dir = dir_loss_per.mean()
 
-        vel_hat = x_hat[:, 1:] - x_hat[:, :-1]
-        vel = x[:, 1:] - x[:, :-1]
-        vel_mask = mask[:, 1:] * mask[:, :-1]  # only consider velocity where both frames are valid
-        loss_vel = F.l1_loss(vel_hat, vel, reduction='none').mean(dim=-1)  # (B,T-1)
-        loss_vel = (loss_vel * vel_mask).sum() / vel_mask.sum()
         loss_vq = q["loss_vq"]
 
         loss_total = (
             self.loss_w.recon_pos * loss_recon_pos
-            + self.loss_w.recon_dir * loss_recon_dir
-            + self.loss_w.vel * loss_vel
+                + self.loss_w.recon_hand * loss_recon_hand
             + self.loss_w.vq * loss_vq
         )
 
         out = {
             "loss_total": loss_total,
             "loss_recon_pos": loss_recon_pos.detach(),
-            "loss_recon_dir": loss_recon_dir.detach(),
-            "loss_vel": loss_vel.detach(),
+            'loss_recon_hand': loss_recon_hand.detach(),
             "loss_vq": loss_vq.detach(),
             "perplexity": q["perplexity"].detach(),
             "codes": q["codes"],   # (B,K) for VQ, (B,stages,K) for RVQ
@@ -814,6 +802,8 @@ class VQVAETransformer1D(nn.Module):
         B, K, C = z_e.shape
         z = z_e.reshape(-1, C)
         self.quant.random_restart(z,threshold=threshold)
+
+
 class VQVAETransformer1DSimple(VQVAETransformer1D):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -867,42 +857,28 @@ class VQVAETransformer1DSimple(VQVAETransformer1D):
 class VQVAETransformer1DSeparated(nn.Module):
     def __init__(
             self,
-            pose_dim: int = 16,
-            hand_dim: int = 42,
-            extra_dim: int = 4,
+            pose_dim: int = 24,
+            hand_dim: int = 63,
             pose_d_model: int = 256,
             hand_d_model: int = 128,
-            extra_d_model: int = 64,
             n_pose_heads: int = 8,
             n_hand_heads: int = 4,
-            n_extra_heads: int = 4,
             n_pose_layers_enc: int = 2,
             n_hand_layers_enc: int = 2,
-            n_extra_layers_enc: int = 2,
             n_pose_layers_dec: int = 2,
             n_hand_layers_dec: int = 2,
-            n_extra_layers_dec: int = 2,
             ff_mult: int = 4,
             dropout: float = 0.1,
             pose_code_dim: int = 128,
             hand_code_dim: int = 64,
-            extra_code_dim: int = 32,
             n_pose_codes: int =64,
             n_hand_codes: int = 128,
-            n_extra_codes: int = 32,
             stride: int = 4,
             rvq_stages: int = 2,
             vq_beta: float = 0.25,
             loss_w: VQLossWeights = VQLossWeights(),
-            pose_idx: Tuple[slice, ...] = (slice(0, 12), slice(12,14), slice(54, 56)),  # body + Lwrist + Rwrist
-            dir_l_idx: Tuple[slice, ...] = (slice(12, 54),),               # L(x,z) + R(x,z)
-            dir_r_idx: Tuple[slice, ...] = (slice(54, 96),)
     ):
         super().__init__()
-        self.pose_idx = pose_idx
-        self.dir_l_idx = dir_l_idx
-        self.dir_r_idx = dir_r_idx
-        self.extra_dim = extra_dim
         self.loss_w = loss_w
         self.pose_vqvae = VQVAETransformer1D(
             in_dim=pose_dim,
@@ -1118,30 +1094,30 @@ class VQVAETransformer1DSeparated(nn.Module):
         return torch.cat(parts, dim=-1) if len(parts) > 1 else parts[0]
     def forward(self, x: torch.Tensor, hand_valid_mask: Optional[torch.Tensor] = None, input_length: Optional[int] = None) -> Dict[str, torch.Tensor]:
         # x: (B,T,36) -> split into pose/hand/extra
-        pose = self._gather_slices(x, self.pose_idx)  # (B,T,pose_dim)
-        l_hand = self._gather_slices(x, self.dir_l_idx)   # (B,T,hand_dim)
-        r_hand= self._gather_slices(x, self.dir_r_idx)   # (B,T,hand_dim)
-        #extra = x[..., -self.extra_dim:]              # (B,T,extra_dim)
+        B,T,J,C= x.shape
+        assert J*C==self.in_dim
+        pose=x[:,:,:8]
+        l_hand=x[:,:,8:29]
+        r_hand=x[:,:,29:50]
+
+
 
         out_pose = self.pose_vqvae(pose, hand_valid_mask=hand_valid_mask, input_length=input_length,no_return_loss=True)
         out_l_hand = self.left_vqvae(l_hand, hand_valid_mask=hand_valid_mask, input_length=input_length,no_return_loss=True)
         out_r_hand= self.right_vqvae(r_hand, hand_valid_mask=hand_valid_mask, input_length=input_length,no_return_loss=True)
-        #out_extra = self.extra_vqvae(extra, hand_valid_mask=hand_valid_mask, input_length=input_length,no_return_loss=True)
 
         pose_recon_loss=F.smooth_l1_loss(out_pose['x_hat'],pose,reduction='none')
         hand_recon_loss=(F.smooth_l1_loss(out_l_hand['x_hat'],l_hand,reduction='none')+F.smooth_l1_loss(out_r_hand['x_hat'],r_hand,reduction='none'))/2.0
-        #extra_recon_loss=F.smooth_l1_loss(out_extra['x_hat'],extra,reduction='none')
         if input_length is not None:
             mask=create_mask(input_length,max_len=x.shape[1]).unsqueeze(-1) #(B,T,1)
         else:
             mask=torch.ones(x.shape[0],x.shape[1],1,device=x.device)
+        mask=~(mask.bool())
         pose_recon_loss=(pose_recon_loss*mask).sum()/mask.sum()
         hand_recon_loss=(hand_recon_loss*mask).sum()/mask.sum()
-        #extra_recon_loss=(extra_recon_loss*mask).sum()/mask.sum()
 
         pose_vq_loss=out_pose['loss_vq']
         hand_vq_loss=(out_l_hand['loss_vq']+out_r_hand['loss_vq'])/2.0
-       # extra_vq_loss=out_extra['loss_vq']
 
         total_loss = self.loss_w.recon_pos * (pose_recon_loss + hand_recon_loss) + \
                      self.loss_w.vq * (pose_vq_loss + hand_vq_loss)
@@ -1171,34 +1147,36 @@ class VQVAETransformer1DEncoder(nn.Module):
             d_model: int = 256,
             n_heads: int = 8,
             n_layers_enc: int = 2,
-            n_layers_dec: int = 2,
             ff_mult: int = 4,
             dropout: float = 0.1,
-            code_dim: int = 128,
-            n_codes: int = 1024,
             stride: int = 4,
-            rvq_stages: int = 2,
-            vq_beta: float = 0.25,
-            loss_w: VQLossWeights = VQLossWeights(),
-            # coarse split indices (same meaning as in previous code)
-            pos_idx: Tuple[slice, ...] = (slice(0, 18), slice(18, 21), slice(29, 32)),  # body + Lwrist + Rwrist
-            dir_idx: Tuple[slice, ...] = (slice(21, 27), slice(32, 38)),  # L(x,z) + R(x,z)
     ):
         super().__init__()
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
         self.in_dim = in_dim
         self.d_model = d_model
-        self.code_dim = code_dim
-        self.n_codes = n_codes
         self.stride = stride
-        self.loss_w = loss_w
-        self.pos_idx = pos_idx
-        self.dir_idx = dir_idx
+        assert stride%2 == 0, "stride must be even for symmetric downsampling"
 
         self.pos_emb = SinusoidalPosEmb(d_model)
 
         # ---- Encoder ----
+        self.encoder=nn.ModuleList()
+        self.down=nn.ModuleList()
         self.in_proj = nn.Linear(in_dim, d_model)
+        if stride > 1:
+            for i in range(stride%2):
+                enc_layer = nn.TransformerEncoderLayer(
+                    d_model=d_model,
+                    nhead=n_heads,
+                    dim_feedforward=ff_mult * d_model,
+                    dropout=dropout,
+                    activation="gelu",
+                    batch_first=True,
+                    norm_first=True,
+                )
+                self.encoder.append( nn.TransformerEncoder(enc_layer, num_layers=n_layers_enc))
+                self.down.append(nn.Conv1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2))
         enc_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=n_heads,
@@ -1208,14 +1186,13 @@ class VQVAETransformer1DEncoder(nn.Module):
             batch_first=True,
             norm_first=True,
         )
-        self.encoder = nn.TransformerEncoder(enc_layer, num_layers=n_layers_enc)
+        self.encoder.append(nn.TransformerEncoder(enc_layer, num_layers=n_layers_enc))
+        self.down.append(nn.Identity())
+
+
 
         # downsample in time (learned)
         # (B,T,d_model) -> (B,d_model,T) -> Conv1d stride -> (B,d_model,K)
-        if stride > 1:
-            self.down = nn.Conv1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2)
-        else:
-            self.down = nn.Identity()
     def forward(self,x,padding_mask=None,attn_mask=None):
         B, T, C = x.shape
         assert C == self.in_dim
@@ -1223,10 +1200,10 @@ class VQVAETransformer1DEncoder(nn.Module):
         h = self.in_proj(x)  # (B,T,d_model)
         pe = self.pos_emb(T, device=h.device, dtype=h.dtype)  # (1,T,d_model)
         h = h + pe
-        h = self.encoder(h, src_key_padding_mask=padding_mask, mask=attn_mask)  # (B,T,d_model)
-        # downsample
-        h_t = h.transpose(1, 2).contiguous()   # (B,d_model,T)
-        h_k = self.down(h_t).transpose(1, 2).contiguous()  # (B,K,d_model)
+        for enc, down in zip(self.encoder, self.down):
+            h = enc(h, src_key_padding_mask=padding_mask, mask=attn_mask)  # (B,T,d_model)
+            h_t = h.transpose(1, 2).contiguous()  # (B,d_model,T)
+            h_k = down(h_t).transpose(1, 2).contiguous()  # (B,K,d_model)
         return h_k
 class VQVAETransformer1DDecoder(nn.Module):
     def __init__(
@@ -1234,30 +1211,18 @@ class VQVAETransformer1DDecoder(nn.Module):
             in_dim: int = 36,
             d_model: int = 256,
             n_heads: int = 8,
-            n_layers_enc: int = 2,
             n_layers_dec: int = 2,
             ff_mult: int = 4,
             dropout: float = 0.1,
-            code_dim: int = 128,
-            n_codes: int = 1024,
             stride: int = 4,
-            rvq_stages: int = 2,
-            vq_beta: float = 0.25,
-            loss_w: VQLossWeights = VQLossWeights(),
-            # coarse split indices (same meaning as in previous code)
-            pos_idx: Tuple[slice, ...] = (slice(0, 18), slice(18, 21), slice(29, 32)),  # body + Lwrist + Rwrist
-            dir_idx: Tuple[slice, ...] = (slice(21, 27), slice(32, 38)),  # L(x,z) + R(x,z)
+            code_dim: int = 128,
     ):
         super().__init__()
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
         self.in_dim = in_dim
         self.d_model = d_model
-        self.code_dim = code_dim
-        self.n_codes = n_codes
         self.stride = stride
-        self.loss_w = loss_w
-        self.pos_idx = pos_idx
-        self.dir_idx = dir_idx
+
 
         self.pos_emb = SinusoidalPosEmb(d_model)
 
@@ -1266,11 +1231,29 @@ class VQVAETransformer1DDecoder(nn.Module):
 
         # upsample in time (learned)
         # (B,K,d_model) -> (B,d_model,K) -> ConvTranspose1d stride -> (B,d_model,T)
+        self.up = nn.ModuleList()
+        self.decoder = nn.ModuleList()
         if stride > 1:
-            self.up = nn.ConvTranspose1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2)
-        else:
-            self.up = nn.Identity()
-
+            for i in range(stride%2):
+                dec_layer = nn.TransformerEncoderLayer(
+                    d_model=d_model,
+                    nhead=n_heads,
+                    dim_feedforward=ff_mult * d_model,
+                    dropout=dropout,
+                    activation="gelu",
+                    batch_first=True,
+                    norm_first=True,
+                )
+                self.decoder.append(nn.TransformerEncoderLayer(
+                    d_model=d_model,
+                    nhead=n_heads,
+                    dim_feedforward=ff_mult * d_model,
+                    dropout=dropout,
+                    activation="gelu",
+                    batch_first=True,
+                    norm_first=True,
+                ))
+                self.up.append(nn.ConvTranspose1d(d_model, d_model, kernel_size=2 * stride, stride=stride, padding=stride // 2))
         dec_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=n_heads,
@@ -1280,7 +1263,8 @@ class VQVAETransformer1DDecoder(nn.Module):
             batch_first=True,
             norm_first=True,
         )
-        self.decoder = nn.TransformerEncoder(dec_layer, num_layers=n_layers_dec)
+        self.decoder.append(nn.TransformerEncoder(dec_layer, num_layers=n_layers_dec))
+        self.up.append(nn.Identity())
         self.dec_ln_out = nn.LayerNorm(d_model)
         self.out_proj = nn.Linear(d_model, in_dim)
     @staticmethod
@@ -1296,161 +1280,101 @@ class VQVAETransformer1DDecoder(nn.Module):
     def forward(self,z_q,T_out,padding_mask=None,attn_mask=None):
         h = self.from_code(z_q)  # (B,K,d_model)
 
-        # upsample
-        h_t = h.transpose(1, 2).contiguous()     # (B,d_model,K)
-        h_up = self.up(h_t).transpose(1, 2).contiguous()  # (B,T_hat,d_model)
+        for dec, up in zip(self.decoder, self.up):
+            h = dec(h, src_key_padding_mask=padding_mask, mask=attn_mask)  # (B,K,d_model)
+            h_t = h.transpose(1, 2).contiguous()  # (B,d_model,K)
+            h_up = up(h_t).transpose(1, 2).contiguous()  # (B,T_hat,d_model)
+            h = h_up
+        h = self._safe_crop_or_pad_time(h, T_out)  # ensure output has correct time dimension
+        x_hat= self.dec_ln_out(h)
+        x_hat = self.out_proj(x_hat)  # (B,T,in_dim)
 
-        h_up = self._safe_crop_or_pad_time(h_up, T_out)
-
-        # add positional embedding at target length
-        pe = self.pos_emb(T_out, device=h_up.device, dtype=h_up.dtype)
-        h_up = h_up + pe
-        h_up = self.decoder(h_up, src_key_padding_mask=padding_mask, mask=attn_mask)  # (B,T,d_model)
-        h_up = self.dec_ln_out(h_up)
-        x_hat = self.out_proj(h_up)
         return x_hat
 class VQVAETransformer1DAggregated(nn.Module):
     def __init__(
             self,
             n_codes=1024,
             code_dim=128,
-            pose_dim: int = 16,
-            hand_dim: int = 42,
-            extra_dim: int = 4,
+            pose_dim: int = 24,
+            hand_dim: int = 36,
             pose_d_model: int = 256,
             hand_d_model: int = 128,
-            extra_d_model: int = 64,
             n_pose_heads: int = 8,
             n_hand_heads: int = 4,
-            n_extra_heads: int = 4,
             n_pose_layers_enc: int = 2,
             n_hand_layers_enc: int = 2,
-            n_extra_layers_enc: int = 2,
             n_pose_layers_dec: int = 2,
             n_hand_layers_dec: int = 2,
-            n_extra_layers_dec: int = 2,
             ff_mult: int = 4,
             dropout: float = 0.1,
-            pose_code_dim: int = 128,
-            hand_code_dim: int = 64,
-            extra_code_dim: int = 32,
-            n_pose_codes: int =64,
-            n_hand_codes: int = 128,
-            n_extra_codes: int = 32,
             stride: int = 4,
             rvq_stages: int = 2,
             vq_beta: float = 0.25,
             loss_w: VQLossWeights = VQLossWeights(),
-            pose_idx: Tuple[slice, ...] = (slice(0, 6), slice(6, 7), slice(27, 28)),  # body + Lwrist + Rwrist
-            dir_l_idx: Tuple[slice, ...] = (slice(6, 27),),  # L(x,z) + R(x,z)
-            dir_r_idx: Tuple[slice, ...] = (slice(27, 48),),
-            tau=1.0,
+
     ):
         super().__init__()
-        self.pose_idx = pose_idx
-        self.dir_l_idx = dir_l_idx
-        self.dir_r_idx = dir_r_idx
         #pose_idxからpose_dimを計算
-        pose_dim=0
-        for s in pose_idx:
-            pose_dim+=(s.stop-s.start)*s.step if s.step is not None else (s.stop-s.start)
-        pose_dim*=3
-        hand_dim=0
-        for s in dir_l_idx:
-            hand_dim+=(s.stop-s.start)*s.step if s.step is not None else (s.stop-s.start)
-        hand_dim*=3
         self.loss_w = loss_w
         self.pose_encoder = VQVAETransformer1DEncoder(
             in_dim=pose_dim,
             d_model=pose_d_model,
             n_heads=n_pose_heads,
             n_layers_enc=n_pose_layers_enc,
-            n_layers_dec=n_pose_layers_dec,
             ff_mult=ff_mult,
             dropout=dropout,
-            code_dim=pose_code_dim,
-            n_codes=n_pose_codes,
             stride=stride,
-            rvq_stages=rvq_stages,
-            vq_beta=vq_beta,
-            pos_idx=pose_idx,
-            dir_idx=dir_l_idx + dir_r_idx,
         )
         self.pose_decoder = VQVAETransformer1DDecoder(
             in_dim=pose_dim,
             d_model=pose_d_model,
             n_heads=n_pose_heads,
-            n_layers_enc=n_pose_layers_enc,
             n_layers_dec=n_pose_layers_dec,
             ff_mult=ff_mult,
             dropout=dropout,
-            code_dim=code_dim,
-            n_codes=n_pose_codes,
             stride=stride,
-            rvq_stages=rvq_stages,
-            vq_beta=vq_beta,
-            pos_idx=pose_idx,
-            dir_idx=dir_l_idx + dir_r_idx,
+            code_dim=code_dim
+
         )
         self.left_encoder = VQVAETransformer1DEncoder(
             in_dim=hand_dim,
             d_model=hand_d_model,
             n_heads=n_hand_heads,
             n_layers_enc=n_hand_layers_enc,
-            n_layers_dec=n_hand_layers_dec,
             ff_mult=ff_mult,
             dropout=dropout,
-            code_dim=hand_code_dim,
-            n_codes=n_hand_codes,
             stride=stride,
-            rvq_stages=rvq_stages,
-            pos_idx=dir_l_idx,
-            dir_idx=(),
+
         )
         self.left_decoder = VQVAETransformer1DDecoder(
             in_dim=hand_dim,
             d_model=hand_d_model,
             n_heads=n_hand_heads,
-            n_layers_enc=n_hand_layers_enc,
             n_layers_dec=n_hand_layers_dec,
             ff_mult=ff_mult,
             dropout=dropout,
-            code_dim=code_dim,
-            n_codes=n_hand_codes,
             stride=stride,
-            rvq_stages=rvq_stages,
-            pos_idx=dir_l_idx,
-            dir_idx=(),
+            code_dim=code_dim
         )
         self.right_encoder = VQVAETransformer1DEncoder(
             in_dim=hand_dim,
             d_model=hand_d_model,
             n_heads=n_hand_heads,
             n_layers_enc=n_hand_layers_enc,
-            n_layers_dec=n_hand_layers_dec,
             ff_mult=ff_mult,
             dropout=dropout,
-            code_dim=hand_code_dim,
-            n_codes=n_hand_codes,
             stride=stride,
-            rvq_stages=rvq_stages,
-            pos_idx=dir_r_idx,
-            dir_idx=(),
         )
         self.right_decoder = VQVAETransformer1DDecoder(
             in_dim=hand_dim,
             d_model=hand_d_model,
             n_heads=n_hand_heads,
-            n_layers_enc=n_hand_layers_enc,
             n_layers_dec=n_hand_layers_dec,
             ff_mult=ff_mult,
             dropout=dropout,
-            code_dim=code_dim,
-            n_codes=n_hand_codes,
             stride=stride,
-            rvq_stages=rvq_stages,
-            pos_idx=dir_r_idx,
-            dir_idx=(),
+            code_dim=code_dim
+
         )
         self.stride=stride
         # ---- Quantizer ----
@@ -1462,22 +1386,21 @@ class VQVAETransformer1DAggregated(nn.Module):
             self.quant = ResidualVectorQuantizer(n_codes=n_codes, code_dim=code_dim, stages=rvq_stages, beta=vq_beta)
             self.is_rvq = True
 
-    def _gather_slices(self, x: torch.Tensor, slices: Tuple[slice, ...]) -> torch.Tensor:
-        #x:(B,T,C,2or3)
-        parts = [x[:,:,s] for s in slices]
-        return torch.cat(parts, dim=2) if len(parts) > 1 else parts[0]
 
     def forward(self, x: torch.Tensor, hand_valid_mask: Optional[torch.Tensor] = None,
                 input_length: Optional[torch.tensor] = None) -> Dict[str, torch.Tensor]:
         # x: (B,T,36) -> split into pose/hand/extra
         B,T,J,C=x.shape
-        pose = self._gather_slices(x, self.pose_idx).reshape(B,T,-1) # (B,T,pose_dim)
-        l_hand = self._gather_slices(x, self.dir_l_idx).reshape(B,T,-1)  # (B,T,hand_dim)
-        r_hand = self._gather_slices(x, self.dir_r_idx).reshape(B,T,-1)  # (B,T,hand_dim)
+        pose = x[:,:,:8]  # (B,T,pose_dim)
+        pose=pose.reshape(B,T,-1)
+        l_hand =x[:,:,8:29]  # (B,T,hand_dim)
+        l_hand=l_hand.reshape(B,T,-1)
+        r_hand =x[:,:,29:50]  # (B,T,hand_dim)
+        r_hand=r_hand.reshape(B,T,-1)
         padding_mask=create_mask(input_length,max_len=x.shape[1]).bool() if input_length is not None else None
         #attn_mask=create_slide_window_mask(x.shape[1],window_size=7,device=x.device) if input_length is not None else None
         attn_mask=None
-        # extra = x[..., -self.extra_dim:]              # (B,T,extra_dim)
+
         h_pose=self.pose_encoder(pose,padding_mask=padding_mask,attn_mask=attn_mask)  # (B,K_p,pose_d_model)
         h_l_hand=self.left_encoder(l_hand,padding_mask=padding_mask,attn_mask=attn_mask)  # (B,K_l,hand_d_model)
         h_r_hand=self.right_encoder(r_hand,padding_mask=padding_mask,attn_mask=attn_mask)  #(B,K_r,hand_d_model)
@@ -1489,18 +1412,15 @@ class VQVAETransformer1DAggregated(nn.Module):
         x_hat_pose = self.pose_decoder(z_q, T_out=pose.shape[1],padding_mask=padding_mask,attn_mask=attn_mask)  # (B,T,pose_dim)
         x_hat_l_hand = self.left_decoder(z_q, T_out=l_hand.shape[1],padding_mask=padding_mask,attn_mask=attn_mask)  # (B,T,hand_dim)
         x_hat_r_hand = self.right_decoder(z_q, T_out=r_hand.shape[1],padding_mask=padding_mask,attn_mask=attn_mask)  # (B,T,hand_dim)
-        x_hat = torch.zeros_like(x)
-        # scatter back to original positions
-        #loss
-        pose_recon_loss=F.mse_loss(x_hat_pose,pose,reduction='none')
-        right_recon_loss=F.mse_loss(x_hat_l_hand,l_hand,reduction='none')
-        left_recon_loss=F.mse_loss(x_hat_r_hand,r_hand,reduction='none')
-        #if hand_valid_mask is not None:
-        #    right_recon_loss=right_recon_loss*hand_valid_mask[...,0:1]
-        #    left_recon_loss=left_recon_loss*hand_valid_mask[...,1:2]
+
+        pose_recon_loss=F.mse_loss(x_hat_pose,pose,reduction='none').mean(dim=-1) #(B,T)
+        right_recon_loss=F.mse_loss(x_hat_r_hand,r_hand,reduction='none').mean(dim=-1) #(B,T)
+        left_recon_loss=F.mse_loss(x_hat_l_hand,l_hand,reduction='none').mean(dim=-1) #(B,T)
+
         hand_recon_loss=right_recon_loss+left_recon_loss
         if input_length is not None:
-            mask=create_mask(input_length,max_len=x.shape[1]).unsqueeze(-1) #(B,T,1)
+            mask=create_mask(input_length,max_len=x.shape[1]) #(B,T,1)
+            mask=~(mask.bool())
             pose_recon_loss=(pose_recon_loss*mask).sum()/mask.sum()
             hand_recon_loss=(hand_recon_loss*mask).sum()/mask.sum()
         else:
@@ -1509,10 +1429,12 @@ class VQVAETransformer1DAggregated(nn.Module):
         recon_loss=pose_recon_loss+hand_recon_loss
         vq_loss=q['loss_vq']
         total_loss=self.loss_w.recon_pos*recon_loss+self.loss_w.vq*vq_loss
+        x_hat=torch.cat([x_hat_pose,x_hat_l_hand,x_hat_r_hand],dim=-1) #(B,T,36)
+        x_hat=x_hat.view(B,T,J,C)
         return {
             "loss_total": total_loss,
             "pose_recon_loss": recon_loss.detach(),  # for simplicity, not separating pose/hand recon loss here since they are combined in the aggregate
-            "hand_recon_loss": torch.tensor(0.0, device=x.device),  # placeholder since recon_loss is combined
+            "hand_recon_loss": hand_recon_loss,  # placeholder since recon_loss is combined
             "extra_recon_loss": torch.tensor(0.0, device=x.device),  # placeholder since extra is not used
             "pose_vq_loss": vq_loss.detach(),  # for simplicity, not separating
             "hand_vq_loss": torch.tensor(0.0, device=x.device),  # placeholder since vq_loss is combined
@@ -1523,6 +1445,7 @@ class VQVAETransformer1DAggregated(nn.Module):
             "left_x_hat": x_hat_l_hand,
             "right_x_hat": x_hat_r_hand,
             "extra_x_hat": torch.tensor(0.0, device=x.device),  #
+            "x_hat": x_hat,
             "perplexity": q["perplexity"],
             'z_e': z_e.detach(),
             'dist': q.get('dist', torch.tensor(0.0, device=x.device)),

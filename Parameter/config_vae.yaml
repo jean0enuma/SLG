@@ -3,8 +3,8 @@ work_dir: "/home/caffe/work/SLG/"
 device: "cuda:0"
 dataset_parameters:
   use_phoenix: False
-  use_phoenixT: True
-  use_how2sign: False
+  use_phoenixT: False
+  use_how2sign: True
   use_csl-daily: False
   is_processed: False
 lr_parameters:
@@ -30,10 +30,10 @@ loss_parameters:
     vq_weight: 1.0
     vel_weight: 0.00
 model:
-  kl_weight: 0.1
+  kl_weight: 1.0
   pose_dim: 100
   text_cond: False
-  text_encoder_name: "dbmdz/bert-base-german-uncased"
+  text_encoder_name: "google-bert/bert-base-multilingual-uncased"
   body_weight: 0.3
   hand_weight: 0.7
   recon_weight: 1.0

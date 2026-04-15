@@ -16,6 +16,7 @@ import shutil
 from models.module.EMA import EMA
 import matplotlib.pyplot as plt
 
+from loader.coordinate_preprocess import apply_savgol_filter,average_movint
 
 
 
@@ -111,8 +112,7 @@ class VQVAETrainer(BaseTrainer):
         model.train()
         total_loss = []
         total_recon_pose_loss=[]
-        total_recon_dir_loss=[]
-        total_vel_loss=[]
+        total_recon_hand_loss=[]
         total_vq_loss=[]
         total_perplexity=[]
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
@@ -130,8 +130,7 @@ class VQVAETrainer(BaseTrainer):
 
             loss = loss_dict['loss_total']
             recon_pose_loss=loss_dict['loss_recon_pos']
-            recon_dir_loss_list=loss_dict.get('loss_recon_dir',torch.tensor(0.0))
-            loss_vel=loss_dict.get('loss_vel',torch.tensor(0.0))
+            recon_hand_loss_list=loss_dict.get('loss_recon_hand',torch.tensor(0.0))
             loss_vq=loss_dict['loss_vq']
             perplexity=loss_dict['perplexity']
             scaler.scale(loss).backward()
@@ -145,8 +144,7 @@ class VQVAETrainer(BaseTrainer):
                 ema.update()
             total_loss.append(loss.item())
             total_recon_pose_loss.append(recon_pose_loss.item())
-            total_recon_dir_loss.append(recon_dir_loss_list.item())
-            total_vel_loss.append(loss_vel.item())
+            total_recon_hand_loss.append(recon_hand_loss_list.item())
             total_vq_loss.append(loss_vq.item())
             total_perplexity.append(perplexity.item())
             if ((self.iter + 1) % self.replacement_num_batches == 0):
@@ -154,8 +152,7 @@ class VQVAETrainer(BaseTrainer):
             if batch_idx % 100== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_pose_loss)}")
-                tqdm.write(f"Avg Recon Dir Loss: {np.mean(total_recon_dir_loss)}")
-                tqdm.write(f"Avg Vel Loss: {np.mean(total_vel_loss)}")
+                tqdm.write(f"Avg Recon Dir Loss: {np.mean(total_recon_hand_loss)}")
                 tqdm.write(f"Avg VQ Loss: {np.mean(total_vq_loss)}")
                 tqdm.write(f"Avg Perplexity: {np.mean(total_perplexity)}")
 
@@ -166,15 +163,13 @@ class VQVAETrainer(BaseTrainer):
 
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_pose_avg_loss=np.mean(total_recon_pose_loss).astype(np.float32)
-        recon_dir_avg_loss=np.mean(total_recon_dir_loss).astype(np.float32)
-        vel_avg_loss=np.mean(total_vel_loss).astype(np.float32)
+        recon_hand_avg_loss=np.mean(total_recon_hand_loss).astype(np.float32)
         vq_avg_loss=np.mean(total_vq_loss).astype(np.float32)
         perplexity_avg=np.mean(total_perplexity).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_pose_loss": recon_pose_avg_loss,
-            "recon_dir_loss": recon_dir_avg_loss,
-            "vel_loss": vel_avg_loss,
+            "recon_hand_loss": recon_hand_avg_loss,
             "vq_loss": vq_avg_loss,
             "perplexity": perplexity_avg
         }
@@ -182,8 +177,7 @@ class VQVAETrainer(BaseTrainer):
         model.eval()
         total_loss = []
         total_recon_pose_loss=[]
-        total_recon_dir_loss=[]
-        total_vel_loss=[]
+        total_recon_hand_loss=[]
         total_vq_loss=[]
         total_perplexity=[]
         with torch.no_grad():
@@ -198,27 +192,23 @@ class VQVAETrainer(BaseTrainer):
                     loss_dict = self.compute_loss(batch, model, criterion)
                 loss = loss_dict['loss_total']
                 recon_pose_loss = loss_dict['loss_recon_pos']
-                recon_dir_loss_list = loss_dict.get('loss_recon_dir', torch.tensor(0.0))
-                loss_vel = loss_dict.get('loss_vel', torch.tensor(0.0))
+                recon_hand_loss_list = loss_dict.get('loss_recon_hand', torch.tensor(0.0))
                 loss_vq = loss_dict['loss_vq']
                 perplexity = loss_dict['perplexity']
                 total_loss.append(loss.item())
                 total_recon_pose_loss.append(recon_pose_loss.item())
-                total_recon_dir_loss.append(recon_dir_loss_list.item())
-                total_vel_loss.append(loss_vel.item())
+                total_recon_hand_loss.append(recon_hand_loss_list.item())
                 total_vq_loss.append(loss_vq.item())
                 total_perplexity.append(perplexity.item())
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_pose_avg_loss=np.mean(total_recon_pose_loss).astype(np.float32)
-        recon_dir_avg_loss=np.mean(total_recon_dir_loss).astype(np.float32)
-        vel_avg_loss=np.mean(total_vel_loss).astype(np.float32)
+        recon_hand_avg_loss=np.mean(total_recon_hand_loss).astype(np.float32)
         vq_avg_loss=np.mean(total_vq_loss).astype(np.float32)
         perplexity_avg=np.mean(total_perplexity).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_pose_loss": recon_pose_avg_loss,
-            "recon_dir_loss": recon_dir_avg_loss,
-            "vel_loss": vel_avg_loss,
+            "recon_hand_loss": recon_hand_avg_loss,
             "vq_loss": vq_avg_loss,
             "perplexity": perplexity_avg
         }
@@ -228,20 +218,17 @@ class VQVAETrainer(BaseTrainer):
         num_epochs=self.config["lr_parameters"]['epoch']
         train_loss_list=self.config['train_loss_list'] if 'train_loss_list' in self.config.keys() else []
         train_recon_pose_loss_list=self.config['train_recon_pose_loss_list'] if 'train_recon_pose_loss_list' in self.config.keys() else []
-        train_recon_dir_loss_list=self.config['train_recon_dir_loss_list'] if 'train_recon_dir_loss_list' in self.config.keys() else []
-        train_vel_loss_list=self.config['train_vel_loss_list'] if 'train_vel_loss_list' in self.config.keys() else []
+        train_recon_hand_loss_list=self.config['train_recon_hand_loss_list'] if 'train_recon_hand_loss_list' in self.config.keys() else []
         train_vq_loss_list=self.config['train_vq_loss_list'] if 'train_vq_loss_list' in self.config.keys() else []
         train_perplexity_list=self.config['train_perplexity_list'] if 'train_perplexity_list' in self.config.keys() else []
         eval_loss_list=self.config['eval_loss_list'] if 'eval_loss_list' in self.config.keys() else []
         eval_recon_pose_loss_list=self.config['eval_recon_pose_loss_list'] if 'eval_pose_loss_list' in self.config.keys() else []
-        eval_recon_dir_loss_list=self.config['eval_recon_dir_loss_list'] if 'eval_recon_dir_loss_list' in self.config.keys() else []
-        eval_recon_vel_loss_list=self.config['eval_recon_vel_loss_list'] if 'eval_recon_vel_loss_list' in self.config.keys() else []
+        eval_recon_hand_loss_list=self.config['eval_recon_hand_loss_list'] if 'eval_recon_hand_loss_list' in self.config.keys() else []
         eval_recon_vq_loss_list=self.config['eval_recon_vq_loss_list'] if 'eval_recon_vq_loss_list' in self.config.keys() else []
         eval_recon_perplexity_list=self.config['eval_recon_perplexity_list'] if 'eval_recon_perplexity_list' in self.config.keys() else []
         test_loss_list=self.config['test_loss_list'] if 'test_loss_list' in self.config.keys() else []
         test_recon_pose_loss_list=self.config['test_recon_pose_loss_list'] if 'test_recon_pose_loss_list' in self.config.keys() else []
-        test_recon_dir_loss_list=self.config['test_recon_dir_loss_list'] if 'test_recon_dir_loss_list' in self.config.keys() else []
-        test_recon_vel_loss_list=self.config['test_recon_vel_loss_list'] if 'test_recon_vel_loss_list' in self.config.keys() else []
+        test_recon_hand_loss_list=self.config['test_recon_hand_loss_list'] if 'test_recon_hand_loss_list' in self.config.keys() else []
         test_recon_vq_loss_list=self.config['test_recon_vq_loss_list'] if 'test_recon_vq_loss_list' in self.config.keys() else []
         test_recon_perplexity_list=self.config['test_recon_perplexity_list'] if 'test_recon_perplexity_list' in self.config.keys() else []
         save_path=self.config["save_path"]
@@ -261,41 +248,36 @@ class VQVAETrainer(BaseTrainer):
             test_loss = self.eval(model, criterion, test_loader, device)
             train_loss_list.append(train_loss['loss'])
             train_recon_pose_loss_list.append(train_loss['recon_pose_loss'])
-            train_recon_dir_loss_list.append(train_loss['recon_dir_loss'])
-            train_vel_loss_list.append(train_loss['vel_loss'])
+            train_recon_hand_loss_list.append(train_loss['recon_hand_loss'])
             train_vq_loss_list.append(train_loss['vq_loss'])
             train_perplexity_list.append(train_loss['perplexity'])
             eval_loss_list.append(eval_loss['loss'])
             eval_recon_pose_loss_list.append(eval_loss['recon_pose_loss'])
-            eval_recon_dir_loss_list.append(eval_loss['recon_dir_loss'])
-            eval_recon_vel_loss_list.append(eval_loss['vel_loss'])
+            eval_recon_hand_loss_list.append(eval_loss['recon_hand_loss'])
             eval_recon_vq_loss_list.append(eval_loss['vq_loss'])
             eval_recon_perplexity_list.append(eval_loss['perplexity'])
             test_loss_list.append(test_loss['loss'])
             test_recon_pose_loss_list.append(test_loss['recon_pose_loss'])
-            test_recon_dir_loss_list.append(test_loss['recon_dir_loss'])
-            test_recon_vel_loss_list.append(test_loss['vel_loss'])
+            test_recon_hand_loss_list.append(test_loss['recon_hand_loss'])
             test_recon_vq_loss_list.append(test_loss['vq_loss'])
             test_recon_perplexity_list.append(test_loss['perplexity'])
             print(f"Epoch {epoch+1}/{num_epochs})")
-            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Pose Loss: {train_loss['recon_pose_loss']:.4f}, Recon Dir Loss: {train_loss['recon_dir_loss']:.4f}, Vel Loss: {train_loss['vel_loss']:.4f}, VQ Loss: {train_loss['vq_loss']:.4f}, Perplexity: {train_loss['perplexity']:.4f}")
-            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Pose Loss: {eval_loss['recon_pose_loss']:.4f}, Recon Dir Loss: {eval_loss['recon_dir_loss']:.4f}, Vel Loss: {eval_loss['vel_loss']:.4f}, VQ Loss: {eval_loss['vq_loss']:.4f}, Perplexity: {eval_loss['perplexity']:.4f}")
-            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Pose Loss: {test_loss['recon_pose_loss']:.4f}, Recon Dir Loss: {test_loss['recon_dir_loss']:.4f}, Vel Loss: {test_loss['vel_loss']:.4f}, VQ Loss: {test_loss['vq_loss']:.4f}, Perplexity: {test_loss['perplexity']:.4f}")
+            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Pose Loss: {train_loss['recon_pose_loss']:.4f}, Recon Hand Loss: {train_loss['recon_hand_loss']:.4f},  VQ Loss: {train_loss['vq_loss']:.4f}, Perplexity: {train_loss['perplexity']:.4f}")
+            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Pose Loss: {eval_loss['recon_pose_loss']:.4f}, Recon Hand Loss: {eval_loss['recon_hand_loss']:.4f},  VQ Loss: {eval_loss['vq_loss']:.4f}, Perplexity: {eval_loss['perplexity']:.4f}")
+            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Pose Loss: {test_loss['recon_pose_loss']:.4f}, Recon Hand Loss: {test_loss['recon_hand_loss']:.4f}, VQ Loss: {test_loss['vq_loss']:.4f}, Perplexity: {test_loss['perplexity']:.4f}")
 
             #eval_lossとtest_lossのkeyを変更
             eval_loss = {
                 "eval_loss": eval_loss['loss'],
                 "eval_recon_pose_loss": eval_loss['recon_pose_loss'],
-                "eval_recon_dir_loss": eval_loss['recon_dir_loss'],
-                "eval_vel_loss": eval_loss['vel_loss'],
+                "eval_recon_hand_loss": eval_loss['recon_hand_loss'],
                 "eval_vq_loss": eval_loss['vq_loss'],
                 "eval_perplexity": eval_loss['perplexity']
             }
             test_loss = {
                 "test_loss": test_loss['loss'],
                 "test_recon_pose_loss": test_loss['recon_pose_loss'],
-                "test_recon_dir_loss": test_loss['recon_dir_loss'],
-                "test_vel_loss": test_loss['vel_loss'],
+                "test_recon_hand_loss": test_loss['recon_hand_loss'],
                 "test_vq_loss": test_loss['vq_loss'],
                 "test_perplexity": test_loss['perplexity']
             }
@@ -310,20 +292,17 @@ class VQVAETrainer(BaseTrainer):
                 "optimizer_state_dict": optimizer.state_dict(),
                 "train_loss_list": train_loss_list,
                 "train_recon_pose_loss_list": train_recon_pose_loss_list,
-                "train_recon_dir_loss_list": train_recon_dir_loss_list,
-                "train_vel_loss_list": train_vel_loss_list,
+                "train_recon_hand_loss_list": train_recon_hand_loss_list,
                 "train_vq_loss_list": train_vq_loss_list,
                 "train_perplexity_list": train_perplexity_list,
                 "eval_loss_list": eval_loss_list,
                 "eval_recon_pose_loss_list": eval_recon_pose_loss_list,
-                "eval_recon_dir_loss_list": eval_recon_dir_loss_list,
-                "eval_recon_vel_loss_list": eval_recon_vel_loss_list,
+                "eval_recon_hand_loss_list": eval_recon_hand_loss_list,
                 "eval_recon_vq_loss_list": eval_recon_vq_loss_list,
                 "eval_recon_perplexity_list": eval_recon_perplexity_list,
                 "test_loss_list": test_loss_list,
                 "test_recon_pose_loss_list": test_recon_pose_loss_list,
-                "test_recon_dir_loss_list": test_recon_dir_loss_list,
-                "test_recon_vel_loss_list": test_recon_vel_loss_list,
+                "test_recon_hand_loss_list": test_recon_hand_loss_list,
                 "test_recon_vq_loss_list": test_recon_vq_loss_list,
                 "test_recon_perplexity_list": test_recon_perplexity_list,
                 'random': random.getstate(),
@@ -337,21 +316,17 @@ class VQVAETrainer(BaseTrainer):
                     "epoch": list(range(epoch + 1)),
                     "train_loss": train_loss_list,
                     "train_recon_pose_loss": train_recon_pose_loss_list,
-                    "train_recon_dir_loss": train_recon_dir_loss_list,
-                    "train_vel_loss": train_vel_loss_list,
+                    "train_recon_hand_loss": train_recon_hand_loss_list,
                     "train_vq_loss": train_vq_loss_list,
                     "train_perplexity": train_perplexity_list,
                     "eval_loss": eval_loss_list,
                     "eval_recon_pose_loss": eval_recon_pose_loss_list,
-                    "eval_recon_dir_loss": eval_recon_dir_loss_list,
-                    "eval_recon_vel_loss": eval_recon_vel_loss_list,
+                    "eval_recon_hand_loss": eval_recon_hand_loss_list,
                     "eval_recon_vq_loss": eval_recon_vq_loss_list,
                     "eval_recon_perplexity_loss": eval_recon_perplexity_list,
                     "test_loss": test_loss_list,
                     "test_recon_pose_loss": test_recon_pose_loss_list,
-                    "test_recon_dir_loss": test_recon_dir_loss_list,
-                    "test_recon_vel_loss": test_recon_vel_loss_list,
-                    "test_recon_vq_loss": test_recon_vq_loss_list,
+                    "test_recon_hand_loss": test_recon_hand_loss_list,
                     "test_recon_perplexity_loss": test_recon_perplexity_list,
                 }
             )
@@ -373,7 +348,7 @@ class VQVAETrainer(BaseTrainer):
         )
 
         return
-    def visualize(self,model,loader,device):
+    def visualize(self,model,dataset,device):
         # 可視化用のディレクトリを作成
         #予測したポーズとGTポーズをそれぞれ256x256の白画像にプロットする
         if os.path.exists(f"{self.config['save_path']}/visualize"):
@@ -385,48 +360,73 @@ class VQVAETrainer(BaseTrainer):
 
         model.eval()
         prev_hist=None
+        dataset.set_return_length()
+
         with torch.no_grad():
-            for batch in tqdm(loader, total=len(loader.dataset) // loader.batch_size):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path = batch
-                padded_cod_data = padded_cod_data.float().to(device)
-                padded_mask = padded_mask.to(device)
-                input_length_tensor = input_length_tensor.to(device)
-                id_list = id_list.to(device)
+            for batch in tqdm(dataset, total=len(dataset)):
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length = batch
+                padded_cod_data = padded_cod_data.float().unsqueeze(0).to(device)
+                padded_mask = padded_mask.unsqueeze(0).to(device)
+                input_length_tensor = input_length_tensor.unsqueeze(0).to(device)
+                id_list = torch.tensor(id_list).to(device)
                 batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
-                outputs = model.code_usage_histogram(padded_cod_data,prev_hist=prev_hist,hand_valid_mask=padded_mask,input_length=input_length_tensor)
-                prev_hist=outputs
-                pred_poses=outputs['predicted_poses'].cpu()
-                B,T,D=pred_poses.shape
-                pred_poses=pred_poses.view(B,T,D//3,3).numpy()
-                gt_poses=padded_cod_data[0].cpu()
-                gt_poses=gt_poses.permute(0,2,3,1).numpy()
-                input_lengths=input_length_tensor.cpu().numpy()
-                id_list=id_list.cpu().numpy()
-                for i in range(len(id_list)):
-                    os.makedirs(f"{self.config['save_path']}/visualize/GT/{data_path[i].split('/')[-1]}",exist_ok=True)
-                    os.makedirs(f"{self.config['save_path']}/visualize/Pred/{data_path[i].split('/')[-1]}",exist_ok=True)
-                    #opencvを使って白画像にposeをプロット
-                    for t in range(input_lengths[i]):
-                        gt_img = np.ones((256, 256, 3), dtype=np.uint8) * 255
-                        pred_img = np.ones((256, 256, 3), dtype=np.uint8) * 255
-                        for f in range(D//3):
-                            x_gt=int(gt_poses[i][t][f][0]*256)
-                            y_gt=int(gt_poses[i][t][f][1]*256)
-                            x_pred=int(pred_poses[i][t][f][0]*256)
-                            y_pred=int(pred_poses[i][t][f][1]*256)
-                            cv2.circle(gt_img,(x_gt,y_gt),3,(0,0,255),-1)
-                            try:
-                                cv2.circle(pred_img,(x_pred,y_pred),3,(255,0,0),-1)
-                            except:
-                                cv2.circle(pred_img, (0, 0), 3, (255, 0, 0), -1)
+                outputs = model(padded_cod_data, hand_valid_mask=padded_mask, input_length=input_length_tensor)
+                #prev_hist=model.code_usage_histogram_update(padded_cod_data, hand_valid_mask=padded_mask, input_length=input_length_tensor)
 
-                        #if stop_logits[i] < t:
-                        cv2.imwrite(f"{self.config['save_path']}/visualize/Pred/{data_path[i].split('/')[-1]}/{t:03}.png", pred_img)
-                        #if input_lengths[i]>t:
-                        cv2.imwrite(f"{self.config['save_path']}/visualize/GT/{data_path[i].split('/')[-1]}/{t:03}.png", gt_img)
+                T,J,C=padded_cod_data.shape[1],padded_cod_data.shape[2],padded_cod_data.shape[3]
+                # outputを元のスケールに戻す
+                output = outputs['x_hat'].reshape(T, J, C)
+                output=output.cpu().numpy()
+                output[:, :8] *= shoulder_length.cpu().numpy()[:, None, None]
+                output[:, :8] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                output[:, 8:29] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                output[:, 8:29] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                output[:, 29:] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                output[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                # output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
+                output = np.where(output == 0, np.nan, output)
+                output = apply_savgol_filter(output.transpose(1, 0, 2), window_size=7, poly_order=2).transpose(1, 0, 2)
+                output = np.where(np.isnan(output), 0, output)
+                # output[:,8:29]で，全てが0.01以下のときは，手が検出されなかったとして，0にする
+                hand_mask = (np.max(np.abs(output[:, 8:29]), axis=2) < 0.01)
+                output[:, 8:29][hand_mask] = 0.0
+                # output[:,29:]も同様
+                hand_mask = (np.max(np.abs(output[:, 29:]), axis=2) < 0.01)
+                output[:, 29:][hand_mask] = 0.0
+
+                padded_cod_data = padded_cod_data.squeeze(0).cpu().numpy()
+                padded_cod_data = padded_cod_data.reshape(T, J, C)
+                padded_cod_data[:, :8] *= shoulder_length.cpu().numpy()[:, None, None]
+                padded_cod_data[:, :8] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                padded_cod_data[:, 8:29] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                padded_cod_data[:, 8:29] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                padded_cod_data[:, 29:] *= shoulder_length.cpu().numpy()[:, None, None] / 2
+                padded_cod_data[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                # outputの点群を動画として保存
+                # 同時に，元の動画も保存
+                video_size = (256, 256)
+                v_writer = cv2.VideoWriter(
+                    f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4",
+                    cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)
+                v_writer_gt = cv2.VideoWriter(
+                    f"{self.config['save_path']}/visualize/GT/gt_{os.path.basename(data_path)}.mp4",
+                    cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)
+                for t in range(T):
+                    base_frame = np.ones((video_size[0], video_size[1], 3), dtype=np.uint8) * 255
+                    base_frame_gt = np.ones((video_size[0], video_size[1], 3), dtype=np.uint8) * 255
+                    for j in range(J):
+                        x = int(output[t, j, 0] * video_size[0])
+                        y = int(output[t, j, 1] * video_size[1])
+                        x_gt = int(padded_cod_data[t, j, 0] * video_size[0])
+                        y_gt = int(padded_cod_data[t, j, 1] * video_size[1])
+                        pd_frame = cv2.circle(base_frame, (x, y), radius=3, color=(0, 0, 255), thickness=-1)
+                        gt_frame = cv2.circle(base_frame_gt, (x_gt, y_gt), radius=3, color=(0, 255, 0), thickness=-1)
+                    v_writer.write(pd_frame)
+                    v_writer_gt.write(gt_frame)
+                v_writer.release()
+                v_writer_gt.release()
             if prev_hist is not None:
-                save_code_usage_histogram(prev_hist,f"{self.config['save_path']}/visualize/code_usage_histogram.png",top_k=50,title="Code Usage Histogram")
-                save_code_usage_probability(prev_hist,f"{self.config['save_path']}/visualize/code_usage_probability.png",top_k=50,title="Code Usage Probability")
-
-        return
+                save_code_usage_histogram(prev_hist, f"{self.config['save_path']}/visualize/code_usage_histogram.png", top_k=50, title=f"Code Usage Histogram")
+                save_code_usage_probability(prev_hist, f"{self.config['save_path']}/visualize/code_usage_probability.png", top_k=50, title=f"Code Usage Probability ")
+            return
 

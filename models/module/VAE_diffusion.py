@@ -2,6 +2,8 @@ import math
 import torch
 from torch import nn
 import torch.nn.functional as F
+from models.module.UnetDiffusionDenoiser import UNetDiffusionDenoiser
+from models.module.TransformerUnetDiffusionDenoiser import TransformerUNetDenoiser
 
 # 例:
 from models.module.CLIP_Skeleton import SkeletonTextCLIP
@@ -53,9 +55,11 @@ class DenoiserBlock(nn.Module):
             nn.Linear(d_model * 4, d_model)
         )
 
-        self.norm1 = AdaLN(d_model,cond_dim,scale_shft_gate=adaln_apply)
+        #self.norm1 = AdaLN(d_model,cond_dim,scale_shft_gate=adaln_apply)
+        self.norm1=nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
-        self.norm3 = AdaLN(d_model,cond_dim,scale_shft_gate=adaln_apply)
+        #self.norm3 = AdaLN(d_model,cond_dim,scale_shft_gate=adaln_apply)
+        self.norm3=nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
     def forward(
@@ -68,7 +72,8 @@ class DenoiserBlock(nn.Module):
         src_mask=None,
     ):
         res = x
-        x,gate=self.norm1.forward(x,time_embed)
+        gate=None
+        x=self.norm1.forward(x) if isinstance(self.norm1, AdaLN) else self.norm1(x)
         x = self.dropout(
             self.self_attn(
                 x,x,x,
@@ -89,7 +94,7 @@ class DenoiserBlock(nn.Module):
         )
         x=x+res
         res=x
-        x,gate=self.norm3.forward(x,time_embed)
+        x,gate=self.norm3.forward(x) if isinstance(self.norm3, AdaLN) else (self.norm3(x), None)
         x = self.dropout(self.ffn(x))
         x=res+gate*x if gate is not None else x+res
         return x
@@ -115,12 +120,12 @@ class DiffusionDenoiser(nn.Module):
         self.time_mlp = nn.Sequential(
             SinusoidalTimeEmbedding(time_dim),
             nn.Linear(time_dim, time_dim * 4),
-            nn.SiLU(),
-            nn.Linear(time_dim * 4, time_dim),
+            nn.GELU(),
+            nn.Linear(time_dim * 4, text_cond_dim),
         )
 
         self.blocks = nn.ModuleList([
-            DenoiserBlock(model_dim,time_dim, nhead, dropout=dropout,adaln_apply=(True,True,True))
+            DenoiserBlock(model_dim,text_cond_dim, nhead, dropout=dropout,adaln_apply=(False,False,False))
             for _ in range(num_layers)
         ])
 
@@ -146,9 +151,10 @@ class DiffusionDenoiser(nn.Module):
     ):
         x = self.in_proj(x_t)
         x = x + self.position_embedding(x.size(1), x.size(2), x.device)
-        #x = x + self.time_mlp(t).unsqueeze(1)
         time_embed=self.time_mlp(t)
-        text = self.text_proj(text_tokens)
+        text = self.text_proj(text_tokens+time_embed.unsqueeze(1))
+        #x = x + self.time_mlp(t).unsqueeze(1)
+
 
         for block in self.blocks:
             x = block(
@@ -209,14 +215,17 @@ class DiffusionModel(nn.Module):
         # 学習可能 null token
         self.null_text = nn.Parameter(torch.randn(1, 1, text_cond_dim) * 0.02)
 
-        self.denoiser = DiffusionDenoiser(
+        self.denoiser = TransformerUNetDenoiser(
             latent_dim=self.z_dim,
             model_dim=self.model_dim,
             time_dim=self.time_dim,
             nhead=self.nhead,
-            num_layers=self.num_layers,
+            #num_layers=self.num_layers,
             text_cond_dim=text_cond_dim,
             dropout=self.dropout,
+            num_levels=diff_cfg.get("num_levels", 3),
+            depth_per_level=diff_cfg.get("depth_per_level", 2),
+            use_text_at_levels=diff_cfg.get("use_text_at_levels", [True, True, True]),
         )
 
         betas = self.cosine_beta_schedule(self.num_train_steps)
@@ -259,14 +268,23 @@ class DiffusionModel(nn.Module):
         sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
         sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
         return (x_t - sqrt_om * eps) / (sqrt_ac + 1e-8)
-    def predict_v0_from_eps(self,x_t,t,eps):
-        sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
-        sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
-        return sqrt_ac * eps + sqrt_om * x_t
-    def predict_x0_from_v(self,x_t,t,v):
+    def compute_v_target(self, x0, t, eps):
+        """v-predictionのターゲット: v = sqrt(ᾱ)*ε - sqrt(1-ᾱ)*x0"""
+        sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x0.shape)
+        sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x0.shape)
+        return sqrt_ac * eps - sqrt_om * x0
+
+    def predict_x0_from_v(self, x_t, t, v):
+        """v-predictionからx0を復元: x0 = sqrt(ᾱ)*x_t - sqrt(1-ᾱ)*v"""
         sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
         sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
         return sqrt_ac * x_t - sqrt_om * v
+
+    def predict_eps_from_v(self, x_t, t, v):
+        """v-predictionからεを復元: ε = sqrt(ᾱ)*v + sqrt(1-ᾱ)*x_t"""
+        sqrt_ac = self._extract(self.sqrt_alphas_cumprod, t, x_t.shape)
+        sqrt_om = self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
+        return sqrt_ac * v + sqrt_om * x_t
     def encode_text_condition(self, text_inputs):
         tx_out = self.clip_model.text_encoder(
             input_ids=text_inputs["input_ids"],
@@ -379,7 +397,7 @@ class DiffusionModel(nn.Module):
                     text_tokens, text_padding_mask
                 )
 
-        eps_pred = self.denoise_once(
+        pred = self.denoise_once(
             x_t=x_t,
             t=t,
             text_tokens=text_tokens,
@@ -387,61 +405,18 @@ class DiffusionModel(nn.Module):
             x_padding_mask=padding_mask,
             src_mask=src_mask,
         )
-        if self.pred_type:
-            v_pred=self.predict_v0_from_eps(x_t,t,eps_pred)
-            return {
-                "pred": v_pred,
-                "target": self.predict_v0_from_eps(x_t,t,noise),
-                "t": t,
-                "x_t": x_t,
-            }
+        if self.pred_type == "v":
+            target = self.compute_v_target(z0, t, noise)
+        else:  # "eps"
+            target = noise
         return {
-            "pred": eps_pred,
-            "target": noise,
+            "pred": pred,
+            "target": target,
             "t": t,
             "x_t": x_t,
         }
 
-    def forward_nocond(
-            self,
-            z0,
-            padding_mask=None,
-            src_mask=None,
-    ):
-        """
-        条件なし版 forward
-        z0: (B,T,z_dim)
 
-        学習可能 null text のみを条件として使ってノイズ予測を行う
-        """
-        B = z0.size(0)
-        device = z0.device
-
-        t = torch.randint(0, self.num_train_steps, (B,), device=device, dtype=torch.long)
-        noise = torch.randn_like(z0)
-        x_t = self.q_sample(z0, t, noise=noise)
-
-        null_text_tokens, null_text_padding = self.get_null_text_tokens(
-            batch_size=B,
-            seq_len=self.config["diffusion_config"].get("null_text_seq_len", 32),
-            device=device
-        )
-
-        eps_pred = self.denoise_once(
-            x_t=x_t,
-            t=t,
-            text_tokens=null_text_tokens,
-            text_padding_mask=null_text_padding,
-            x_padding_mask=padding_mask,
-            src_mask=src_mask,
-        )
-
-        return {
-            "eps_pred": eps_pred,
-            "eps_target": noise,
-            "t": t,
-            "x_t": x_t,
-        }
     def predict_eps_cfg(
         self,
         x_t,
@@ -506,23 +481,38 @@ class DiffusionModel(nn.Module):
             # unconditional: null tokensのみ使用
             return null_tokens, null_mask, null_tokens, null_mask, False, 1.0
 
-    def _predict_eps(self, x_t, t, text_tokens, text_mask, null_tokens, null_mask,
-                     use_cfg, cfg_scale, padding_mask, src_mask):
-        """CFGありなしでノイズを予測する。"""
-        eps_uncond = self.denoise_once(
+    def _predict_and_get_x0_eps(self, x_t, t, text_tokens, text_mask, null_tokens, null_mask,
+                                use_cfg, cfg_scale, padding_mask, src_mask):
+        """
+        denoiserの出力からx0とepsを返す。
+        pred_type="v" → vからx0/εを変換
+        pred_type="eps" → εからx0を変換
+        CFGも考慮。
+        戻り値: (x0_pred, eps_pred)
+        """
+        pred_uncond = self.denoise_once(
             x_t=x_t, t=t,
             text_tokens=null_tokens, text_padding_mask=null_mask,
             x_padding_mask=padding_mask, src_mask=src_mask,
         )
-        if not use_cfg:
-            return eps_uncond
+        if use_cfg:
+            pred_cond = self.denoise_once(
+                x_t=x_t, t=t,
+                text_tokens=text_tokens, text_padding_mask=text_mask,
+                x_padding_mask=padding_mask, src_mask=src_mask,
+            )
+            pred = pred_uncond + cfg_scale * (pred_cond - pred_uncond)
+        else:
+            pred = pred_uncond
 
-        eps_cond = self.denoise_once(
-            x_t=x_t, t=t,
-            text_tokens=text_tokens, text_padding_mask=text_mask,
-            x_padding_mask=padding_mask, src_mask=src_mask,
-        )
-        return eps_uncond + cfg_scale * (eps_cond - eps_uncond)
+        if self.pred_type == "v":
+            x0_pred = self.predict_x0_from_v(x_t, t, pred)
+            eps_pred = self.predict_eps_from_v(x_t, t, pred)
+        else:  # "eps"
+            x0_pred = self.predict_x0_from_eps(x_t, t, pred)
+            eps_pred = pred
+
+        return x0_pred, eps_pred
 
     @torch.no_grad()
     def ddim_sample(
@@ -556,13 +546,12 @@ class DiffusionModel(nn.Module):
         for i, t_now in enumerate(timesteps):
             t = torch.full((batch_size,), t_now, device=device, dtype=torch.long)
 
-            eps = self._predict_eps(
+            x0_pred, eps = self._predict_and_get_x0_eps(
                 x, t, text_tokens, text_mask, null_tokens, null_mask,
                 use_cfg, cfg_scale, padding_mask, src_mask,
             )
-
             alpha_bar = self._extract(self.alphas_cumprod, t, x.shape)
-            x0_pred = self.predict_x0_from_eps(x, t, eps).clamp(-5.0, 5.0)
+            x0_pred = x0_pred.clamp(-5.0, 5.0)
 
             # 最終ステップはx0をそのまま返す
             if i == len(timesteps) - 1:
@@ -609,7 +598,7 @@ class DiffusionModel(nn.Module):
         for step in reversed(range(self.num_train_steps)):
             t = torch.full((batch_size,), step, device=device, dtype=torch.long)
 
-            eps = self._predict_eps(
+            _, eps = self._predict_and_get_x0_eps(
                 x, t, text_tokens, text_mask, null_tokens, null_mask,
                 use_cfg, cfg_scale, padding_mask, src_mask,
             )
@@ -748,7 +737,7 @@ class VAETransformerDiffusion(nn.Module):
             param.requires_grad = False
         for param in self.diffusion.parameters():
             param.requires_grad = True
-        for param in self.diffusion.clip_model.text_encoder.bert.parameters():
+        for param in self.diffusion.clip_model.text_encoder.embed_model.parameters():
             param.requires_grad = False
 
     def forward(self, pose_input, pose_length, text_inputs=None):

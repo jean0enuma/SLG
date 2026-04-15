@@ -306,8 +306,8 @@ if __name__ == "__main__":
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
-    mode = "visualize"  # Change this to "test" when you want to test
-    checkpoint ="/media/caffe/data_storage/CSLR/keyword_models/SLG/VAE/How2Sign_VAE_withoutDM/52/model_epoch52.pth" #model_epoch9.cpt or model_epoch9.pth or None
+    mode = "train"  # Change this to "test" when you want to test
+    checkpoint ="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0414/1741/checkpoint.cpt"
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
@@ -318,7 +318,10 @@ if __name__ == "__main__":
     print("Config loaded.")
     # logディレクトリにContinurous_Sign以下のディレクトリ，ファイルをコピー
     if checkpoint != None:
-        save_path = checkpoint.split("/")[:-2]
+        if checkpoint.split(".")[-1] == "cpt":
+            save_path=checkpoint.split("/")[:-1]
+        else:
+            save_path = checkpoint.split("/")[:-2]
         save_path = "/".join(save_path)
         with open(f"{save_path}/config_diffusion.yaml", "r") as f:
             config = yaml.safe_load(f)

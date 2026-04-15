@@ -4,8 +4,14 @@ from typing import Optional, Dict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers import BertModel, BertTokenizer
-
+from transformers import AutoModel, BertTokenizer,CLIPTextModel
+def create_mask(target_length, max_len):
+    # target_length: (batch_size,)
+    batch_size = target_length.size(0)
+    mask = torch.ones((batch_size, max_len), dtype=torch.float32, device=target_length.device)
+    for i in range(batch_size):
+        mask[i, :target_length[i]] = 0.0
+    return mask  # (batch_size, max_len)
 
 class PositionalEncoding(nn.Module):
     """
@@ -121,36 +127,42 @@ class SkeletonTransformerEncoder(nn.Module):
         x = self.pos_enc(x)                    # (B, T, D)
 
         x = self.encoder(x, src_key_padding_mask=skeleton_mask)  # (B, T, D)
+        x=self.proj(x)                                  # (B, T, proj_dim)
         pooled = self.masked_mean_pool(x, skeleton_mask)         # (B, D)
-        emb = self.proj(pooled)                                  # (B, proj_dim)
-        emb = F.normalize(emb, dim=-1)
+        emb = F.normalize(pooled, dim=-1)
 
         out = {
-            "sequence_features": x,
+            "last_hidden_state": x,
             "pooled_features": pooled,
             "embeddings": emb,
         }
         if not return_sequence:
-            out.pop("sequence_features")
+            out.pop("last_hidden_state")
         return out
 
 
-class TextBertEncoder(nn.Module):
+class TextEncoder(nn.Module):
     """
     Text encoder using Hugging Face BERT.
     """
     def __init__(
         self,
-        bert_name: str = "bert-base-uncased",
+        model_name: str = "bert-base-uncased",
         proj_dim: int = 256,
         dropout: float = 0.1,
         pooling: str = "cls",  # "cls" or "mean"
+        num_layers=2,
+        nhead=8,
+        ffn_mult=4,
     ):
         super().__init__()
-        self.bert = BertModel.from_pretrained(bert_name)
-        hidden_size = self.bert.config.hidden_size
+        self.model_name=model_name
+        if model_name=="openai/clip-vit-base-patch32":
+            self.embed_model=CLIPTextModel.from_pretrained(model_name)
+        else:
+            self.embed_model = AutoModel.from_pretrained(model_name)
+        hidden_size = self.embed_model.config.hidden_size
         self.pooling = pooling
-
         self.proj = nn.Sequential(
             nn.Dropout(dropout),
             nn.Linear(hidden_size, proj_dim),
@@ -172,26 +184,29 @@ class TextBertEncoder(nn.Module):
         attention_mask: torch.Tensor,
         token_type_ids: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
-        outputs = self.bert(
+        outputs = self.embed_model(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            return_dict=True,
+            #token_type_ids=token_type_ids,
+            #return_dict=True,
         )
-        last_hidden = outputs.last_hidden_state  # (B, L, D)
-
+        hidden_feature = outputs.last_hidden_state  # (B, L, D)
+        hidden_feature=self.proj(hidden_feature)  # (B, L, proj_dim)
         if self.pooling == "cls":
-            pooled = last_hidden[:, 0]  # [CLS]
+            if self.model_name=="openai/clip-vit-base-patch32":
+                pooled = hidden_feature[:, -1]  # [B, D], CLIP uses the first token as pooled output
+            else:
+                pooled = hidden_feature[:, 0]  # [CLS]
         elif self.pooling == "mean":
-            pooled = self.masked_mean_pool(last_hidden, attention_mask)
+            pooled = self.masked_mean_pool(hidden_feature, attention_mask)
         else:
             raise ValueError(f"Unsupported pooling: {self.pooling}")
 
-        emb = self.proj(pooled)
+        emb = pooled
         emb = F.normalize(emb, dim=-1)
 
         return {
-            "token_features": last_hidden,
+            "last_hidden_state": hidden_feature,
             "pooled_features": pooled,
             "embeddings": emb,
         }
@@ -216,6 +231,9 @@ class SkeletonTextCLIP(nn.Module):
         dropout=config.get("dropout", 0.1)
         text_pooling=config.get("text_pooling", "cls")
         init_temperature=config.get("init_temperature", 0.07)
+        text_num_layers=config.get("text_num_layers", 2)
+        text_nhead=config.get("text_nhead", 8)
+        text_ffn_mult=config.get("text_ffn_mult", 4)
         self.skeleton_encoder = SkeletonTransformerEncoder(
             num_joints=num_joints,
             joint_dim=joint_dim,
@@ -226,11 +244,14 @@ class SkeletonTextCLIP(nn.Module):
             dropout=dropout,
             proj_dim=proj_dim,
         )
-        self.text_encoder = TextBertEncoder(
-            bert_name=text_encoer_name,
+        self.text_encoder = TextEncoder(
+            model_name=text_encoer_name,
             proj_dim=proj_dim,
             dropout=dropout,
             pooling=text_pooling,
+            num_layers=text_num_layers,
+            nhead=text_nhead,
+            ffn_mult=text_ffn_mult,
         )
 
         # CLIP-style learnable logit scale
@@ -281,15 +302,19 @@ class SkeletonTextCLIP(nn.Module):
             token_type_ids=token_type_ids,
         )
         return tx_out
+    def no_train_text_encoder(self):
+        for param in self.text_encoder.embed_model.parameters():
+            param.requires_grad = False
     def forward(
         self,
         skeleton: torch.Tensor,
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
-        skeleton_mask: Optional[torch.Tensor] = None,
+        skeleton_lengths: Optional[torch.Tensor] = None,
         token_type_ids: Optional[torch.Tensor] = None,
         return_features: bool = False,
     ) -> Dict[str, torch.Tensor]:
+        skeleton_mask=create_mask(skeleton_lengths, skeleton.size(1)).bool() if skeleton_lengths is not None else None
         sk_out = self.skeleton_encoder(
             skeleton=skeleton,
             skeleton_mask=skeleton_mask,

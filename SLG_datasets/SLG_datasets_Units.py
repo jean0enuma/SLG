@@ -213,6 +213,11 @@ class SLGText2UnitsDatasets(Dataset):
             target_corpus = self.targets_corpus[id]
             if self.is_islr==True:
                 sequence=target_corpus[video_name]
+                #sequenceの最後日の文字が数字なら，その数字を削除する
+                if sequence[-1].isdigit():
+                    sequence=sequence[:-1]
+                #sequenceを小文字にする
+                sequence=sequence.lower()
             else:
                 sequence = target_corpus[target_corpus["id"] == file_name]["annotation"].values[0]
             if self.return_length:

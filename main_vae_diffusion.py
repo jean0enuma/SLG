@@ -332,7 +332,7 @@ if __name__ == "__main__":
     # "train"か"eval"を指定(変数名を考えて)
     mode = "train"  # Change this to "test" when you want to test
     vae_weights="/media/caffe/data_storage/CSLR/keyword_models/SLG/VAE/How2Sign_VAE_withoutDM/52/model_epoch52.pth"  # model_epoch9.pth or None
-    checkpoint =None # model_epoch9.pth or None
+    checkpoint =None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()

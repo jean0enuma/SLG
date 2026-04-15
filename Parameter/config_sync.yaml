@@ -27,10 +27,12 @@ lr_parameters:
   ema_beta: 0.999
   replacement_num_batches: 100
 loss_parameters:
-    recon_pos_weight: 1.0
-    recon_dir_weight: 0.0
-    vq_weight: 1.0
-    vel_weight: 0.00
+    recon_skeleton: 1.0
+    recon_text: 1.0
+    kl_skeleton: 0.2
+    kl_text: 0.2
+    kl_skeleton_aux: 0.1
+    kl_text_aux: 0.1
 model:
   kl_weight: 0.2
   pose_dim: 100
@@ -66,23 +68,6 @@ model:
     ffn_mult: 2
     dropout: 0.1
     activation: "gelu"
-  diffusion_config:
-    is_text_cond: False
-    model_dim: 512
-    nhead: 8
-    num_layers: 2
-    ffn_mult: 4
-    dropout: 0.1
-    num_train_steps: 1000
-    sampling_steps: 50
-    ddim_eta: 0.0
-    text_drop_prob: 0.1
-    cfg_scale_text: 3.0
-    freeze_text_encoder: True
-    time_dim: 512
-    pred_type: "eps"
-    channel_mults: (1,2,4)
-    use_attn_levels: (True,True,True)
   clip_text:
     num_joints: 50
     joint_dim: 3

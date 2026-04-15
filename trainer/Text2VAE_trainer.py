@@ -312,6 +312,8 @@ class Text2VAETrainer(BaseTrainer):
                 batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
                 output = model.sample(input_length_tensor,sequence,padded_cod_data,input_length_tensor)
                 output = output.squeeze(0).cpu().numpy()
+                T,JC= output.shape
+                output=output.reshape(T,JC//3,3)
                 T, J, C = output.shape
                 # outputを元のスケールに戻す
                 output = output.reshape(T, J, C)
@@ -342,7 +344,7 @@ class Text2VAETrainer(BaseTrainer):
                 padded_cod_data[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
                 # outputの点群を動画として保存
                 # 同時に，元の動画も保存
-                video_size = (1024, 1024)
+                video_size = (256, 256)
                 v_writer = cv2.VideoWriter(
                     f"{self.config['save_path']}/visualize/Pred/pred_{os.path.basename(data_path)}.mp4",
                     cv2.VideoWriter_fourcc(*'mp4v'), 30, video_size)

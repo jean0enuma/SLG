@@ -9,9 +9,9 @@ dataset_parameters:
   is_processed: True
 lr_parameters:
   epoch: 20
-  learning_rate : 0.0005
+  learning_rate : 0.0001
   min_lr: 0.000001
-  weight_decay: 0.01
+  weight_decay: 0.001
   milestones: [50,80]
   dropout: 0.3
   amp: True
@@ -26,45 +26,38 @@ lr_parameters:
   replacement_num_batches: 100
 loss_parameters:
     recon_pos_weight: 1.0
-    recon_dir_weight: 0.0
+    recon_hand_weight: 1.0
     vq_weight: 1.0
-    vel_weight: 0.00
 
 model:
-  pose_dim: 96
-  in_dim: 96
-  hidden_dim: 128
-  code_dim: 64
+  pose_dim: 100
+  in_dim: 100
+  hidden_dim: 512
+  code_dim: 128
   n_codes: 256
-  stride: 1
+  stride: 4
   n_res_blocks: 4
   dropout: 0.3
   rvq_stages: 1
   vq_beta: 0.5
-  n_layers_enc: 2
-  n_layers_dec: 2
+  n_layers_enc: 1
+  n_layers_dec: 1
   n_heads: 8
   ff_mult: 4
   tau: 1.0
   separated_vae:
-    pose_d_model: 64
-    hand_d_model: 128
-    extra_d_model: 64
+    pose_d_model: 128
+    hand_d_model: 256
     n_pose_heads: 4
     n_hand_heads: 4
-    n_extra_heads: 4
     n_pose_layers_enc: 2
     n_hand_layers_enc: 2
-    n_extra_layers_enc: 2
-    n_pose_layers_dec: 2
-    n_hand_layers_dec: 2
-    n_extra_layers_dec: 2
-    pose_code_dim: 64
-    hand_code_dim: 128
-    extra_code_dim: 64
-    n_pose_codes: 16
-    n_hand_codes: 64
-    n_extra_codes: 8
+    n_pose_layers_dec: 1
+    n_hand_layers_dec: 1
+    pose_code_dim: 32
+    hand_code_dim: 64
+    n_pose_codes: 64
+    n_hand_codes: 128
 tokenizer_parameters:
   k_bodyloc: 32
   k_loc: 64

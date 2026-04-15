@@ -376,7 +376,11 @@ def preprocess_from_video_with_skeleton(video_path,skeleton_path, threshold_min_
     for v_path in video_path:
         id=v_path.split("/")[-1].split(".mp4")[0]
         skeleton_file=f"{skeleton_path}/{id}.csv"
-        skeleton_data=np.loadtxt(skeleton_file,delimiter=",",dtype=np.float32)
+        if os.path.exists(skeleton_file):
+            skeleton_data=np.loadtxt(skeleton_file,delimiter=",",dtype=np.float32)
+        else:
+            print(f"Skeleton file not found: {skeleton_file}")
+            continue
 
         if len(skeleton_data.shape)==1:
             continue
@@ -450,14 +454,15 @@ def islr_datasets_loader(dataset:str):
                 gloss2class[gloss] = len(gloss2class)
         class2gloss= {v: k for k, v in gloss2class.items()}
         train_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_train.keys()])
-        skeleton_train_pat=SKELETON_ASL_CITIZEN_TRAIN_DATADIR_3D
-        train_path= preprocess_from_video_with_skeleton(train_path,skeleton_train_pat, threshold_min_frame=16, threshold_max_frame=96)
+        skeleton_train_path=SKELETON_ASL_CITIZEN_TRAIN_DATADIR_3D
+        train_path= preprocess_from_video_with_skeleton(train_path,skeleton_train_path, threshold_min_frame=16, threshold_max_frame=96)
         dev_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_dev.keys()])
-        skeleton_dev_pat=SKELETON_ASL_CITIZEN_DEV_DATADIR_3D
-        dev_path= preprocess_from_video_with_skeleton(dev_path,skeleton_dev_pat, threshold_min_frame=16, threshold_max_frame=96)
-        test_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_dev.keys()])
-        skeleton_test_pat=SKELETON_ASL_CITIZEN_TEST_DATADIR_3D
-        test_path= preprocess_from_video_with_skeleton(test_path,skeleton_test_pat, threshold_min_frame=16, threshold_max_frame=96)
+        skeleton_dev_path=SKELETON_ASL_CITIZEN_DEV_DATADIR_3D
+        dev_path= preprocess_from_video_with_skeleton(dev_path,skeleton_dev_path, threshold_min_frame=16, threshold_max_frame=96)
+        test_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_test.keys()])
+        skeleton_test_path=SKELETON_ASL_CITIZEN_TEST_DATADIR_3D
+        test_path= preprocess_from_video_with_skeleton(test_path,skeleton_test_path, threshold_min_frame=16, threshold_max_frame=96)
+        train_path=train_path+test_path
 
     elif dataset=="LSA64":
         data_path=sorted(glob.glob(f"{LSA64_DATADIR}/*/*.mp4"))
