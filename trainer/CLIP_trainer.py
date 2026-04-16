@@ -101,7 +101,7 @@ class CLIP_trainer:
             self.g_scheduler=1.0
         else:
             self.g_scheduler=scheduler(epoch)
-    def train(self, model, optimizer, criterion, train_loader, device,ema=False):
+    def train(self, model, optimizer,train_loader, device,ema=False):
         model.train()
         total_loss = []
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
@@ -142,14 +142,14 @@ class CLIP_trainer:
             total_loss.append(loss.item())
 
             # codebook replacement
-            if batch_idx % 100== 0:
+            if batch_idx % 10== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
 
         avg_loss = np.mean(total_loss).astype(np.float32)
         return {
             "loss": avg_loss,
         }
-    def eval(self, model, criterion, test_loader, device):
+    def eval(self, model,  test_loader, device):
         model.eval()
         total_loss = []
         with torch.no_grad():
@@ -173,12 +173,13 @@ class CLIP_trainer:
         return {
             "loss": avg_loss,
         }
-    def fit(self,model,optimizer,scheduler,criterion,train_loader,eval_loader,device,early_stopping=None):
+    def fit(self,model,optimizer,scheduler,train_loader,eval_loader,test_loader,device,early_stopping=None):
         if self.config["lr_parameters"]["ema"]:
             ema_model=EMA(model,self.config["lr_parameters"]["ema_beta"])
         num_epochs=self.config["lr_parameters"]['epoch']
         train_loss_list=self.config['train_loss_list'] if 'train_loss_list' in self.config.keys() else []
         eval_loss_list=self.config['eval_loss_list'] if 'eval_loss_list' in self.config.keys() else []
+        test_loss_list=self.config['test_loss_list'] if 'test_loss_list' in self.config.keys() else []
         save_path=self.config["save_path"]
         for epoch in range(self.config["init_epoch"], num_epochs):
             #self.generate_scheduler(epoch)
@@ -189,29 +190,29 @@ class CLIP_trainer:
             print(f"epoch:{epoch}/{self.config['lr_parameters']['epoch']}")
             os.makedirs(f"{save_path}/{epoch}", exist_ok=True)
             print("--train--")
-            train_loss = self.train(model, optimizer, criterion, train_loader, device,ema=self.config["lr_parameters"]["ema"])
+            train_loss = self.train(model, optimizer,  train_loader, device,ema=self.config["lr_parameters"]["ema"])
             print("--eval--")
-            eval_loss = self.eval(model, criterion, eval_loader, device)
-            #print("--test--")
-            #test_loss = self.eval(model, criterion, test_loader, device)
+            eval_loss = self.eval(model, eval_loader, device)
+            print("--test--")
+            test_loss = self.eval(model, test_loader, device)
             train_loss_list.append(train_loss['loss'])
 
             eval_loss_list.append(eval_loss['loss'])
 
-            #test_loss_list.append(test_loss['loss'])
+            test_loss_list.append(test_loss['loss'])
 
             print(f"Epoch {epoch+1}/{num_epochs})")
             print(f"Train Loss: {train_loss['loss']:.4f}")
             print(f"Eval Loss: {eval_loss['loss']:.4f}")
-            #print(f"Test Loss: {test_loss['loss']:.4f}")
+            print(f"Test Loss: {test_loss['loss']:.4f}")
             #eval_lossとtest_lossのkeyを変更
             eval_loss = {
                 "eval_loss": eval_loss['loss'],
             }
-            #test_loss = {
-            #    "test_loss": test_loss['loss'],
-            #}
-            log_dict={**train_loss,**eval_loss}
+            test_loss = {
+                "test_loss": test_loss['loss'],
+            }
+            log_dict={**train_loss,**eval_loss,**test_loss}
             wandb.log(log_dict)
             torch.save(model.state_dict(), f"{save_path}/{epoch}/model_epoch{epoch}.pth")
             if self.config["lr_parameters"]["ema"]:
@@ -222,7 +223,7 @@ class CLIP_trainer:
                 "optimizer_state_dict": optimizer.state_dict(),
                 "train_loss_list": train_loss_list,
                 "eval_loss_list": eval_loss_list,
-                #"test_loss_list": test_loss_list,
+                "test_loss_list": test_loss_list,
                 'random': random.getstate(),
                 'np_random': np.random.get_state(),
                 'torch': torch.get_rng_state(),
@@ -235,7 +236,7 @@ class CLIP_trainer:
                     "epoch": list(range(epoch + 1)),
                     "train_loss": train_loss_list,
                     "eval_loss": eval_loss_list,
-                    #"test_loss": test_loss_list,
+                    "test_loss": test_loss_list,
                 }
             )
             log_data.to_csv(f"{save_path}/log.csv")

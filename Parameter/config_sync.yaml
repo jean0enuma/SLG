@@ -4,8 +4,8 @@ device: "cuda:0"
 dataset_parameters:
   use_phoenix: False
   use_phoenixT: False
-  use_how2sign: False
-  use_asl: True
+  use_how2sign: True
+  use_asl: False
   use_csl: False
   use_csl-daily: False
   is_processed: False
@@ -13,13 +13,13 @@ lr_parameters:
   epoch: 100
   learning_rate : 0.0002
   min_lr: 0.000001
-  weight_decay: 0.01
+  weight_decay: 0.1
   milestones: [50,80]
   dropout: 0.3
   amp: True
   display_step: 100
   accumulation_step: 1
-  batch_size: 2048
+  batch_size: 512
   scheduler_timing: "step"
   scheduler_type: "CosineAnnealingWarmRestarts"
   grad_clip_norm: 1.0
@@ -35,7 +35,7 @@ loss_parameters:
     kl_text_aux: 0.1
 model:
   kl_weight: 0.2
-  pose_dim: 100
+  pose_dim: 252
   text_cond: False
   is_diffusion: False
   text_encoder_name: "openai/clip-vit-base-patch32"
@@ -69,7 +69,7 @@ model:
     dropout: 0.1
     activation: "gelu"
   clip_text:
-    num_joints: 50
+    num_joints: 126
     joint_dim: 3
     skeleton_d_model: 512
     skeleton_nhead: 8
@@ -81,7 +81,7 @@ model:
     text_ffn_mult: 4
     proj_dim: 512
     dropout: 0.1
-    text_pooling: "mean"
+    text_pooling: "cls"
     init_temperature: 0.07
     null_text_seq_len: 32
 

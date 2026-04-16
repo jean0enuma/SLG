@@ -186,12 +186,15 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     #new_hand_data[2, :, 21:]+=right_criterion[:, np.newaxis]
     new_body_data = new_data[:, :, body_points]
     new_data = new_data[:, :, connection_indexes]
+    face_center=new_data[:, :, 0]
     data_face = nan_interpolate(data_face, limit_area="both")
     #data_face = average_movint(data_face)
     new_data_face = np.zeros((3, data_face.shape[0], data_face.shape[1] // 3))
     new_data_face[0] = data_face[:, 0::3]
     new_data_face[1] = data_face[:, 1::3]
     new_data_face[2] = -data_face[:, 2::3]
+    new_data_face=np.where(new_data_face==0,np.nan,new_data_face)
+
     if is_face_connect:
         connection_indexes=connection_to_set(face_connections)
         new_data_face=new_data_face[:,:,connection_indexes]

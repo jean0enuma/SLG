@@ -13,6 +13,48 @@ def create_mask(target_length, max_len):
         mask[i, :target_length[i]] = 0.0
     return mask  # (batch_size, max_len)
 
+
+class MultiheadAttentionPooling(nn.Module):
+    def __init__(self, input_dim, embed_dim, num_heads=8, dropout=0.1):
+        super().__init__()
+        # 1. 学習可能なクエリ (1つのトークンとして機能)
+        self.query = nn.Parameter(torch.randn(1, 1, embed_dim))
+
+        # 2. 次元が異なる場合のプロジェクション層
+        self.input_proj = nn.Linear(input_dim, embed_dim) if input_dim != embed_dim else nn.Identity()
+
+        # 3. Multi-head Attention
+        # batch_first=True により (B, T, D) の入力を受け付ける
+        self.mha = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout, batch_first=True)
+
+        # 4. 正規化層
+        self.ln = nn.LayerNorm(embed_dim)
+
+    def forward(self, x, key_padding_mask=None):
+        """
+        Args:
+            x: (Batch, Time, Input_Dim)
+            key_padding_mask: (Batch, Time) のブーリアンマスク。
+                             パディング部分を True にすることで無視できます。
+        Returns:
+            pooled_output: (Batch, Embed_Dim)
+        """
+        # 次元の調整
+        x = self.input_proj(x)  # (B, T, D)
+
+        # クエリをバッチサイズ分複製
+        # self.query: (1, 1, D) -> b_query: (B, 1, D)
+        b_query = self.query.expand(x.size(0), -1, -1)
+
+        # Attentionの計算
+        # Query: 学習可能な固定ベクトル, Key/Value: スケルトン系列
+        # attn_output: (B, 1, D)
+        attn_output, _ = self.mha(query=b_query, key=x, value=x, key_padding_mask=key_padding_mask)
+
+        # 残差接続とLayerNorm (1つのベクトルに絞る)
+        output = self.ln(attn_output.squeeze(1))  # (B, D)
+
+        return output
 class PositionalEncoding(nn.Module):
     """
     Standard sinusoidal positional encoding.
@@ -94,6 +136,7 @@ class SkeletonTransformerEncoder(nn.Module):
         )
 
         self.proj = nn.Linear(d_model, proj_dim)
+        self.attn_pool = MultiheadAttentionPooling(input_dim=d_model, embed_dim=proj_dim, num_heads=nhead, dropout=dropout)
 
     def masked_mean_pool(self, x: torch.Tensor, mask: Optional[torch.Tensor]) -> torch.Tensor:
         """
@@ -126,9 +169,8 @@ class SkeletonTransformerEncoder(nn.Module):
         x = self.input_proj(x)                 # (B, T, D)
         x = self.pos_enc(x)                    # (B, T, D)
 
-        x = self.encoder(x, src_key_padding_mask=skeleton_mask)  # (B, T, D)
-        x=self.proj(x)                                  # (B, T, proj_dim)
-        pooled = self.masked_mean_pool(x, skeleton_mask)         # (B, D)
+        x = self.encoder(x, src_key_padding_mask=skeleton_mask)  # (B, T, D)                            # (B, T, proj_dim)
+        pooled = self.attn_pool(x, skeleton_mask)         # (B, D)
         emb = F.normalize(pooled, dim=-1)
 
         out = {
@@ -191,7 +233,6 @@ class TextEncoder(nn.Module):
             #return_dict=True,
         )
         hidden_feature = outputs.last_hidden_state  # (B, L, D)
-        hidden_feature=self.proj(hidden_feature)  # (B, L, proj_dim)
         if self.pooling == "cls":
             if self.model_name=="openai/clip-vit-base-patch32":
                 pooled = hidden_feature[:, -1]  # [B, D], CLIP uses the first token as pooled output
@@ -202,7 +243,7 @@ class TextEncoder(nn.Module):
         else:
             raise ValueError(f"Unsupported pooling: {self.pooling}")
 
-        emb = pooled
+        emb = self.proj(pooled)  # (B, proj_dim)
         emb = F.normalize(emb, dim=-1)
 
         return {

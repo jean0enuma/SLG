@@ -75,6 +75,7 @@ def main(config, mode, checkpoint):
     dev_face_root = {}
     test_face_root = {}
     i = 0
+    is_islr=False
     if config['dataset_parameters']['use_phoenixT'] or config['dataset_parameters']['use_phoenix']:
         phoenixT_train_path,  phoenixT_test_path,phoenix_gloss2class, phoenix_class2gloss,phoenix_video2gloss= islr_datasets_loader("phoenix")
         train_corpus[0] = phoenix_video2gloss
@@ -128,6 +129,36 @@ def main(config, mode, checkpoint):
         train_data_path += integrate_path(2, asl_train_path)
         dev_data_path += integrate_path(2, asl_dev_path)
         test_data_path += integrate_path(2, asl_test_path)
+        is_islr=True
+        i += 1
+    if config['dataset_parameters']['use_how2sign']:
+        how2sign_train_path, how2sign_dev_path, how2sign_test_path, how2sign_train_corpus, how2sign_dev_corpus, how2sign_test_corpus = datasets_loader_T(
+            "how2sign")
+        train_corpus[2] = how2sign_train_corpus
+        dev_corpus[2] = how2sign_dev_corpus
+        test_corpus[2] = how2sign_test_corpus
+        if config['dataset_parameters']['is_processed']:
+            train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR_PROCESSED
+            dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR_PROCESSED
+            test_cod_root[2] = SKELETON_HOW2SIGN_TEST_DATADIR_PROCESSED
+
+            train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR_PROCESSED
+            dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR_PROCESSED
+            test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR_PROCESSED
+            is_3d = True
+        else:
+            train_cod_root[2] = SKELETON_HOW2SIGN_TRAIN_DATADIR_3D
+            dev_cod_root[2] = SKELETON_HOW2SIGN_DEV_DATADIR_3D
+            test_cod_root[2] = SKELETON_HOW2SIGN_TEST_DATADIR_3D
+
+            train_face_root[2] = FACE_HOW2SIGN_TRAIN_DATADIR_3D
+            dev_face_root[2] = FACE_HOW2SIGN_DEV_DATADIR_3D
+            test_face_root[2] = FACE_HOW2SIGN_TEST_DATADIR_3D
+            is_3d = True
+
+        train_data_path += integrate_path(2, how2sign_train_path)
+        dev_data_path += integrate_path(2, how2sign_dev_path)
+        test_data_path += integrate_path(2, how2sign_test_path)
         i += 1
     if i == 0:
         raise ValueError("At least one dataset must be selected.")
@@ -152,11 +183,11 @@ def main(config, mode, checkpoint):
     tokenizer=AutoTokenizer.from_pretrained(config["model"]['text_encoder_name'])
     print("---Creating datasets---")
     ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,
-                                trainable=True,tokenizer=tokenizer,texts_corpus=train_corpus,is_islr=True)
+                                trainable=True,tokenizer=tokenizer,texts_corpus=train_corpus,is_islr=is_islr)
     ds_dev = SLGText2UnitsDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,
-                                tokenizer=tokenizer,texts_corpus=dev_corpus,is_islr=True)
-    #ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,
-    #                            tokenizer=tokenizer,texts_corpus=test_corpus,is_islr=True)
+                                tokenizer=tokenizer,texts_corpus=dev_corpus,is_islr=is_islr)
+    ds_test = SLGText2UnitsDatasets(test_data_path, test_cod_root, test_face_root,trainable=False,is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,
+                                tokenizer=tokenizer,texts_corpus=test_corpus,is_islr=is_islr)
 
     if ds_train.is_3d:
         config['model']['encoder']['q_input_dim'] = int(config['model']['encoder']['q_input_dim']*1.5)  # 3Dの場合の入力サイズ
@@ -181,14 +212,14 @@ def main(config, mode, checkpoint):
     dl_dev = torch.utils.data.DataLoader(ds_dev, batch_size=config['lr_parameters']['batch_size'], shuffle=False,
                                          num_workers=2,
                                          collate_fn=ds_dev.collate_fn)
-    #dl_test = torch.utils.data.DataLoader(ds_test, batch_size=config['lr_parameters']['batch_size'], shuffle=False,
-    #                                      num_workers=2, collate_fn=ds_test.collate_fn)
+    dl_test = torch.utils.data.DataLoader(ds_test, batch_size=config['lr_parameters']['batch_size'], shuffle=False,
+                                          num_workers=2, collate_fn=ds_test.collate_fn)
     print("DataLoaders created.")
     # モデルの作成
     print("---Creating model---")
     config['model']['anchor_frame_path'] = ANCHOR_FRAME_PATH
     model = SkeletonTextCLIP(config["model"]['clip_text']).float().to(device)
-    #model.no_train_text_encoder()
+    model.no_train_text_encoder()
 
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
@@ -251,6 +282,7 @@ def main(config, mode, checkpoint):
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
         config['train_loss_list']= torch.load(checkpoint, weights_only=False, map_location=device)["train_loss_list"]
         config['eval_loss_list'] = torch.load(checkpoint, weights_only=False, map_location=device)["eval_loss_list"]
+        config['test_loss_list'] = torch.load(checkpoint, weights_only=False, map_location=device)["test_loss_list"]
     if mode == "train":
         if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
             # id名を取得
@@ -263,7 +295,7 @@ def main(config, mode, checkpoint):
             # id名を保存
             with open(f"{save_path}/wandb_id.txt", "w") as f:
                 f.write(id)
-        trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, device,
+        trainer.fit(model, optimizer, scheduler,  dl_train, dl_dev,dl_test, device,
                     early_stopping=None)
         trainer.visualize(model, ds_dev, device,is_3d=is_3d)
     elif mode == "visualize":
@@ -276,7 +308,7 @@ def main(config, mode, checkpoint):
 if __name__ == "__main__":
     command = ['sudo', 'systemctl', 'stop', 'systemd-oomd']
     print("OOM killerを無効化")
-    # subprocess.run(command, input=("gazouken\n").encode(), check=True)
+    #subprocess.run(command, input=("gazouken\n").encode(), check=True)
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)

@@ -3,6 +3,33 @@ from torch.utils.data import Dataset
 from loader import *
 
 import torch.nn.functional as F
+from transformers import pipeline
+
+# モデルのロード (BART-baseベースの言い換えモデル)
+# GPUがある場合は device=0 を指定
+paraphraser = pipeline("text2text-generation", model="eugenesiow/bart-paraphrase", device=-1)
+
+def transform_local(text, num_return_sequences=5):
+    """
+    ローカルモデルを使用して文章を変換する
+    """
+    try:
+        results = paraphraser(
+            text,
+            max_length=128,
+            top_k=120,
+            top_p=0.95,
+            do_sample=True,
+            num_return_sequences=num_return_sequences,
+            early_stopping=True,
+            num_beams=5,
+            clean_up_tokenization_spaces=True
+        )
+        # 5つの候補の中からランダムに1つを選択して返す
+        transformed_text = results[torch.randint(0, num_return_sequences, (1,)).item()]['generated_text']
+        return transformed_text
+    except Exception as e:
+        return text
 
 class SLGText2UnitsDatasets(Dataset):
     """
@@ -164,7 +191,7 @@ class SLGText2UnitsDatasets(Dataset):
             # face_cod_data=coordinate_preprocess_face(face_data)
             C,T,J = cod_data.shape
             cod_data = torch.tensor(cod_data)  # (3,T,JC)
-            face_data = torch.tensor(face_data) # (3,T,FC)
+            face_cod_data = torch.tensor(face_cod_data) # (3,T,FC)
             center_data = cod_data[:, :, 1].clone()  # (3,T)
             shoulder_length = torch.sqrt(
                 (cod_data[0, :, 2] - cod_data[0, :, 3]) ** 2 + (cod_data[1, :, 2] - cod_data[1, :, 3]) ** 2 + (
@@ -188,9 +215,13 @@ class SLGText2UnitsDatasets(Dataset):
             hand_cod_data[:, :, 21:] -= center_data.unsqueeze(2)
             hand_cod_data[:, :, :21] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)+1e-8
             hand_cod_data[:, :, 21:] /= (shoulder_length.unsqueeze(0).unsqueeze(2) / 2)+1e-8
-            cod_data = torch.cat([body_cod_data, hand_cod_data], dim=2)
+
+            face_cod_data=face_cod_data-center_data.unsqueeze(2)
+            face_cod_data/= (shoulder_length.unsqueeze(0).unsqueeze(2))+1e-8
+
+            cod_data = torch.cat([body_cod_data, hand_cod_data,face_cod_data], dim=2)
             cod_data = torch.tensor(cod_data).float()
-            face_cod_data = torch.tensor(face_data).float()
+            face_cod_data = torch.tensor(face_cod_data).float()
             hand_cod_data = torch.tensor(hand_cod_data).float()
             body_cod_data = torch.tensor(body_cod_data).float()
         left_data=hand_cod_data[:, :, :21].permute(1, 2, 0)#(2,T,21)
@@ -220,6 +251,8 @@ class SLGText2UnitsDatasets(Dataset):
                 sequence=sequence.lower()
             else:
                 sequence = target_corpus[target_corpus["id"] == file_name]["annotation"].values[0]
+                if random.random()<0.5 and self.trainable:
+                    sequence=transform_local(sequence)
             if self.return_length:
                 sequence=self.tokenizer([sequence], padding=False, truncation=True, return_tensors='pt')
                 return pose_data,hand_mask,input_length,id,data_path,sequence,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length
