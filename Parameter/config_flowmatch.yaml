@@ -1,0 +1,63 @@
+dataset: "phoenixT"
+work_dir: "/home=/caffe/work/SLG/"
+device: "cuda:0"
+is_processed: False
+is_openpose: True
+vae:
+  lr_parameters:
+    epoch: 20
+    learning_rate : 0.0001
+    min_lr: 0.000001
+    weight_decay: 0.0001
+    milestones: [50,80]
+    amp: True
+    display_step: 100
+    accumulation_step: 1
+    batch_size: 32
+    scheduler_timing: "epoch"
+    grad_clip_norm: 1.0
+    ema: False
+    ema_beta: 0.999
+    replacement_num_batches: 100
+  loss_parameters:
+      w_6d: 1.0
+      w_mat: 1.0
+      w_vel: 0.0
+      w_fk: 1.0
+      beta: 0.0001
+      free_bits: 0.05
+  model:
+    bones: "hand"
+    blocks_per_stage: 2
+    n_stages: 1
+    dropout: 0.3
+    d_model: 128
+    latent_dim: 32
+flow_matching:
+  lr_parameters:
+    epoch: 500
+    learning_rate: 0.0001
+    min_lr: 0.000001
+    weight_decay: 0.0001
+    milestones: [ 50,80 ]
+    amp: True
+    display_step: 100
+    accumulation_steps: 4
+    batch_size: 8
+    grad_clip_norm: 1.0
+    ema: True
+    ema_beta: 0.999
+    replacement_num_batches: 100
+  model:
+    boundary: 0.5
+    d_model: 256
+    n_heads: 8
+    depth_high: 2
+    depth_low: 4
+    cond_dim: 768
+    cross_attn: True
+    part_weight:
+        body: 1.0
+        hand: 2.0
+
+

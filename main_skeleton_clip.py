@@ -76,26 +76,33 @@ def main(config, mode, checkpoint):
     test_face_root = {}
     i = 0
     is_islr=False
-    if config['dataset_parameters']['use_phoenixT'] or config['dataset_parameters']['use_phoenix']:
-        phoenixT_train_path,  phoenixT_test_path,phoenix_gloss2class, phoenix_class2gloss,phoenix_video2gloss= islr_datasets_loader("phoenix")
-        train_corpus[0] = phoenix_video2gloss
-        test_corpus[0] = phoenix_video2gloss
+    if config['dataset_parameters']['use_phoenixT']:
+        phoenixT_train_path, phoenixT_dev_path, phoenixT_test_path, phoenixT_train_corpus, phoenixT_dev_corpus, phoenixT_test_corpus = datasets_loader_T(
+            "phoenixT")
+        train_corpus[0] = phoenixT_train_corpus
+        dev_corpus[0] = phoenixT_dev_corpus
+        test_corpus[0] = phoenixT_test_corpus
         if config['dataset_parameters']['is_processed']:
             train_cod_root[0] = SKELETON_TRAIN_DATADIR_T_PROCESSED
-            test_cod_root[0] = SKELETON_TRAIN_DATADIR_T_PROCESSED
+            dev_cod_root[0] = SKELETON_DEV_DATADIR_T_PROCESSED
+            test_cod_root[0] = SKELETON_TEST_DATADIR_T_PROCESSED
 
             train_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
-            test_face_root[0] = FACE_TRAIN_DATADIR_T_PROCESSED
-            is_3d=True
+            dev_face_root[0] = FACE_DEV_DATADIR_T_PROCESSED
+            test_face_root[0] = FACE_TEST_DATADIR_T_PROCESSED
+            is_3d = True
         else:
             train_cod_root[0] = SKELETON_TRAIN_DATADIR_T_3D
-            test_cod_root[0] = SKELETON_TRAIN_DATADIR_T_3D
+            dev_cod_root[0] = SKELETON_DEV_DATADIR_T_3D
+            test_cod_root[0] = SKELETON_TEST_DATADIR_T_3D
 
             train_face_root[0] = FACE_TRAIN_DATADIR_T_3D
-            test_face_root[0] = FACE_TRAIN_DATADIR_T_3D
-            is_3d=True
+            dev_face_root[0] = FACE_DEV_DATADIR_T_3D
+            test_face_root[0] = FACE_TEST_DATADIR_T_3D
+            is_3d = True
 
         train_data_path += integrate_path(0, phoenixT_train_path)
+        dev_data_path += integrate_path(0, phoenixT_dev_path)
         test_data_path += integrate_path(0, phoenixT_test_path)
         i += 1
     if config['dataset_parameters']['use_csl']:
@@ -160,6 +167,28 @@ def main(config, mode, checkpoint):
         dev_data_path += integrate_path(2, how2sign_dev_path)
         test_data_path += integrate_path(2, how2sign_test_path)
         i += 1
+    if config['dataset_parameters']['use_autsl']:
+        autsl_train_path, autsl_dev_path, autsl_test_path,autsl_gloss2class, autsl_class2gloss,autsl_video2gloss  = islr_datasets_loader(
+            "AUTSL")
+        train_corpus[3] = autsl_video2gloss
+        dev_corpus[3] =autsl_video2gloss
+        test_corpus[3] = autsl_video2gloss
+        if config['dataset_parameters']['is_processed']:
+           raise NotImplementedError("Processed data for AUTSL is not available yet.")
+        else:
+            train_cod_root[3] = SKELETON_AUTSL_TRAIN_DATADIR_3D
+            dev_cod_root[3] = SKELETON_AUTSL_DEV_DATADIR_3D
+            test_cod_root[3] = SKELETON_AUTSL_TEST_DATADIR_3D
+
+            train_face_root[3] = FACE_AUTSL_TRAIN_DATADIR_3D
+            dev_face_root[3] = FACE_AUTSL_DEV_DATADIR_3D
+            test_face_root[3] = FACE_AUTSL_TEST_DATADIR_3D
+            is_3d=True
+        train_data_path += integrate_path(3, autsl_train_path)
+        dev_data_path += integrate_path(3, autsl_dev_path)
+        test_data_path += integrate_path(3, autsl_test_path)
+        is_islr=True
+        i += 1
     if i == 0:
         raise ValueError("At least one dataset must be selected.")
     config['model']['decoder_num_lang'] = i + 1
@@ -180,7 +209,7 @@ def main(config, mode, checkpoint):
         gpu_name = torch.cuda.get_device_name(int(device[-1]))
         print("GPU name:", gpu_name)
     print("---Loading tokenizer---")
-    tokenizer=AutoTokenizer.from_pretrained(config["model"]['text_encoder_name'])
+    tokenizer=AutoTokenizer.from_pretrained(config["model"]['clip_text']['text_encoder_name'],trust_remote_code=True)
     print("---Creating datasets---")
     ds_train = SLGText2UnitsDatasets(train_data_path, train_cod_root, train_face_root, is_3d=is_3d,is_processed=config['dataset_parameters']['is_processed'],is_sg_filter=False,is_coarse=False,
                                 trainable=True,tokenizer=tokenizer,texts_corpus=train_corpus,is_islr=is_islr)
@@ -219,7 +248,8 @@ def main(config, mode, checkpoint):
     print("---Creating model---")
     config['model']['anchor_frame_path'] = ANCHOR_FRAME_PATH
     model = SkeletonTextCLIP(config["model"]['clip_text']).float().to(device)
-    model.no_train_text_encoder()
+    #model.trainable_text_layers(3)
+    #model.no_train_text_encoder()
 
     # モデルの保存
     if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
@@ -297,7 +327,7 @@ def main(config, mode, checkpoint):
                 f.write(id)
         trainer.fit(model, optimizer, scheduler,  dl_train, dl_dev,dl_test, device,
                     early_stopping=None)
-        trainer.visualize(model, ds_dev, device,is_3d=is_3d)
+        #trainer.visualize(model, ds_dev, device,is_3d=is_3d)
     elif mode == "visualize":
         trainer.visualize(model, ds_dev, device,is_3d=is_3d)
     else:

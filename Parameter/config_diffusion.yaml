@@ -3,25 +3,25 @@ work_dir: "/home/caffe/work/SLG/"
 device: "cuda:0"
 dataset_parameters:
   use_phoenix: False
-  use_phoenixT: False
+  use_phoenixT: True
   use_how2sign: False
-  use_asl: True
+  use_asl: False
   use_csl: False
   use_csl-daily: False
   is_processed: False
 lr_parameters:
   epoch: 100
-  learning_rate : 0.0002
+  learning_rate : 0.0001
   min_lr: 0.000001
-  weight_decay: 0.01
+  weight_decay: 0.001
   milestones: [50,80]
   dropout: 0.3
   amp: True
   display_step: 100
   accumulation_step: 1
-  batch_size: 2048
-  scheduler_timing: "step"
-  scheduler_type: "CosineAnnealingWarmRestarts"
+  batch_size: 32
+  scheduler_timing: "epoch"
+  scheduler_type: "CosineAnnealingLR"
   grad_clip_norm: 1.0
   ema: False
   ema_beta: 0.999
@@ -33,21 +33,22 @@ loss_parameters:
     vel_weight: 0.00
 model:
   kl_weight: 0.2
-  pose_dim: 100
+  pose_dim: 252
   text_cond: False
   is_diffusion: False
   text_encoder_name: "openai/clip-vit-base-patch32"
   body_weight: 0.3
   hand_weight: 0.7
-  recon_weight: 0.0
+  face_weight: 0.5
+  recon_weight: 1.0
   length_weight: 0.0
   diffusion_weight: 1.0
   constractive_weight: 0.0
   constractive_temp:  0.07
   encoder:
     z_dim: 64
-    q_input_dim: 100
-    kv_input_dim: 100
+    q_input_dim: 252
+    kv_input_dim: 252
     d_model: 512
     nhead: 8
     num_layers: 2
@@ -59,8 +60,9 @@ model:
     window_size: 13
     text_nhead: 4
     text_num_layers: 3
+    num_queries: 64
   decoder:
-    d_model: 128
+    d_model: 256
     nhead: 8
     num_layers: 2
     ffn_mult: 2

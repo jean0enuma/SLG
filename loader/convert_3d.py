@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from collections import defaultdict, deque
+from loader.coordinate_preprocess import *
 def sort_connections(connections):
     #all_connectionsは元データのインデックスを表すが，データからconnectionに対応するデータを取得すると，インデックスが変わる
     #all_connectionsのインデックスを変換後のデータに対応させる
@@ -33,7 +34,7 @@ def build_parents_from_connections(connections, root, num_joints=None):
 
     # ---- joint数の推定 ----
     if num_joints is None:
-        max_idx = max(max(i, j) for i, j in connections)
+        max_idx = max(max(i, j) for (i, j) in connections)
         num_joints = max_idx + 1
 
     # ---- 無向グラフ作成 ----
@@ -120,16 +121,21 @@ def analytic_init_3d_from_2d(
     c = bone_pairs[:, 1]
     vec2d = x2d[:, :, c, :] - x2d[:, :, p, :]  # (B,T,E,2)
     len2d = torch.sqrt((vec2d ** 2).sum(dim=-1) + 1e-8)  # (B,T,E)
-    L0_bt = len2d.mean(dim=1)  # (B,E)
-    L0 = L0_bt.mean(dim=0)  # (E,) グローバル初期値（簡単化）
+    #L0_bt = len2d.mean(dim=1)  # (B,E)
+    #L0 = L0_bt.mean(dim=0)  # (E,) グローバル初期値（簡単化）
+    L0 = len2d.mean(dim=1)  # (B,E) 系列ごとの時間平均（バッチ方向には潰さない）
 
     # 左右対称などを「同一長」に寄せる（任意）
     if sym_pairs is not None:
         L0 = L0.clone()
         for e1, e2 in sym_pairs:
-            m = 0.5 * (L0[e1] + L0[e2])
-            L0[e1] = m
-            L0[e2] = m
+            #m = 0.5 * (L0[e1] + L0[e2])
+            #L0[e1] = m
+            #L0[e2] = m
+            m = 0.5 * (L0[:, e1] + L0[:, e2])
+            L0[:, e1] = m
+            L0[:, e2] = m
+
 
     # bone index lookup: (parent,child) -> e
     # Jが大きくても動くよう dict で
@@ -158,7 +164,8 @@ def analytic_init_3d_from_2d(
         dx = xt - x0
         dy = yt - y0
         Lp = torch.sqrt(dx * dx + dy * dy + 1e-8)  # L' in paper
-        L = L0[e].clamp_min(1e-6)
+        #L = L0[e].clamp_min(1e-6)
+        L = L0[:, e].clamp_min(1e-6).unsqueeze(-1)  # (B,1) → (B,T) に broadcast
 
         # if L' > L : 届かない → (1)(2)(3) のように2D方向へスケールし z=0
         # if L' <= L : x,yは目標へ、zは (4) で決める
@@ -186,7 +193,8 @@ def analytic_init_3d_from_2d(
             z1_reach = z0 - dz  # 「小さい方」を選ぶ（ヒューリスティック）
         else:
             z1_reach = z0 + dz
-        z1 = torch.where(mask_reach, z1_reach, torch.zeros_like(z0))
+        #z1 = torch.where(mask_reach, z1_reach, torch.zeros_like(z0))
+        z1 = torch.where(mask_reach, z1_reach, z0)
 
         x3d[:, :, child, 0] = x1
         x3d[:, :, child, 1] = y1
@@ -244,8 +252,25 @@ def lift_2d_to_3d_correct(
 
     # 骨長（グローバル）を学習変数にしても良い（論文に近づける）
     # ただし安定のため log-param にして正に保つ
-    logL = torch.log(L0.clamp_min(1e-6)).detach().clone()
-    logL.requires_grad_(True)
+    #logL = torch.log(L0.clamp_min(1e-6)).detach().clone()
+    #logL.requires_grad_(True)
+    # --- 対称ペアを考慮した独立パラメータの構築 ---
+    # rep[e] = 骨 e が参照する「代表骨」のインデックス
+    rep = list(range(E))
+    if sym_pairs is not None:
+        for e1, e2 in sym_pairs:
+            rep[e2] = rep[e1]  # e2 は e1 を参照（e1 を代表とする）
+
+    # 独立な代表骨のみ抽出
+    unique_reps = sorted(set(rep))  # 独立パラメータに対応する骨
+    rep_to_idx = {r: i for i, r in enumerate(unique_reps)}
+    gather_idx = torch.tensor([rep_to_idx[rep[e]] for e in range(E)],
+                              device=device)  # (E,) 全骨 → 独立パラメータ
+
+    # 初期値: 代表骨の初期長（対称ペアはすでに平均化済みなのでどちらでも同じ）
+    L0_indep = L0[:, unique_reps]  # (B, E_indep)
+    logL = torch.log(L0_indep.clamp_min(1e-6)).detach().clone()
+    logL.requires_grad_(True)  # (B, E_indep)
 
     opt = torch.optim.Adam([x3d, logL], lr=lr)
 
@@ -270,19 +295,27 @@ def lift_2d_to_3d_correct(
 
         # ---- bone length consistency ----
         # bone vectors (B,T,E,3)
+        #v = x3d_eff[:, :, c, :] - x3d_eff[:, :, p, :]
+        #len_bt = torch.sqrt((v ** 2).sum(dim=-1) + 1e-8)  # (B,T,E)
+
+        #L = torch.exp(logL).clamp_min(1e-6)  # (E,)
+
+        # 時間方向で一定：len(t,e) ≈ L(e)
+        #loss_bone = F.mse_loss(len_bt, L.view(1, 1, E).expand_as(len_bt))
         v = x3d_eff[:, :, c, :] - x3d_eff[:, :, p, :]
         len_bt = torch.sqrt((v ** 2).sum(dim=-1) + 1e-8)  # (B,T,E)
 
-        L = torch.exp(logL).clamp_min(1e-6)  # (E,)
-        # 時間方向で一定：len(t,e) ≈ L(e)
-        loss_bone = F.mse_loss(len_bt, L.view(1, 1, E).expand_as(len_bt))
+        L_indep = torch.exp(logL).clamp_min(1e-6)  # (B, E_indep)
+        L = L_indep[:, gather_idx]  # (B, E) 対称ペアは同一値を厳密共有
+        loss_bone = F.mse_loss(len_bt, L.unsqueeze(1).expand_as(len_bt))
+
 
         # 左右対称boneの同一長（任意）
-        loss_sym = torch.zeros([], device=device, dtype=dtype)
-        if sym_pairs is not None:
-            for e1, e2 in sym_pairs:
-                loss_sym = loss_sym + (L[e1] - L[e2]).pow(2)
-            loss_sym = loss_sym / max(1, len(sym_pairs))
+        #loss_sym = torch.zeros([], device=device, dtype=dtype)
+        #if sym_pairs is not None:
+        #    for e1, e2 in sym_pairs:
+        #        loss_sym = loss_sym + (L[e1] - L[e2]).pow(2)
+        #    loss_sym = loss_sym / max(1, len(sym_pairs))
 
         # ---- velocity smoothness ----
         # joints velocity (B,T-1,J,3)
@@ -290,12 +323,13 @@ def lift_2d_to_3d_correct(
         loss_vel = (vel ** 2).mean()
 
         # ---- length regularization ----
-        loss_len_reg = (L ** 2).mean()
+        #loss_len_reg = (L ** 2).mean()
+        loss_len_reg = (L_indep ** 2).mean()
 
         loss = (
                 w_reproj * loss_reproj
                 + w_bone * loss_bone
-                + 1.0 * loss_sym
+                #+ 1.0 * loss_sym
                 + w_vel * loss_vel
                 + w_len_reg * loss_len_reg
         )
@@ -329,53 +363,20 @@ if __name__ == "__main__":
         for path in path_list:
             integrated_path.append((id, path))
         return integrated_path
-    connections = [(10, 0), (10, 11), (10, 12), (11, 13), (12, 14)]
-    hand_connections = [
-        (0, 1), (1, 2), (2, 3), (3, 4),  # Thumb
-        (0, 5), (5, 6), (6, 7), (7, 8),  # Index finger
-        (0, 9), (9, 10), (10, 11), (11, 12),  # Middle finger
-        (0, 13), (13, 14), (14, 15), (15, 16),  # Ring finger
-        (0, 17), (17, 18), (18, 19), (19, 20),  # Little finger
-        (5, 9), (9, 13), (13, 17),
-    ]
-    righteye_connections = [(33, 246), (246, 161), (161, 160), (160, 159), (159, 158), (158, 157), (157, 173),
-                            (173, 133),
-                            (133, 155), (155, 154), (154, 153), (153, 145), (145, 144), (144, 163), (163, 7), (7, 33),
-                            (33, 246)]
-    lefteye_connections = [(362, 398), (398, 384), (384, 385), (385, 386), (386, 387), (387, 388), (388, 466),
-                           (466, 388),
-                           (388, 263), (263, 249), (249, 390), (390, 373), (373, 374), (374, 380), (380, 381),
-                           (381, 382),
-                           (382, 362)]
-    contour_connectrions = [(127, 234), (234, 93), (93, 132), (132, 58), (58, 172), (172, 136), (136, 150), (150, 149),
-                            (149, 176), (176, 148), (148, 152), (152, 377), (377, 400), (400, 378), (378, 379),
-                            (379, 365),
-                            (365, 397), (397, 288), (288, 435), (435, 361), (361, 323), (323, 454), (454, 356)]
-    mouth_connections = [(0, 267), (267, 269), (269, 270), (270, 409), (409, 291), (291, 375), (375, 321), (321, 405),
-                         (405, 314), (314, 17), (17, 84), (84, 181), (181, 91), (91, 146), (146, 61), (61, 185),
-                         (185, 40),
-                         (40, 39), (39, 37), (37, 0)]
-    face_connections = righteye_connections + lefteye_connections + mouth_connections + contour_connectrions
-    all_connections = connections +[(13,15)]+ [(i + 15, j + 15) for i, j in hand_connections] + [(14,36)]+ [(i + 36, j + 36) for i, j in
-                                                                                               hand_connections]
-    all_connections=sort_connections(all_connections)
-    face_connections=sort_connections(face_connections)
-    #print(all_connections)
-    hand_points = [(i + 17, j + 17) for i, j in hand_connections] + [(i + 38, j + 38) for i, j in hand_connections]
-    body_points = [0, 10, 11, 12, 13, 14]
-    B, T, J = 64, 20, 48
+    is_opnepose=True
 
+    B, T, J = 64, 20, 48
     # simple chain: 0(root) -> 1 -> 2 -> 3 -> 4
     parents = build_parents_from_connections(
-        all_connections,
+        all_connections if not is_opnepose else all_connections_openpose,
         root=1
     )
     parents_face = build_parents_from_connections(
-        face_connections,
+        face_connections if not is_opnepose else face_connections_openpose,
         root=1
     )
-    bone_pairs =torch.tensor(all_connections,dtype=torch.long)
-    dataset="how2sign"
+    bone_pairs =torch.tensor(all_connections if not is_opnepose else all_connections_openpose, dtype=torch.long)
+    dataset="phoenixT"
     print("dataset:",dataset)
     tokenizer = AutoTokenizer.from_pretrained("openai/clip-vit-base-patch32")#ここは何でも良い
     train_data_path = []
@@ -393,18 +394,18 @@ if __name__ == "__main__":
     train_path, dev_path, test_path, train_corpus_T, dev_corpus_T, test_corpus_T =datasets_loader_T(dataset)
     if dataset=="phoenixT":
         id=0
-        train_cod_root[id]=SKELETON_TRAIN_DATADIR_T
-        dev_cod_root[id]=SKELETON_DEV_DATADIR_T
-        test_cod_root[id]=SKELETON_TEST_DATADIR_T
-        train_face_root[id]=FACE_TRAIN_DATADIR_T
-        dev_face_root[id]=FACE_DEV_DATADIR_T
-        test_face_root[id]=FACE_TEST_DATADIR_T
-        save_train_path=SKELETON_TRAIN_DATADIR_T_PROCESSED
-        save_dev_path=SKELETON_DEV_DATADIR_T_PROCESSED
-        save_test_path=SKELETON_TEST_DATADIR_T_PROCESSED
-        save_train_path_face=FACE_TRAIN_DATADIR_T_PROCESSED
-        save_dev_path_face=FACE_DEV_DATADIR_T_PROCESSED
-        save_test_path_face=FACE_TEST_DATADIR_T_PROCESSED
+        train_cod_root[id]=SKELETON_TRAIN_DATADIR_T_OPENPOSE
+        dev_cod_root[id]=SKELETON_DEV_DATADIR_T_OPENPOSE
+        test_cod_root[id]=SKELETON_TEST_DATADIR_T_OPENPOSE
+        train_face_root[id]=FACE_TRAIN_DATADIR_T_OPENPOSE
+        dev_face_root[id]=FACE_DEV_DATADIR_T_OPENPOSE
+        test_face_root[id]=FACE_TEST_DATADIR_T_OPENPOSE
+        save_train_path=SKELETON_TRAIN_DATADIR_T_OPENPOSE_PROCESSED
+        save_dev_path=SKELETON_DEV_DATADIR_T_OPENPOSE_PROCESSED
+        save_test_path=SKELETON_TEST_DATADIR_T_OPENPOSE_PROCESSED
+        save_train_path_face=FACE_TRAIN_DATADIR_T_OPENPOSE_PROCESSED
+        save_dev_path_face=FACE_DEV_DATADIR_T_OPENPOSE_PROCESSED
+        save_test_path_face=FACE_TEST_DATADIR_T_OPENPOSE_PROCESSED
 
     elif dataset=="CSL-Daily":
         id=1
@@ -457,11 +458,11 @@ if __name__ == "__main__":
     dev_data_path=integrate_path(id,dev_path)
     test_data_path=integrate_path(id,test_path)
     ds_train=SLG_t2s_datasets(train_data_path, train_cod_root, train_face_root, train_corpus, tokenizer, trainable=False, is_processed=False,
-                              is_sg_filter=False)
+                              is_sg_filter=False,is_openpose=is_opnepose)
     ds_dev=SLG_t2s_datasets(dev_data_path, dev_cod_root, dev_face_root, dev_corpus, tokenizer, trainable=False, is_processed=False,
-                            is_sg_filter=False)
+                            is_sg_filter=False,is_openpose=is_opnepose)
     ds_test=SLG_t2s_datasets(test_data_path, test_cod_root, test_face_root, test_corpus, tokenizer, trainable=False, is_processed=False,
-                             is_sg_filter=False)
+                             is_sg_filter=False,is_openpose=is_opnepose)
     dl_train=DataLoader(ds_train,batch_size=B,shuffle=False,collate_fn=ds_train.collate_fn,drop_last=False)
     dl_dev=DataLoader(ds_dev,batch_size=B,shuffle=False,collate_fn=ds_dev.collate_fn,drop_last=False)
     dl_test=DataLoader(ds_test,batch_size=B,shuffle=False,collate_fn=ds_test.collate_fn,drop_last=False)
@@ -499,7 +500,7 @@ if __name__ == "__main__":
         x3d = lift_2d_to_3d_correct(
             x2d,
             parents=parents,
-            bone_pairs=torch.tensor(all_connections,dtype=torch.long),
+            bone_pairs=torch.tensor(all_connections if not is_opnepose else all_connections_openpose,dtype=torch.long),
             sym_pairs=None,
             steps=100,
             lr=1e-2,
@@ -528,7 +529,7 @@ if __name__ == "__main__":
         x3d = lift_2d_to_3d_correct(
             x2d,
             parents=parents,
-            bone_pairs=torch.tensor(all_connections,dtype=torch.long),
+            bone_pairs=torch.tensor(all_connections if not is_opnepose else all_connections_openpose,dtype=torch.long),
             sym_pairs=None,
             steps=100,
             lr=1e-2,
@@ -557,7 +558,7 @@ if __name__ == "__main__":
         x3d = lift_2d_to_3d_correct(
             x2d,
             parents=parents,
-            bone_pairs=torch.tensor(all_connections,dtype=torch.long),
+            bone_pairs=torch.tensor(all_connections if not is_opnepose else all_connections_openpose,dtype=torch.long),
             sym_pairs=None,
             steps=100,
             lr=1e-2,

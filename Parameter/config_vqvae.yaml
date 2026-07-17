@@ -6,45 +6,51 @@ dataset_parameters:
   use_phoenixT: True
   use_how2sign: False
   use_csl-daily: False
-  is_processed: True
+  is_processed: False
 lr_parameters:
   epoch: 20
-  learning_rate : 0.0001
+  learning_rate : 0.00005
   min_lr: 0.000001
-  weight_decay: 0.001
+  weight_decay: 0.01
   milestones: [50,80]
   dropout: 0.3
   amp: True
   display_step: 100
   accumulation_step: 1
   batch_size: 32
-  scheduler_timing: "epoch"
-  scheduler_type: "CosineAnnealingLR"
+  scheduler_timing: "step"
+  scheduler_type: "CosineAnnealingWarmRestarts"
   grad_clip_norm: 1.0
   ema: False
   ema_beta: 0.999
   replacement_num_batches: 100
 loss_parameters:
-    recon_pos_weight: 1.0
-    recon_hand_weight: 1.0
+    recon_pos_weight: 0.2
+    recon_hand_weight: 0.8
+    recon_face_weight: 0.5
     vq_weight: 1.0
 
 model:
   pose_dim: 100
   in_dim: 100
   hidden_dim: 512
-  code_dim: 128
-  n_codes: 256
-  stride: 4
-  n_res_blocks: 4
+  pose_hidden_dim: 256
+  hand_hidden_dim: 512
+  code_dim: 32
+  n_codes: 512
+  stride: 1
+  n_res_blocks: 2
   dropout: 0.3
   rvq_stages: 1
   vq_beta: 0.5
-  n_layers_enc: 1
-  n_layers_dec: 1
+  n_layers_enc: 2
+  n_layers_dec: 2
   n_heads: 8
   ff_mult: 4
   tau: 1.0
+  levels: [3,2,2,2]
+  levels_pos: [3,3]
+  levels_hand: [3,3]
   separated_vae:
     pose_d_model: 128
     hand_d_model: 256

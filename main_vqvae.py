@@ -13,8 +13,8 @@ from torchvision.transforms.v2 import Compose, Resize, RandomCrop, CenterCrop, R
 
 import time
 from models.text2pose import Text2Pose
-from models.module.VQ_VAE import VQVAE1D,VQLossWeights
-from models.module.VQ_VAE_Transformer import VQVAETransformer1D,VQVAETransformer1DSeparated,VQVAETransformer1DAggregated,VQVAETransformer1DAggregatedCategorical
+from models.module.VQ_VAE import VQVAE1D
+from models.module.VQ_VAE_Transformer import VQVAETransformer1D,VQLossWeights
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
 from loader import *
 from Parameter.Parameter import *
@@ -248,6 +248,7 @@ def main(config, mode, checkpoint):
     loss_w=VQLossWeights()
     loss_w.recon_pos=config['loss_parameters']['recon_pos_weight']
     loss_w.recon_hand=config['loss_parameters']['recon_hand_weight']
+    loss_w.recon_face=config['loss_parameters']['recon_face_weight']
     loss_w.vq=config['loss_parameters']['vq_weight']
     """
     model = VQVAE1D(
@@ -278,6 +279,7 @@ def main(config, mode, checkpoint):
         dropout=config["model"]["dropout"],
         rvq_stages=config["model"]["rvq_stages"],
         vq_beta=config["model"]["vq_beta"],
+        levels=config["model"]["levels"],
         loss_w=loss_w
     ).float().to(device)
     """
@@ -323,18 +325,30 @@ def main(config, mode, checkpoint):
     optimizer = optim.AdamW(model.parameters(), lr=config["lr_parameters"]['learning_rate'],
                            weight_decay=config["lr_parameters"]['weight_decay'])
 
-    #criterion = Text2Pose_criterion(config['loss_parameters'])
+    # criterion = Text2Pose_criterion(config['loss_parameters'])
     if config['lr_parameters']['scheduler_type'] == "CosineAnnealingLR":
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["lr_parameters"]["epoch"],
-                                                         eta_min=config["lr_parameters"]["min_lr"])
+        if config['lr_parameters']['scheduler_timing'] == "epoch":
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config["lr_parameters"]["epoch"],
+                                                             eta_min=config["lr_parameters"]["min_lr"])
+        elif config['lr_parameters']['scheduler_timing'] == "step":
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,
+                                                             T_max=len(dl_train) * config["lr_parameters"]["epoch"],
+                                                             eta_min=config["lr_parameters"]["min_lr"])
     elif config['lr_parameters']['scheduler_type'] == "CosineAnnealingWarmRestarts":
-        scheduler = CosineAnnealingLR(optimizer, warmup_epochs=int(config["lr_parameters"]["epoch"]*0.02),
-                                      max_epochs=config["lr_parameters"]["epoch"],
-                                      warmup_start_lr=config["lr_parameters"]["min_lr"],
-                                      eta_min=config["lr_parameters"]["min_lr"])
+        if config['lr_parameters']['scheduler_timing'] == "epoch":
+            scheduler = CosineAnnealingLR(optimizer, warmup_epochs=int(config["lr_parameters"]["epoch"] * 0.1),
+                                          max_epochs=config["lr_parameters"]["epoch"],
+                                          warmup_start_lr=config["lr_parameters"]["min_lr"],
+                                          eta_min=config["lr_parameters"]["min_lr"])
+        elif config['lr_parameters']['scheduler_timing'] == "step":
+            scheduler = CosineAnnealingLR(optimizer,
+                                          warmup_epochs=int(len(dl_train) * config["lr_parameters"]["epoch"] * 0.1),
+                                          max_epochs=len(dl_train) * config["lr_parameters"]["epoch"],
+                                          warmup_start_lr=config["lr_parameters"]["min_lr"],
+                                          eta_min=config["lr_parameters"]["min_lr"])
     elif config['lr_parameters']['scheduler_type'] == "StepLR":
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=config['lr_parameters']['milestones'],
-                                                 gamma=config['lr_parameters']['gamma'])
+                                                   gamma=config['lr_parameters']['gamma'])
     print("Optimizer, criterion, and lr_scheduler created.")
     # 学習の実行
     print("---Starting training/evaluation---")
@@ -354,6 +368,8 @@ def main(config, mode, checkpoint):
                 f.write(id)
         trainer.fit(model, optimizer, scheduler, None, dl_train, dl_dev, dl_test, device,
                     early_stopping=None)
+        trainer.visualize(model, ds_test, device)
+
     elif mode == "visualize":
         trainer.visualize(model, ds_test, device)
     else:
@@ -368,8 +384,8 @@ if __name__ == "__main__":
     print("無効化完了")
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
-    mode = "visualize"
-    checkpoint = "/media/caffe/data_storage/CSLR/keyword_models/train/2026/0414/1709/19/model_epoch19.pth"
+    mode = "train"
+    checkpoint =None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
@@ -393,9 +409,12 @@ if __name__ == "__main__":
             else:
                  break
         log_create_dir(save_path)
-        # copy_dir(PROJECT_DIR, save_path)
+        copy_dir(PROJECT_DIR, save_path)
         shutil.copy(f"/home/caffe/work/SLG/Parameter/config_vqvae.yaml", f"{save_path}/config_vqvae.yaml")
 
     config['save_path'] = save_path
     main(config, mode, checkpoint=checkpoint)
     # print("Process time: ", time.time() - start)
+    #time.sleep(10)
+    #print("全学習が終了しました．PCをシャットダウンします...")
+    #os.system("shutdown -h now")

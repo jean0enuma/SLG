@@ -6,6 +6,7 @@ from Parameter.Parameter import *
 from sklearn.model_selection import train_test_split
 import os,copy
 import random,time
+from utils.phoenix_cleanup import clean_phoenix_2014,clean_phoenix_2014_trans
 
 def create_corpus(data_path):
     gloss2class = {}
@@ -49,6 +50,14 @@ def create_video2gloss_from_datapath(data_path, gloss2class):
         key = path.split("/")[-1]
         gloss= path.split("/")[-2]
         video2gloss[key] = gloss
+    return video2gloss
+def create_video2gloss_from_datapath_autsl(data_path,class2word):
+    video2gloss={}
+    #class2word
+    for path in data_path:
+        key=path.split("/")[-1]
+        gloss=class2word[int(path.split("/")[-2])]
+        video2gloss[key]=gloss
     return video2gloss
 def create_video2gloss_from_datapath_phoenix(data_path, gloss2class):
     """
@@ -159,8 +168,11 @@ def datasets_loader(dataset:str):
         dev_corpusT = pd.read_csv(TEXT_DEV_PATH_T, delimiter="|")
         test_corpusT = pd.read_csv(TEXT_TEST_PATH_T, delimiter="|")
         train_corpus = train_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+        train_corpus["annotation"]=train_corpus["annotation"].apply(clean_phoenix_2014_trans)
         dev_corpus = dev_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+        dev_corpus["annotation"]=dev_corpus["annotation"].apply(clean_phoenix_2014_trans)
         test_corpus = test_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+        test_corpus["annotation"]=test_corpus["annotation"].apply(clean_phoenix_2014_trans)
     elif dataset=="CSL-Daily":
         data_path=sorted(glob.glob(f"{CSL_DAILY_DATADIR}/*"))
         split=pd.read_csv(f"{CSL_DAILY_LABELS}/split_1.txt",delimiter="|")
@@ -206,7 +218,36 @@ def datasets_loader(dataset:str):
     else:
         raise ValueError("dataset is not defined")
     return train_path, dev_path, test_path, train_corpus, dev_corpus, test_corpus
-def datasets_loader_T(dataset:str):
+def datasets_loader_gloss_trans(dataset:str):
+    if dataset=="phoenixT":
+        train_path = sorted(glob.glob(f"{TRAIN_DATADIR_T}/*"))
+        dev_path = sorted(glob.glob(f"{DEV_DATADIR_T}/*"))
+        test_path = sorted(glob.glob(f"{TEST_DATADIR_T}/*"))
+        train_corpusT = pd.read_csv(TEXT_TRAIN_PATH_T, delimiter="|")
+        dev_corpusT = pd.read_csv(TEXT_DEV_PATH_T, delimiter="|")
+        test_corpusT = pd.read_csv(TEXT_TEST_PATH_T, delimiter="|")
+        train_corpus = train_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+        train_corpus['annotation'] = train_corpus['annotation'].apply(clean_phoenix_2014_trans)
+        dev_corpus = dev_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+        dev_corpus['annotation']=dev_corpus['annotation'].apply(clean_phoenix_2014_trans)
+        test_corpus = test_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+        test_corpus['annotation']=test_corpus['annotation'].apply(clean_phoenix_2014_trans)
+
+    elif dataset=="CSL-Daily":
+        data_path=sorted(glob.glob(f"{CSL_DAILY_DATADIR}/*"))
+        split=pd.read_csv(f"{CSL_DAILY_LABELS}/split_1.txt",delimiter="|")
+        train_path=sorted([path for path in data_path if path.split("/")[-1] in split[split["split"]=="train"]["name"].values])
+        dev_path=sorted([path for path in data_path if path.split("/")[-1] in split[split["split"]=="dev"]["name"].values])
+        test_path=sorted([path for path in data_path if path.split("/")[-1] in split[split["split"]=="test"]["name"].values])
+        corpus= pd.read_csv(f"{CSL_DAILY_LABELS}/video_map.txt",delimiter="|")
+        train_corpus=corpus.rename(columns={"gloss":"annotation","name":"id","char":"translation"})
+        dev_corpus=train_corpus
+        test_corpus=train_corpus
+    else:
+        raise ValueError("dataset is not defined")
+    return train_path, dev_path, test_path, train_corpus, dev_corpus, test_corpus
+        # clean_phoenix_2014_transを適用する
+def datasets_loader_T(dataset:str,gloss=False):
     #手話動画データセットの読み込み
     #phoenixは画像の連番となっている
     if dataset=="how2sign":
@@ -268,9 +309,18 @@ def datasets_loader_T(dataset:str):
         train_corpusT = pd.read_csv(TEXT_TRAIN_PATH_T, delimiter="|")
         dev_corpusT = pd.read_csv(TEXT_DEV_PATH_T, delimiter="|")
         test_corpusT = pd.read_csv(TEXT_TEST_PATH_T, delimiter="|")
-        train_corpus = train_corpusT.rename(columns={"translation": "annotation", "name": "id"})
-        dev_corpus = dev_corpusT.rename(columns={"translation": "annotation", "name": "id"})
-        test_corpus = test_corpusT.rename(columns={"translation": "annotation", "name": "id"})
+        if gloss==True:
+            train_corpus = train_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+            dev_corpus=dev_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+            test_corpus=test_corpusT.rename(columns={"orth": "annotation", "name": "id"})
+            #clean_phoenix_2014_transを適用する
+            train_corpus["annotation"]=train_corpus["annotation"].apply(clean_phoenix_2014_trans)
+            dev_corpus["annotation"]=dev_corpus["annotation"].apply(clean_phoenix_2014_trans)
+            test_corpus["annotation"]=test_corpus["annotation"].apply(clean_phoenix_2014_trans)
+        else:
+            train_corpus = train_corpusT.rename(columns={"translation": "annotation", "name": "id"})
+            dev_corpus = dev_corpusT.rename(columns={"translation": "annotation", "name": "id"})
+            test_corpus = test_corpusT.rename(columns={"translation": "annotation", "name": "id"})
     elif dataset=="CSL-Daily":
         data_path=sorted(glob.glob(f"{CSL_DAILY_DATADIR}/*"))
         split=pd.read_csv(f"{CSL_DAILY_LABELS}/split_1.txt",delimiter="|")
@@ -278,7 +328,10 @@ def datasets_loader_T(dataset:str):
         dev_path=sorted([path for path in data_path if path.split("/")[-1] in split[split["split"]=="dev"]["name"].values])
         test_path=sorted([path for path in data_path if path.split("/")[-1] in split[split["split"]=="test"]["name"].values])
         corpus= pd.read_csv(f"{CSL_DAILY_LABELS}/video_map.txt",delimiter="|")
-        train_corpus=corpus.rename(columns={"char":"annotation","name":"id"})
+        if gloss==True:
+            train_corpus=corpus.rename(columns={"gloss":"annotation","name":"id"})
+        else:
+            train_corpus=corpus.rename(columns={"char":"annotation","name":"id"})
         dev_corpus=train_corpus
         test_corpus=train_corpus
     elif dataset=="LSA-T":
@@ -313,6 +366,11 @@ def datasets_loader_T(dataset:str):
         train_corpus = pd.read_csv(TEXT_TRAIN_PATH, delimiter="|")
         dev_corpus = pd.read_csv(TEXT_DEV_PATH, delimiter="|")
         test_corpus = pd.read_csv(TEXT_TEST_PATH, delimiter="|")
+        #clean_phoenix_2014を適用する
+        train_corpus["annotation"]=train_corpus["annotation"].apply(clean_phoenix_2014)
+        dev_corpus["annotation"]=dev_corpus["annotation"].apply(clean_phoenix_2014)
+        test_corpus["annotation"]=test_corpus["annotation"].apply(clean_phoenix_2014)
+
     else:
         raise ValueError("dataset is not defined")
     return train_path, dev_path, test_path, train_corpus, dev_corpus, test_corpus
@@ -410,19 +468,25 @@ def preprocess_from_frames(video_path, threshold_min_frame=8, threshold_max_fram
     if len(new_video_path)==0:
         raise ValueError("No video found after preprocessing")
     return new_video_path
-def islr_datasets_loader(dataset:str):
+def islr_datasets_loader(dataset:str,train_test_split="none"):
     dev_path=None
     if dataset=="AUTSL":
         train_path = sorted(glob.glob(f"{AUTSL_TRAIN_DATADIR}/*/*.mp4"))
-        train_path=preprocess_from_video(train_path)
+        #train_path=preprocess_from_video(train_path)
         dev_path = sorted(glob.glob(f"{AUTSL_DEV_DATADIR}/*/*.mp4"))
-        dev_path=preprocess_from_video(dev_path)
+        #dev_path=preprocess_from_video(dev_path)
         test_path = sorted(glob.glob(f"{AUTSL_TEST_DATADIR}/*/*.mp4"))
-        test_path=preprocess_from_video(test_path)
+        #test_path=preprocess_from_video(test_path)
         data_path=train_path + dev_path + test_path
-
+        classid=pd.read_csv(AUTSL_CLASSID_PATH,delimiter=",")
+        #classidは"ClassId","TR","EN"の列を持つ，TRとENは言語が異なるだけ．ここではTRを使用する
+        #class2wordは"ClassId"をキーにして"TR"を値とする辞書
+        class2word={}
+        for _, row in classid.iterrows():
+            class2word[row["ClassId"]]=row["TR"]
         gloss2class,class2gloss= create_corpus(data_path)
-        video2gloss= create_video2gloss_from_datapath(data_path, gloss2class)
+        video2gloss= create_video2gloss_from_datapath_autsl(data_path, class2word)
+        gloss2class= {class_id:gloss for gloss, class_id in class2word.items()}
     elif dataset=="WLASL":
         data_path = sorted(glob.glob(f"{WLASL2000_DATADIR}/*/*.mp4"))
         gloss2class, class2gloss = create_corpus(data_path)
@@ -462,7 +526,8 @@ def islr_datasets_loader(dataset:str):
         test_path= sorted([f"{ASL_CITIZEN_DATADIR}/{video}" for video in video2gloss_test.keys()])
         skeleton_test_path=SKELETON_ASL_CITIZEN_TEST_DATADIR_3D
         test_path= preprocess_from_video_with_skeleton(test_path,skeleton_test_path, threshold_min_frame=16, threshold_max_frame=96)
-        train_path=train_path+test_path
+        if train_test_split=="none":
+            train_path=train_path+test_path
 
     elif dataset=="LSA64":
         data_path=sorted(glob.glob(f"{LSA64_DATADIR}/*/*.mp4"))
@@ -488,35 +553,155 @@ def islr_datasets_loader(dataset:str):
             if '/'.join(path.split("/")[-2:]) in test_iso[0].values:
                 test_path.append(path)
     elif dataset=="phoenix":
-        remove_class={
-            "795___ON__",
-            "830___PU__",
-            "790___OFF__",
-            "246___EMOTION__",
-            "510___LEFTHAND__",
-            "1231_si",
-        }
-        data_path = []
-        copy_path=sorted(glob.glob(f"{WORDS_DATADIR}/*"))
-        for gloss_path in copy_path:
+        train_path = []
+        dev_path= []
+        test_path= []
+
+        copy_path_train=sorted(glob.glob(f"{WORDS_DATADIR}/train/*"))
+        copy_path_dev=sorted(glob.glob(f"{WORDS_DATADIR}/dev/*"))
+        copy_path_test=sorted(glob.glob(f"{WORDS_DATADIR}/test/*"))
+        for gloss_path in copy_path_train:
             num_file= len(glob.glob(f"{gloss_path}/*"))
-            if num_file < 100:
+            if num_file < 5:
                 continue
-            elif num_file > 790:#q1+四分位範囲*1.5以上は408個をランダムに選択
-                gloss_path_list=random.sample(glob.glob(f"{gloss_path}/*"), k=408)
             else:
                 gloss_path_list=glob.glob(f"{gloss_path}/*")
             for file_path in gloss_path_list:
                 num_frame= len(glob.glob(f"{file_path}/*.png"))
                 if num_frame < 8:
                     continue
-                elif file_path.split("/")[-2] in remove_class:
+                else:
+                    train_path.append(file_path)
+        for gloss_path in copy_path_dev:
+            num_file= len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list=glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame= len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 8:
                     continue
                 else:
-                    data_path.append(file_path)
-        gloss2class, class2gloss = create_corpus(data_path)
-        train_path, test_path = train_test_split(data_path, test_size=0.2, random_state=42)
-        video2gloss = create_video2gloss_from_datapath_phoenix(data_path, gloss2class)
+                    dev_path.append(file_path)
+        for gloss_path in copy_path_test:
+            num_file= len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list=glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame= len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 8:
+                    continue
+                else:
+                    test_path.append(file_path)
+        gloss2class_t, class2gloss_t = create_corpus(train_path+dev_path+test_path)
+        gloss2class={}
+        class2gloss={}
+        for g,c in gloss2class_t.items():
+            g = g[g.index('_') + 1:].lower()
+            gloss2class[g]=c
+            class2gloss[c]=g
+        video2gloss = create_video2gloss_from_datapath_phoenix(train_path+dev_path+test_path, gloss2class_t)
+    elif dataset=="phoenixT":
+        train_path = []
+        dev_path = []
+        test_path = []
+
+        copy_path_train = sorted(glob.glob(f"{WORDS_DATADIR_T}/train/*"))
+        copy_path_dev = sorted(glob.glob(f"{WORDS_DATADIR_T}/dev/*"))
+        copy_path_test = sorted(glob.glob(f"{WORDS_DATADIR_T}/test/*"))
+        for gloss_path in copy_path_train:
+            num_file = len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list = glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame = len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 2:
+                    continue
+                else:
+                    train_path.append(file_path)
+        for gloss_path in copy_path_dev:
+            num_file = len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list = glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame = len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 2:
+                    continue
+                else:
+                    dev_path.append(file_path)
+        for gloss_path in copy_path_test:
+            num_file = len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list = glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame = len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 2:
+                    continue
+                else:
+                    test_path.append(file_path)
+        gloss2class_t, class2gloss_t = create_corpus(train_path + dev_path + test_path)
+        gloss2class = {}
+        class2gloss = {}
+        for g, c in gloss2class_t.items():
+            g = g[g.index('_') + 1:].lower()
+            gloss2class[g] = c
+            class2gloss[c] = g
+        video2gloss = create_video2gloss_from_datapath_phoenix(train_path + dev_path + test_path, gloss2class_t)
+    elif dataset=="CSL-Daily":
+        train_path = []
+        dev_path = []
+        test_path = []
+
+        copy_path_train = sorted(glob.glob(f"{WORDS_DATADIR_CSL_DAILY}/train/*"))
+        copy_path_dev = sorted(glob.glob(f"{WORDS_DATADIR_CSL_DAILY}/dev/*"))
+        copy_path_test = sorted(glob.glob(f"{WORDS_DATADIR_CSL_DAILY}/test/*"))
+        for gloss_path in copy_path_train:
+            num_file = len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list = glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame = len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 5:
+                    continue
+                else:
+                    train_path.append(file_path)
+        for gloss_path in copy_path_dev:
+            num_file = len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list = glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame = len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 5:
+                    continue
+                else:
+                    dev_path.append(file_path)
+        for gloss_path in copy_path_test:
+            num_file = len(glob.glob(f"{gloss_path}/*"))
+            if num_file < 0:
+                continue
+            else:
+                gloss_path_list = glob.glob(f"{gloss_path}/*")
+            for file_path in gloss_path_list:
+                num_frame = len(glob.glob(f"{file_path}/*.png"))
+                if num_frame < 5:
+                    continue
+                else:
+                    test_path.append(file_path)
+        gloss2class, class2gloss = create_corpus(train_path + dev_path + test_path)
+        video2gloss = create_video2gloss_from_datapath_phoenix(train_path + dev_path + test_path, gloss2class)
     else:
         raise ValueError("dataset is not defined")
     return train_path, dev_path, test_path, gloss2class, class2gloss, video2gloss

@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoModel, BertTokenizer,CLIPTextModel
+import uform
+
 def create_mask(target_length, max_len):
     # target_length: (batch_size,)
     batch_size = target_length.size(0)
@@ -181,7 +183,76 @@ class SkeletonTransformerEncoder(nn.Module):
         if not return_sequence:
             out.pop("last_hidden_state")
         return out
+class ScratchTextEncoder(nn.Module):
+    """
+    A simple scratch text encoder using TransformerEncoder.
+    """
+    def __init__(
+        self,
+        vocab_size: int,
+        d_model: int = 256,
+        nhead: int = 8,
+        num_layers: int = 4,
+        dim_feedforward: int = 1024,
+        dropout: float = 0.1,
+        proj_dim: int = 256,
+        max_len: int = 512,
+        pooling: str = "cls",  # "cls" or "mean"
+    ):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.pos_enc = PositionalEncoding(d_model=d_model, max_len=max_len)
 
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=nhead,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
+            activation="gelu",
+            batch_first=True,  # (B, T, D)
+            norm_first=True,
+        )
+        self.encoder = nn.TransformerEncoder(
+            encoder_layer=encoder_layer,
+            num_layers=num_layers,
+            norm=nn.LayerNorm(d_model),
+        )
+
+        self.proj = nn.Linear(d_model, proj_dim)
+        self.pooling = pooling
+    def masked_mean_pool(self, x: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+        """
+        x: (B, L, D)
+        attention_mask: (B, L), 1=valid, 0=padding
+        """
+        mask = attention_mask.unsqueeze(-1).float()  # (B, L, 1)
+        denom = mask.sum(dim=1).clamp_min(1.0)
+        pooled = (x * mask).sum(dim=1) / denom
+        return pooled
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
+        x = self.embedding(input_ids)  # (B, L, D)
+        x = self.pos_enc(x)           # (B, L, D)
+        x = self.encoder(x, src_key_padding_mask=~attention_mask.bool())  # (B, L, D)
+
+        if self.pooling == "cls":
+            pooled = x[:, 0]  # [CLS]
+        elif self.pooling == "mean":
+            pooled = self.masked_mean_pool(x, attention_mask)
+        else:
+            raise ValueError(f"Unsupported pooling: {self.pooling}")
+
+        emb = self.proj(pooled)  # (B, proj_dim)
+        emb = F.normalize(emb, dim=-1)
+
+        return {
+            "last_hidden_state": x,
+            "pooled_features": pooled,
+            "embeddings": emb,
+        }
 
 class TextEncoder(nn.Module):
     """
@@ -201,8 +272,10 @@ class TextEncoder(nn.Module):
         self.model_name=model_name
         if model_name=="openai/clip-vit-base-patch32":
             self.embed_model=CLIPTextModel.from_pretrained(model_name)
+        elif model_name=="unum-cloud/uform-vl-multilingual-v2":
+            model.processor= uform.UFormProcessor.from_pretrained(model_name)
         else:
-            self.embed_model = AutoModel.from_pretrained(model_name)
+            self.embed_model =AutoModel.from_pretrained(model_name, num_hidden_layers=num_layers, num_attention_heads=nhead, intermediate_size=self.embed_model.config.hidden_size*ffn_mult)
         hidden_size = self.embed_model.config.hidden_size
         self.pooling = pooling
         self.proj = nn.Sequential(
@@ -226,12 +299,17 @@ class TextEncoder(nn.Module):
         attention_mask: torch.Tensor,
         token_type_ids: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
-        outputs = self.embed_model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            #token_type_ids=token_type_ids,
-            #return_dict=True,
-        )
+        if self.model_name=="jinaai/jina-clip-v2":
+            outputs=self.embed_model(x=input_ids)
+        elif self.model_name=="unum-cloud/uform-vl-multilingual-v2":
+            outputs,embedding=model.encode_text(input_ids,attention_mask=attention_mask,return_features=True)
+        else:
+            outputs = self.embed_model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                #token_type_ids=token_type_ids,
+                #return_dict=True,
+            )
         hidden_feature = outputs.last_hidden_state  # (B, L, D)
         if self.pooling == "cls":
             if self.model_name=="openai/clip-vit-base-patch32":
@@ -275,6 +353,8 @@ class SkeletonTextCLIP(nn.Module):
         text_num_layers=config.get("text_num_layers", 2)
         text_nhead=config.get("text_nhead", 8)
         text_ffn_mult=config.get("text_ffn_mult", 4)
+        vocab_size = config["vocab_size"]
+
         self.skeleton_encoder = SkeletonTransformerEncoder(
             num_joints=num_joints,
             joint_dim=joint_dim,
@@ -285,15 +365,27 @@ class SkeletonTextCLIP(nn.Module):
             dropout=dropout,
             proj_dim=proj_dim,
         )
-        self.text_encoder = TextEncoder(
-            model_name=text_encoer_name,
-            proj_dim=proj_dim,
-            dropout=dropout,
-            pooling=text_pooling,
-            num_layers=text_num_layers,
-            nhead=text_nhead,
-            ffn_mult=text_ffn_mult,
-        )
+        if text_encoer_name=="scratch":
+            self.text_encoder=ScratchTextEncoder(
+                vocab_size=vocab_size,
+                d_model=skeleton_d_model,
+                nhead=text_nhead,
+                num_layers=text_num_layers,
+                dim_feedforward=skeleton_ff_dim,
+                dropout=dropout,
+                proj_dim=proj_dim,
+                pooling=text_pooling,
+            )
+        else:
+            self.text_encoder = TextEncoder(
+                model_name=text_encoer_name,
+                proj_dim=proj_dim,
+                dropout=dropout,
+                pooling=text_pooling,
+                num_layers=text_num_layers,
+                nhead=text_nhead,
+                ffn_mult=text_ffn_mult,
+            )
 
         # CLIP-style learnable logit scale
         self.logit_scale = nn.Parameter(torch.tensor(math.log(1.0 / init_temperature)))
@@ -310,7 +402,11 @@ class SkeletonTextCLIP(nn.Module):
         logit_scale = self.logit_scale.exp().clamp(max=100.0)
         logits = logit_scale * (skeleton_emb @ text_emb.t())  # (B, B)
         return logits
-
+    def trainable_text_layers(self,trainable_layers):
+        for param in self.text_encoder.embed_model.encoder.layer[:trainable_layers].parameters():
+            param.requires_grad = True
+        for param in self.text_encoder.embed_model.encoder.layer[trainable_layers:].parameters():
+            param.requires_grad = False
     def contrastive_loss(self, logits: torch.Tensor) -> torch.Tensor:
         """
         Symmetric CLIP loss.

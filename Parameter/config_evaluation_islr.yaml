@@ -1,0 +1,47 @@
+dataset: "phoenixT"
+work_dir: "/home/caffe/work/SLG/"
+device: "cuda:1"
+dataset_parameters:
+  use_phoenix: False
+  use_phoenixT: false
+  use_how2sign: False
+  use_asl: False
+  use_csl: False
+  use_csl-daily: False
+  use_autsl: True
+  is_processed: False
+lr_parameters:
+  epoch: 40
+  learning_rate: 0.0001
+  min_lr: 0.000001
+  weight_decay: 0.01
+  milestones: [50,80]
+  dropout: 0.3
+  amp: True
+  display_step: 100
+  accumulation_step: 1
+  batch_size: 32
+  scheduler_timing: "step"
+  scheduler_type: "CosineAnnealingWarmRestarts"
+  grad_clip_norm: 1.0
+  ema: False
+  ema_beta: 0.999
+  replacement_num_batches: 100
+loss_parameters:
+    recon_skeleton: 1.0
+    recon_text: 1.0
+    kl_skeleton: 0.2
+    kl_text: 0.0
+    kl_skeleton_aux: 0.0
+    kl_text_aux: 0.2
+    body_weight: 0.1
+    hand_weight: 0.9
+    face_weight: 0.2
+model:
+  pose_dim: 252
+  num_classes: 226
+  d_model: 512
+  nhead: 8
+  num_layers: 2
+
+

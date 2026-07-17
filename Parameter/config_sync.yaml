@@ -3,23 +3,24 @@ work_dir: "/home/caffe/work/SLG/"
 device: "cuda:0"
 dataset_parameters:
   use_phoenix: False
-  use_phoenixT: False
-  use_how2sign: True
+  use_phoenixT: True
+  use_how2sign: False
   use_asl: False
   use_csl: False
   use_csl-daily: False
+  use_autsl: False
   is_processed: False
 lr_parameters:
-  epoch: 100
-  learning_rate : 0.0002
+  epoch: 40
+  learning_rate: 0.0001
   min_lr: 0.000001
-  weight_decay: 0.1
+  weight_decay: 0.01
   milestones: [50,80]
   dropout: 0.3
   amp: True
   display_step: 100
   accumulation_step: 1
-  batch_size: 512
+  batch_size: 32
   scheduler_timing: "step"
   scheduler_type: "CosineAnnealingWarmRestarts"
   grad_clip_norm: 1.0
@@ -30,17 +31,19 @@ loss_parameters:
     recon_skeleton: 1.0
     recon_text: 1.0
     kl_skeleton: 0.2
-    kl_text: 0.2
-    kl_skeleton_aux: 0.1
-    kl_text_aux: 0.1
+    kl_text: 0.0
+    kl_skeleton_aux: 0.0
+    kl_text_aux: 0.2
+    body_weight: 0.3
+    hand_weight: 0.7
+    face_weight: 0.2
 model:
   kl_weight: 0.2
-  pose_dim: 252
+  pose_dim:  100
   text_cond: False
   is_diffusion: False
-  text_encoder_name: "openai/clip-vit-base-patch32"
-  body_weight: 0.3
-  hand_weight: 0.7
+  body_weight: 0.2
+  hand_weight: 0.8
   recon_weight: 0.0
   length_weight: 0.0
   diffusion_weight: 1.0
@@ -52,34 +55,34 @@ model:
     kv_input_dim: 100
     d_model: 512
     nhead: 8
-    num_layers: 2
+    num_layers: 4
     pose_num_layers: 2
     pose_nhead: 8
     ffn_mult: 4
     dropout: 0.1
     activation: "gelu"
-    window_size: 13
+    window_size: 9
     text_nhead: 4
     text_num_layers: 3
   decoder:
-    d_model: 128
+    d_model: 512
     nhead: 8
-    num_layers: 2
-    ffn_mult: 2
+    num_layers: 4
+    ffn_mult: 4
     dropout: 0.1
     activation: "gelu"
   clip_text:
-    num_joints: 126
+    num_joints: 50
     joint_dim: 3
     skeleton_d_model: 512
     skeleton_nhead: 8
     skeleton_num_layers: 2
     skeleton_ffn_mult: 4
-    text_encoder_name: "openai/clip-vit-base-patch32"
+    text_encoder_name: "scratch"
     text_num_layers: 2
     text_nhead: 4
     text_ffn_mult: 4
-    proj_dim: 512
+    proj_dim: 256
     dropout: 0.1
     text_pooling: "cls"
     init_temperature: 0.07

@@ -15,6 +15,7 @@ import time
 from models.text2pose import Text2Pose
 from models.module.VQ_VAE import VQVAE1D,VQLossWeights
 from models.module.VAE_diffusion import VAETransformerDiffusion
+from models.module.VAE_Transformer import VAE_Transformer
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
 from loader import *
 from Parameter.Parameter import *
@@ -307,7 +308,7 @@ if __name__ == "__main__":
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
     mode = "train"  # Change this to "test" when you want to test
-    checkpoint ="/media/caffe/data_storage/CSLR/keyword_models/train/2026/0414/1741/checkpoint.cpt"
+    checkpoint =None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()

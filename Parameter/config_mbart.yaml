@@ -1,0 +1,45 @@
+dataset: "phoenixT"
+work_dir: "/home/caffe/work/SLG/"
+device: "cuda:0"
+dataset_parameters:
+  use_phoenix: False
+  use_phoenixT: True
+  use_how2sign: False
+  use_asl: False
+  use_csl: False
+  use_csl-daily: False
+  use_autsl: False
+  is_processed: False
+lr_parameters:
+  epoch: 15
+  learning_rate: 0.0001
+  min_lr: 0.000001
+  weight_decay: 0.01
+  milestones: [50,80]
+  dropout: 0.3
+  amp: True
+  display_step: 100
+  accumulate_step: 4
+  batch_size: 8
+  scheduler_timing: "step"
+  scheduler_type: "CosineAnnealingWarmRestarts"
+  grad_clip_norm: 1.0
+  ema: False
+  ema_beta: 0.999
+  replacement_num_batches: 100
+
+model:
+  model_name: "facebook/mbart-large-50"
+  pose_dim: 100
+  use_peft: False
+  body_weights: 0.2
+  hand_weights: 0.8
+  face_weights: 0.2
+  recon_weights: 0.0
+  ce_weights: 1.0
+
+
+
+
+
+

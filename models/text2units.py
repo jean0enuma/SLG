@@ -181,7 +181,7 @@ class Text2Units(nn.Module):
             param.requires_grad = config['model']['text_encoder_requires_grad']  # テキストエンコーダーのパラメータを固定
         loss_w = VQLossWeights()
         loss_w.recon_pos = config['vqvae']['recon_pos_weight']
-        loss_w.recon_dir = config['vqvae']['recon_dir_weight']
+        loss_w.recon_hand = config['vqvae']['recon_dir_weight']
         loss_w.vq = config['vqvae']['vq_weight']
         self.units_model = VQVAETransformer1DAggregatedCategorical(
             n_codes=config['vqvae']['n_codes'],

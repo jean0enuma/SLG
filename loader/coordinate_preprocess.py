@@ -5,12 +5,43 @@ import matplotlib.pyplot as plt
 import glob
 import cv2
 import os
+import torch
+import torch.nn.functional as F
+
 
 from mpmath import limit
 from networkx.algorithms.centrality import harmonic_centrality
 import math
 # List of connections between landmarks (0 to 20)
-connections = [(0, 10), (10, 11), (10, 12), (11, 13), (12, 14)]
+connections = [(0, 10), (10, 11), (10, 12), (11, 13), (12, 14),(14,16),(13,15)]
+connections_openpose=[(1, 0), (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7)]
+BODY_BONES = [
+    (10,  0, 11),   # 首→鼻       aux=左肩
+    (10, 11,  0),   # 首→左肩     aux=鼻 (12は共線でNG)
+    (10, 12,  0),   # 首→右肩     aux=鼻
+    (11, 13, 15),   # 左上腕      aux=左手首
+    (12, 14, 16),   # 右上腕      aux=右手首
+    (13, 15, 11),   # 左前腕      aux=左肩
+    (14, 16, 12),   # 右前腕      aux=右肩
+]
+BODY_BONES_OPENPOSE=[
+    (1,  0, 2),   # 首→鼻       aux=左肩
+    (1,2,0), # 1→右肩     aux=鼻 (5は共線でNG)
+    (1,5,0), # 1→左肩     aux=鼻
+    (2,3,5), # 2→右肘     aux=右肩
+    (3,4,2), # 3→右手首   aux=右肘
+    (5,6,2), # 5→左肘     aux=左肩
+    (6,7,5), # 6→左手首   aux=左肘
+]
+BODY_BONES2=[
+(1,  0, 2),   # 首→鼻       aux=左肩
+    (1, 2,  0),   # 首→左肩     aux=鼻 (12は共線でNG)
+    (1, 3,  0),   # 首→右肩     aux=鼻
+    (2, 4, 6),   # 左上腕      aux=左手首
+    (3, 5, 7),   # 右上腕      aux=右手首
+    (4, 6, 2),   # 左前腕      aux=左肩
+    (5, 7, 3),   # 右前腕      aux=右肩
+]
 hand_connections = [
     (0, 1), (1, 2), (2, 3), (3, 4),  # Thumb
     (0, 5), (5, 6), (6, 7), (7, 8),  # Index finger
@@ -19,12 +50,92 @@ hand_connections = [
     (0, 17), (17, 18), (18, 19), (19, 20),  # Little finger
     (5, 9), (9, 13), (13, 17),
 ]
+hand_connections2 = [
+    (0, 1), (1, 2), (2, 3), (3, 4),  # Thumb
+    (0, 5), (5, 6), (6, 7), (7, 8),  # Index finger
+    (0, 9), (9, 10), (10, 11), (11, 12),  # Middle finger
+    (0, 13), (13, 14), (14, 15), (15, 16),  # Ring finger
+    (0, 17), (17, 18), (18, 19), (19, 20),  # Little finger
+]
+HAND_BONES = [
+    # Thumb  (aux = index MCP: 5)
+    (0, 1, 5), (1, 2, 5), (2, 3, 5), (3, 4, 5),
+    # Index  (aux = middle MCP: 9)
+    (0, 5, 9), (5, 6, 9), (6, 7, 9), (7, 8, 9),
+    # Middle (aux = index MCP: 5)
+    (0, 9, 5), (9, 10, 5), (10, 11, 5), (11, 12, 5),
+    # Ring   (aux = middle MCP: 9)
+    (0, 13, 9), (13, 14, 9), (14, 15, 9), (15, 16, 9),
+    # Pinky  (aux = ring MCP: 13)
+    (0, 17, 13), (17, 18, 13), (18, 19, 13), (19, 20, 13),
+]
 
+ALL_BONES_OPENPOSE=[
+    (1, 0, 2),  # 首→鼻       aux=左肩
+    (1, 2, 0),  # 1→右肩     aux=鼻 (5は共線でNG)
+    (1, 5, 0),  # 1→左肩     aux=鼻
+    (2, 3, 5),  # 2→右肘     aux=右肩
+    (3, 4, 2),  # 3→右手首   aux=右肘
+    (5, 6, 2),  # 5→左肘     aux=左肩
+    (6, 7, 5),  # 6→左手首   aux=左肘右肩
+    # Thumb  (aux = index MCP: 5)
+    (7, 9, 12), (9, 10, 13), (10, 11, 13), (11, 12, 13),
+    # Index  (aux = middle MCP: 9)
+    (7, 13, 16), (13, 14, 16), (14, 15, 16), (15, 16, 17),
+    # Middle (aux = index MCP: 5)
+    (7, 17, 13), (17, 18, 13), (18, 19, 13), (19, 20, 13),
+    # Ring   (aux = middle MCP: 9)
+    (7, 21, 17), (21, 22, 17), (22, 23, 17), (23, 24, 17),
+    # Pinky  (aux = ring MCP: 13)
+    (7, 25, 21), (25, 26, 21), (26, 27, 21), (27, 28, 21),
+    (4, 30, 34), (30, 31, 34), (31,32 , 34), (32, 33, 34),
+        # Index  (aux = middle MCP: 9)
+    (4, 34, 38), (34, 35, 38), (35, 36, 38), (36, 37, 38),
+        # Middle (aux = index MCP: 5)
+    (4, 38, 34), (38, 39, 34), (39, 40, 34), (40, 41, 34),
+        # Ring   (aux = middle MCP: 9)
+    (4, 42, 38), (42, 43, 38), (43, 44, 38), (44, 45, 38),
+        # Pinky  (aux = ring MCP: 13)
+    (4, 46, 42), (46, 47, 42), (47, 48, 42), (48, 49, 42),
+]
+
+
+ALL_BONES=[
+    (10, 0, 11),  # 首→鼻       aux=左肩
+    (10, 11, 0),  # 首→左肩     aux=鼻 (12は共線でNG)
+    (10, 12, 0),  # 首→右肩     aux=鼻
+    (11, 13, 15),  # 左上腕      aux=左手首
+    (12, 14, 16),  # 右上腕      aux=右手首
+    (13, 15, 11),  # 左前腕      aux=左肩
+    (14, 16, 12),  # 右前腕      aux=右肩
+    # Thumb  (aux = index MCP: 5)
+    (15, 18, 22), (18, 19, 22), (19, 20, 22), (20, 21, 22),
+    # Index  (aux = middle MCP: 9)
+    (15, 22, 26), (22, 23, 26), (23, 24, 26), (24, 25, 26),
+    # Middle (aux = index MCP: 5)
+    (15, 26, 22), (26, 27, 22), (27, 28, 12), (28, 29, 22),
+    # Ring   (aux = middle MCP: 9)
+    (15, 30, 26), (30, 31, 26), (31, 32, 26), (32, 33, 26),
+    # Pinky  (aux = ring MCP: 13)
+    (15, 34, 30), (34, 35, 30), (35, 36, 30), (36, 37, 30),
+    (16, 39, 43), (39, 40, 43), (40,41 , 43), (41, 42, 43),
+        # Index  (aux = middle MCP: 9)
+    (16, 43, 47), (43, 44, 47), (44, 45, 47), (45, 46, 47),
+        # Middle (aux = index MCP: 5)
+    (16, 47, 43), (47, 48, 43), (48, 49, 43), (49, 50, 43),
+        # Ring   (aux = middle MCP: 9)
+    (16, 51, 47), (51, 52, 47), (52, 53, 47), (53, 54, 47),
+        # Pinky  (aux = ring MCP: 13)
+    (16, 55, 51), (55, 56, 51), (56, 57, 51), (57, 58, 51),
+]
 all_connections = connections +[(13,17)]+ [(i + 17, j + 17) for i, j in hand_connections] +[(14,38)]+ [(i + 38, j + 38) for i, j in
                                                                                    hand_connections]
+all_connections_openpose=connections_openpose+[(7,8)]+[(i + 8, j + 8) for i, j in hand_connections]+[(4,29)]+[(i + 29, j + 29) for i, j in hand_connections]
 #print(all_connections)
 hand_points = [(i + 17, j + 17) for i, j in hand_connections] + [(i + 38, j + 38) for i, j in hand_connections]
+hand_points_openpose=[(i+8, j+8) for i,j in hand_connections2]+[(i+29,j+29) for i,j in hand_connections2]
 body_points = [0, 10, 11, 12, 13, 14]
+body_points_openpose=[0,1,2,3,4,5,6,7]
 # righteyepoints=[33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7,33]17
 # lefteyepoints=[362,398,384,385,386,387,388,466,388,263,249,390,373,374,380,381,382]17
 # mouthpoints=[0,267,269,270,409,291,375,321,405,314,17,84,181,91,146,61,185,40,39,37]20
@@ -32,17 +143,120 @@ body_points = [0, 10, 11, 12, 13, 14]
 righteye_connections = [(33, 246), (246, 161), (161, 160), (160, 159), (159, 158), (158, 157), (157, 173), (173, 133),
                         (133, 155), (155, 154), (154, 153), (153, 145), (145, 144), (144, 163), (163, 7), (7, 33),
                         (33, 246)]
+righteye_connections_openpose=[(36,37),(37,38),(38,39),(39,40),(40,41),(41,36)]
 lefteye_connections = [(362, 398), (398, 384), (384, 385), (385, 386), (386, 387), (387, 388), (388, 466), (466, 388),
                        (388, 263), (263, 249), (249, 390), (390, 373), (373, 374), (374, 380), (380, 381), (381, 382),
                        (382, 362)]
+lefteye_connections_openpose=[(42,43),(43,44),(44,45),(45,46),(46,47),(47,42)]
 contour_connectrions = [(127, 234), (234, 93), (93, 132), (132, 58), (58, 172), (172, 136), (136, 150), (150, 149),
                         (149, 176), (176, 148), (148, 152), (152, 377), (377, 400), (400, 378), (378, 379), (379, 365),
                         (365, 397), (397, 288), (288, 435), (435, 361), (361, 323), (323, 454), (454, 356)]
+contour_connections_openpose=[(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(9,10),(10,11),(11,12),(12,13),(13,14),(14,15),(15,16)]
 mouth_connections = [(0, 267), (267, 269), (269, 270), (270, 409), (409, 291), (291, 375), (375, 321), (321, 405),
                      (405, 314), (314, 17), (17, 84), (84, 181), (181, 91), (91, 146), (146, 61), (61, 185), (185, 40),
                      (40, 39), (39, 37), (37, 0)]
+mouth_connections_openpose=[(61,62),(62,63),(63,64),(64,65),(65,66),(66,67),(67,60),(60,61)]
 face_connections = righteye_connections + lefteye_connections + mouth_connections + contour_connectrions
+face_connections_openpose=righteye_connections_openpose+lefteye_connections_openpose+mouth_connections_openpose+contour_connections_openpose
+def joints_to_rotation_inputs(x, bones):
+    """
+    x: (T, C, J)  C=3
+    returns: p_parent, p_child, p_aux 各 (T, B, 3)  B=len(bones)
+    """
+    pos = x.permute(0, 2, 1)                       # (T, J, C)
+    idx = torch.as_tensor(bones, device=x.device)  # (B, 3)
+    p_parent = pos[:, idx[:, 0]]                   # (T, B, 3)
+    p_child  = pos[:, idx[:, 1]]
+    p_aux    = pos[:, idx[:, 2]]
+    return p_parent, p_child, p_aux
+def build_rotation_from_joints(p_parent, p_child, p_aux):
+    """
+    p_parent, p_child, p_aux: (..., 3)
+    p_aux は座標系のねじれ(roll)を決める第3の点。
+    例: 肘なら (肩, 肘, 手首)、手なら (手首, MCP, 小指側MCP) など
+    """
+    # 第1軸: ボーン方向
+    x = F.normalize(p_child - p_parent, dim=-1)
 
+    # 補助ベクトル
+    v = p_aux - p_parent
+
+    # 第2軸: 補助ベクトルからx成分を除去して直交化
+    y = F.normalize(v - (v * x).sum(-1, keepdim=True) * x, dim=-1)
+
+    # 第3軸: 外積
+    z = torch.cross(x, y, dim=-1)
+
+    # 列ベクトルとして積む → (..., 3, 3)
+    R = torch.stack([x, y, z], dim=-1)
+    return R
+def coordinate_preprocess_6D_rotation(data, data_face,is_face_connect=False,is_sg_filter=False,is_delete_nan=True):
+    data = nan_interpolate(data,limit_area="both")
+    #data=nan_interpolate_zero(data)
+    if np.isnan(data).any():
+        print("nan")
+    #data = average_movint(data)
+    new_data = np.zeros((3, data.shape[0], data.shape[1] // 3))
+    new_data[0] = data[:, 0::3]  # data:(2,frame,point)
+    new_data[1] = data[:, 1::3]
+    new_data[2]=-data[:, 2::3]
+    new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
+
+    # 10番目の点は11,12番目の中間点
+    new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
+    new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
+    new_data[2, :, 10] = (new_data[2, :, 11] + new_data[2, :, 12]) / 2
+    connection_indexes = connection_to_set(all_connections)
+    hand_indexes = connection_to_set(hand_points)
+    new_hand_data = new_data[:, :, hand_indexes]
+    #new_hand_data=np.concatenate(fillna_left_right(new_hand_data),axis=2)
+    new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1]),nan_interpolate(new_hand_data[2])],axis=0)
+    #new_hand_dataの(2,S,F)のうち，すべてが0のSのインデックスを取得
+    zero_mask = np.all(new_hand_data == 0, axis=(0, 2))  # shape: (S,)
+    nan_indexes = np.where(zero_mask)[0]
+    # 全フレーム削除で skeleton_length=0 になりモデルでNaNが発生するため防ぐ
+    if len(nan_indexes) == new_hand_data.shape[1]:
+        nan_indexes = np.array([], dtype=int)
+    left_criterion=new_data[2, :,15]
+    right_criterion=new_data[2, :,16]
+    new_data[2,:,17:38]+=left_criterion[:, np.newaxis]
+    new_data[2,:,38:]+=right_criterion[:, np.newaxis]
+    #new_dataを正規化
+
+    #new_hand_data[2, :, :21]+=left_criterion[:, np.newaxis]
+    #new_hand_data[2, :, 21:]+=right_criterion[:, np.newaxis]
+    #new_body_data = new_data[:, :, body_points]
+    #new_data = new_data[:, :, connection_indexes]
+    face_center=new_data[:, :, 0]
+    data_face = nan_interpolate(data_face, limit_area="both")
+    #data_face = average_movint(data_face)
+    new_data_face = np.zeros((3, data_face.shape[0], data_face.shape[1] // 3))
+    new_data_face[0] = data_face[:, 0::3]
+    new_data_face[1] = data_face[:, 1::3]
+    new_data_face[2] = -data_face[:, 2::3]
+    new_data_face=np.where(new_data_face==0,np.nan,new_data_face)
+
+    if is_delete_nan:
+        new_data = np.delete(new_data, nan_indexes, axis=1)
+        new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
+        new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
+        #new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
+
+
+    #average_moveint
+    new_data=np.where(np.isnan(new_data),0,new_data)
+    new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
+    new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
+    #new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
+
+    body_rotations=joints_to_rotation_inputs(torch.tensor(new_data.transpose(1,0,2)),BODY_BONES)
+    left_hand_rotations=joints_to_rotation_inputs(torch.tensor(new_hand_data.transpose(1,0,2)[:,:,:21]),HAND_BONES)
+    right_hand_rotations=joints_to_rotation_inputs(torch.tensor(new_hand_data.transpose(1,0,2)[:,:,21:]),HAND_BONES)
+
+    body_R=build_rotation_from_joints(*body_rotations)
+    left_hand_R=build_rotation_from_joints(*left_hand_rotations)
+    right_hand_R=build_rotation_from_joints(*right_hand_rotations)
+    return body_R, left_hand_R, right_hand_R, new_data_face
 def sort_connections(connections):
     #all_connectionsは元データのインデックスを表すが，データからconnectionに対応するデータを取得すると，インデックスが変わる
     #all_connectionsのインデックスを変換後のデータに対応させる
@@ -107,7 +321,8 @@ def coordinate_preprocess_face(data_face,is_face_connect=False):
         connection_indexes=connection_to_set(face_connections)
         new_data_face=new_data_face[:,:,connection_indexes]
     return new_data_face
-def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=False):
+def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=False,is_delete_nan=True,is_openpose=False):
+    data=np.where(data==0,np.nan,data)
     data = nan_interpolate(data)
     #data=nan_interpolate_zero(data)
     if np.isnan(data).any():
@@ -116,13 +331,21 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
     new_data = np.zeros((2, data.shape[0], data.shape[1] // 2))
     new_data[0] = data[:, 0::2]  # data:(2,frame,point)
     new_data[1] = data[:, 1::2]
-    new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
-    # 10番目の点は11,12番目の中間点
-    new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
-    new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
+    if is_openpose:
+        new_data = np.delete(new_data, [i for i in range(8, 25)], axis=2)
+        connection_indexes = connection_to_set(all_connections_openpose)
+        hand_indexes = connection_to_set(hand_points_openpose)
 
-    connection_indexes = connection_to_set(all_connections)
-    hand_indexes = connection_to_set(hand_points)
+    else:
+        new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
+        connection_indexes = connection_to_set(all_connections)
+        hand_indexes= connection_to_set(hand_points)
+        # 10番目の点は11,12番目の中間点
+        new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
+        new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
+
+
+
     new_hand_data = new_data[:, :, hand_indexes]
     #new_hand_data=np.concatenate(fillna_left_right(new_hand_data),axis=2)
     new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1])],axis=0)
@@ -137,13 +360,17 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
     new_data_face[0] = data_face[:, 0::2]
     new_data_face[1] = data_face[:, 1::2]
     if is_face_connect:
-        connection_indexes=connection_to_set(face_connections)
+        if is_openpose:
+            connection_indexes=connection_to_set(face_connections_openpose)
+        else:
+            connection_indexes=connection_to_set(face_connections)
         new_data_face=new_data_face[:,:,connection_indexes]
     #new_data,new_data_face,new_hand_data,new_body_dataのうち，nan_indexesに対応するフレームをすべて削除する
-    new_data = np.delete(new_data, nan_indexes, axis=1)
-    new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
-    new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
-    new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
+    if is_delete_nan:
+        new_data = np.delete(new_data, nan_indexes, axis=1)
+        new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
+        new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
+        new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
     center_data=new_data[:, :, 1]
     shoulder_length=np.sqrt((new_data[0,:,2]-new_data[0,:,3])**2+(new_data[1,:,2]-new_data[1,:,3])**2)
     if is_sg_filter:
@@ -152,8 +379,11 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
         new_hand_data=apply_savgol_filter(new_hand_data)
         new_body_data=apply_savgol_filter(new_body_data)
     return new_data, new_data_face, new_hand_data, new_body_data
-def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=False):
-    data = nan_interpolate(data)
+def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=False,is_delete_nan=True,is_limit_area=True,is_delete_cod=False):
+    if is_limit_area:
+        data = nan_interpolate(data,limit_area="inside")
+    else:
+        data = nan_interpolate(data,limit_area="both")
     #data=nan_interpolate_zero(data)
     if np.isnan(data).any():
         print("nan")
@@ -162,20 +392,24 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_data[0] = data[:, 0::3]  # data:(2,frame,point)
     new_data[1] = data[:, 1::3]
     new_data[2]=-data[:, 2::3]
-    new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
 
+    new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
+    connection_indexes = connection_to_set(all_connections)
+    hand_indexes = connection_to_set(hand_points)
     # 10番目の点は11,12番目の中間点
     new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
     new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
     new_data[2, :, 10] = (new_data[2, :, 11] + new_data[2, :, 12]) / 2
-    connection_indexes = connection_to_set(all_connections)
-    hand_indexes = connection_to_set(hand_points)
+
     new_hand_data = new_data[:, :, hand_indexes]
     #new_hand_data=np.concatenate(fillna_left_right(new_hand_data),axis=2)
     new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1]),nan_interpolate(new_hand_data[2])],axis=0)
     #new_hand_dataの(2,S,F)のうち，すべてが0のSのインデックスを取得
     zero_mask = np.all(new_hand_data == 0, axis=(0, 2))  # shape: (S,)
     nan_indexes = np.where(zero_mask)[0]
+    # 全フレーム削除で skeleton_length=0 になりモデルでNaNが発生するため防ぐ
+    if len(nan_indexes) == new_hand_data.shape[1]:
+        nan_indexes = np.array([], dtype=int)
     left_criterion=new_data[2, :,15]
     right_criterion=new_data[2, :,16]
     new_data[2,:,17:38]+=left_criterion[:, np.newaxis]
@@ -185,7 +419,8 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     #new_hand_data[2, :, :21]+=left_criterion[:, np.newaxis]
     #new_hand_data[2, :, 21:]+=right_criterion[:, np.newaxis]
     new_body_data = new_data[:, :, body_points]
-    new_data = new_data[:, :, connection_indexes]
+    if is_delete_cod:
+        new_data = new_data[:, :, connection_indexes]
     face_center=new_data[:, :, 0]
     data_face = nan_interpolate(data_face, limit_area="both")
     #data_face = average_movint(data_face)
@@ -199,20 +434,23 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
         connection_indexes=connection_to_set(face_connections)
         new_data_face=new_data_face[:,:,connection_indexes]
     #new_data,new_data_face,new_hand_data,new_body_dataのうち，nan_indexesに対応するフレームをすべて削除する
-    new_data = np.delete(new_data, nan_indexes, axis=1)
-    new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
-    new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
-    new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
+    if is_delete_nan:
+        new_data = np.delete(new_data, nan_indexes, axis=1)
+        new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
+        new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
+        new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
 
     if is_sg_filter:
         new_data=apply_savgol_filter(new_data)
         new_data_face=apply_savgol_filter(new_data_face)
         new_hand_data=apply_savgol_filter(new_hand_data)
         new_body_data=apply_savgol_filter(new_body_data)
+    #average_moveint
     new_data=np.where(np.isnan(new_data),0,new_data)
     new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
     new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
     new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
+    #new_data=average_movint(new_data)
     return new_data, new_data_face, new_hand_data, new_body_data
 def normalize_hand(data):
     data= np.where(data==0,np.nan,data)

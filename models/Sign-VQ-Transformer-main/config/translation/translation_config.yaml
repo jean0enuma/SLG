@@ -1,0 +1,120 @@
+name: "phix_translation"            # name of the experiment, used for logging and saving checkpoints
+
+wandb_logger: True
+log_level: "INFO"                   # log level: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+local_logger: True
+save_path: "./models/translation_models/"
+
+data:
+    dataset_name: "phix"            # dataset name, phix..."
+    data_path: "./data/"            # path to data directory
+    train_subset: -1                # select this many training examples randomly for training in each epoch, default: -1
+    val_subset: -1
+    test_subset: -1
+    train_batch_size: 256
+    dev_batch_size: 256
+    num_workers: 0
+    shuffle: False
+    min_length: 1                   # minimum length of a sequence
+    max_length: 30
+    subsample: 2
+    vq_model_dir: "./models/vq_models/phix_codebook"
+
+backTran_model_dir: './models/backTranslation_PHIX_model/'  # path to the back-translation model directory
+
+training:                           # specify training details here
+    test_every_n_epochs: 1          # test every this many epochs, default: 1
+    log_every_n_steps: 5            # log every x updates
+    random_seed: 42                 # set this seed to make training deterministic
+    gradient_clip_val: 0.1          # clip the gradients to this value when they exceed it, optional
+    gradient_clip_algorithm: "value"
+    epochs: 500                     # train for this many epochs (will be reset in resumed process)
+    fp16: False                     # whether to use 16-bit half-precision training (through NVIDIA apex) instead of 32-bit training.
+    checkpoint:
+        save: True
+        follow_metric: "bt_dev_bleu_1"       # follow this metric for saving checkpoints, default: "eval_metric"
+        mode: "max"                 # mode for following metric, default: "max", other options: "min"
+        keep_top_ckpts: 3           # keep only the last n checkpoints, default: 5
+
+stitch:
+    resample_seq: True              # resample the glosses to have equal number of frames as the ground truth
+    lp_cutoff: 0                    # low pass filter the sequence to remove high frequency noise, default: 0 (no filtering)
+    seq_resample_factor: 1.0        # resample the total sequence length by this factor
+
+model:                              # specify your model architecture here
+    search_beam_search: False
+    beam_setting:
+        n_best: 1                   # n_best size, must be smaller than or equal to beam_size
+        beam_size: 1                # size of the beam for beam search
+        beam_alpha: 1.0             # length penalty for beam search
+        max_output_length: 21       # maximum output length for decoding, default: None. If set to None, allow sentences of max 1.5*src length
+        min_output_length: 1        # minimum output length for decoding, default: 1.
+        generate_unk: True          # whether to generate unk token
+        no_repeat_ngram_size: -1    # ngram size to prohibit repetition, default -1. If set to -1, no blocker applied.
+        repetition_penalty: -1      # repetition penalty, default: -1. Between 0.0 and 1.0 penalizes the repeated tokens. If set to -1, no penalty applied.
+
+    max_output_length: 21           # maximum length of generated sequences
+    early_stopping:
+        metric: "train_loss"        # early stopping metric, default: "val_token_loss"
+        mode: "min"                 # early stopping mode, default: "min"
+        patience: 30                # early stopping patience, default: 10
+
+    losses:
+        token_loss: "xentropy"      # loss function for training, default: "cross_entropy", other options: "mse", "l1"
+        token_weight: 1.0
+        duration_loss: 'mse'
+        duration_weight: 1.0
+
+    learning_rate: 1.0e-3           # initial learning rate, default: 3.0e-4
+    save_val_frequency: 10
+    train_cal_metrics: False
+    optimizer:
+        type: "adam"                # optimizer type, default: "sgd", other options: "adam",
+        adam_betas: [ 0.9, 0.999 ]  # beta parameters for Adam. These are the defaults. Typically these are different for Transformer models.
+        weight_decay: 0.0           # l2 regularization, default: 0
+    scheduler:
+        type: 'ReduceLROnPlateau'
+        tracking_metric: 'bt_dev_bleu_1'
+        interval: 'epoch'
+        frequency: 1
+        mode: 'min'
+        factor: 0.9
+        patience: 15
+        min_lr: 1.0e-6
+    initialization:
+        initializer: "xavier_uniform"   # initializer for all trainable weights (xavier_uniform, xavier_normal, zeros, normal, uniform)
+        init_gain: 1.0                  # gain for Xavier initializer (default: 1.0)
+        bias_initializer: "zeros"       # initializer for bias terms (xavier_uniform, xavier_normal, zeros, normal, uniform)
+        embed_initializer: "xavier_uniform"  # initializer for embeddings (xavier_uniform, xavier_normal, zeros, normal, uniform)
+        embed_init_gain: 1.0            # gain for Xavier initializer for embeddings (default: 1.0)
+        tied_embeddings: False          # tie src and trg embeddings, only applicable if vocabularies are the same, default: False
+    encoder:
+        type: "transformer"         # encoder type: "transformer" for a Transformer
+        num_layers: 1               # number of layers
+        num_heads: 4                # number of transformer heads
+        embeddings:
+            embedding_dim: 512      # size of embeddings (for Transformer set equal to hidden_size)
+            scale: True             # scale the embeddings by sqrt of their size, default: False
+            freeze: False           # if True, embeddings are not updated during training
+            dropout: 0.1
+        hidden_size: 512            # size of hidden layer; must be divisible by number of heads
+        ff_size: 1024                # size of position-wise feed-forward layer
+        dropout: 0.2                # apply dropout to the outputs to the transformer, default: 0.0
+        freeze: False               # if True, encoder parameters are not updated during training (does not include embedding parameters)
+        layer_norm: "pre"           # where to apply layer norm. either "pre" or "post". default "post"
+        activation: "relu"          # activation function. choices: "relu", "gelu", "tanh", "swish". default: "relu"
+    decoder:
+        type: "transformer"         # encoder type: "transformer" for a Transformer
+        num_layers: 1               # number of layers
+        num_heads: 4                # number of transformer heads
+        embeddings:
+            embedding_dim: 512      # size of embeddings (for Transformer set equal to hidden_size)
+            scale: True             # scale the embeddings by sqrt of their size, default: False
+            freeze: False           # if True, embeddings are not updated during training
+            dropout: 0.01
+        hidden_size: 512            # size of hidden layer; must be divisible by number of heads
+        ff_size: 1024                # size of position-wise feed-forward layer
+        dropout: 0.2                # apply dropout to the outputs to the transformer, default: 0.0
+        freeze: False               # if True, encoder parameters are not updated during training (does not include embedding parameters)
+        layer_norm: "pre"           # where to apply layer norm. either "pre" or "post". default "post"
+        activation: "relu"          # activation function. choices: "relu", "gelu", "tanh", "swish". default: "relu"

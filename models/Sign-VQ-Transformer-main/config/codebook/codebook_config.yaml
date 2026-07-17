@@ -1,0 +1,102 @@
+name: "phix_codebook"            # name of the experiment, used for logging and saving
+
+wandb_logger: True
+log_level: "INFO"                   # log level: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+local_logger: True
+save_images: True
+save_path: "./models/vq_models/"
+plot_n_sequences: 1
+
+data:
+    dataset_name: "phix"           # dataset name
+    data_path: "./data/"           # path to data directory
+    train_subset:  -1              # select this many training examples randomly for training in each epoch, default: -1 (no subsampling)
+    val_subset: -1
+    test_subset: -1
+    train_batch_size: 128
+    test_batch_size: 128            # test and dev batch size
+    num_workers: 0
+    shuffle: False
+    subsample: 2                    # subsample the pose data
+    window_size: 4
+    stride: 4
+
+training:                           # specify training details here
+    test_every_n_epochs: 1          # test every this many epochs, default: 1
+    log_every_n_steps: 5            # log every x updates
+    random_seed: 42                 # set this seed to make training deterministic
+    gradient_clip_val: 0.1          # clip the gradients to this value when they exceed it, optional
+    gradient_clip_algorithm: "value"
+    epochs: 1500                    # train for this many epochs (will be reset in resumed process)
+    fp16: False                     # whether to use 16-bit half-precision training (through NVIDIA apex) instead of 32-bit training.
+    print_valid_sents: [0, 1, 2]    # print this many validation sentences during each validation run, default: [0, 1, 2]
+    checkpoint:
+        save: True
+        follow_metric: "val_pose_MSE" # follow this metric for saving checkpoints, default: "eval_metric"
+        mode: "min"                 # mode for following metric, default: "max", other options: "min"
+        keep_top_ckpts: 1           # keep only the last n checkpoints, default: 5
+
+model:                              # specify your model architecture here
+    learning_rate: 1.0e-5           # initial learning rate, default: 3.0e-4
+    val_frequency: 10
+    plot_val_frequency: 10
+    train_cal_metrics: False
+    early_stopping:
+        metric: "val_pose_MSE"      # early stopping metric, default: "val_token_loss"
+        mode: "min"                 # early stopping mode, default: "min"
+        patience: 100               # early stopping patience, default: 10
+    losses:
+        recon_weight: 1.0           # weight for the latent loss, default: 1.0
+        counter_weight:  0.001      # weight for the counter loss, default: 0.001
+    optimizer:
+        type: "adam"                # optimizer type, default: "sgd", other options: "adam",
+        adam_betas: [ 0.9, 0.999 ]  # beta parameters for Adam. These are the defaults. Typically these are different for Transformer models.
+        weight_decay: 0.0           # l2 regularization, default: 0
+    scheduler:
+        type: 'ReduceLROnPlateau'   # scheduler type, default: 'ReduceLROnPlateau', or 'cosineannealingwarmuprestarts'
+        tracking_metric: 'val_pose_MSE'
+        interval: 'epoch'
+        frequency: 1
+        mode: 'min'
+        factor: 0.8
+        patience: 3
+        min_lr: 1.0e-9
+    initialization:
+        initializer: "xavier_uniform"   # initializer for all trainable weights (xavier_uniform, xavier_normal, zeros, normal, uniform)
+        init_gain: 1.0                  # gain for Xavier initializer (default: 1.0)
+        bias_initializer: "zeros"       # initializer for bias terms (xavier_uniform, xavier_normal, zeros, normal, uniform)
+        embed_initializer: "xavier_uniform"  # initializer for embeddings (xavier_uniform, xavier_normal, zeros, normal, uniform)
+        embed_init_gain: 1.0            # gain for Xavier initializer for embeddings (default: 1.0)
+        tied_embeddings: False          # tie src and trg embeddings, only applicable if vocabularies are the same, default: False
+    model_type: 'vq_transformer'        # model type: 'encoder_decoder'
+    encoder:
+        type: "transformer"         # encoder type: "transformer" for a Transformer
+        num_layers: 2               # number of layers
+        num_heads: 8                # number of transformer heads
+        hidden_size: 512            # size of hidden layer; must be divisible by number of heads
+        ff_size: 1024                # size of position-wise feed-forward layer
+        dropout: 0.1                # apply dropout to the outputs to the transformer, default: 0.0
+        freeze: False               # if True, encoder parameters are not updated during training (does not include embedding parameters)
+        layer_norm: "pre"           # where to apply layer norm. either "pre" or "post". default "post"
+        activation: "relu"          # activation function. choices: "relu", "gelu", "tanh", "swish". default: "relu"
+    decoder:
+        type: "transformer"         # decoder type: "transformer" for a Transformer
+        num_layers: 2               # number of layers
+        num_heads: 8                # number of transformer heads
+        hidden_size: 512             # size of hidden layer; must be divisible by number of heads
+        ff_size: 1024                # size of position-wise feed-forward layer
+        dropout: 0.1                # apply dropout to the outputs to the transformer, default: 0.0
+        freeze: False               # if True, decoder parameters are not updated during training (does not include embedding parameters, but attention)
+        layer_norm: "pre"           # where to apply layer norm. either "pre" or "post". default "post"
+        activation: "relu"          # activation function. choices: "relu", "gelu", "tanh", "swish". default: "relu"
+    use_codebook: True
+    codebook:
+        type: 'nsvq'
+        codebook_size: 4000  # Code book size
+        discard_threshold: 0.001
+        initialization: 'normal' # normal or uniform
+        codebook_replacement:
+            mode: 'encoder'  # codebook or encoder, both
+            replace: True
+            epochs: [ 0, 50, 100, 1300]  # means from epoch 0-50 call every 1 epoch, from 50-100 every 5 epochs...
+            call_every: [ 1, 5, 10, -1]

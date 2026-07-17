@@ -14,7 +14,7 @@ class SLG_t2s_datasets(Dataset):
     target_length:ラベル系列の長さ(torch.tensor, [batch_size])
     """
     def __init__(self, data_path, cod_data_path_root, face_data_path_root, targets_corpus, tokenizer, trainable=True,
-                 is_processed=False, is_sg_filter=True, is_3d=False, scale_ratio=(0.8, 1.2), min_frame=16, max_frame=300):
+                 is_processed=False, is_sg_filter=True, is_3d=False, scale_ratio=(0.8, 1.2), min_frame=16, max_frame=300,is_openpose=False):
         super().__init__()
         self.data_path = data_path
         self.face_data_path_root=face_data_path_root
@@ -29,6 +29,7 @@ class SLG_t2s_datasets(Dataset):
         self.is_processed=is_processed
         self.is_3d=is_3d
         self.is_sg_filter=is_sg_filter
+        self.is_openpose=is_openpose
 
     def __len__(self):
         return len(self.data_path)
@@ -154,9 +155,9 @@ class SLG_t2s_datasets(Dataset):
             try:
                 if self.is_3d:
                     cod_data, face_cod_data, hand_cod_data, body_cod_data = coordinate_preprocess_3d(cod_data, face_data,
-                                                                                                    is_face_connect=True,is_sg_filter=self.is_sg_filter)
+                                                                                                    is_face_connect=True,is_sg_filter=self.is_sg_filter,is_openpose=self.is_openpose)
                 else:
-                    cod_data,face_cod_data,hand_cod_data,body_cod_data=coordinate_preprocess(cod_data,face_data,is_face_connect=True,is_sg_filter=self.is_sg_filter)
+                    cod_data,face_cod_data,hand_cod_data,body_cod_data=coordinate_preprocess(cod_data,face_data,is_face_connect=True,is_sg_filter=self.is_sg_filter,is_openpose=self.is_openpose)
             except Exception as e:
                 print(f"Exception in coordinate_preprocess: {e}")
                 print(f"Error in coordinate_preprocess: {cod_data_path}, {face_data_path}")

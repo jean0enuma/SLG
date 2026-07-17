@@ -69,6 +69,8 @@ def clean_phoenix_2014_trans(prediction):
     prediction = re.sub(r"\b([^ ]*)-PLUSPLUS\b", r"\1", prediction) # not in gls.vocab (remove -plusplus)
     prediction = re.sub(r"\b([A-Z][A-Z]*)RAUM\b", r"\1", prediction) #only \bRAUM\b exists in gls annotations (remove RAUM)
     prediction = re.sub(r"WIE AUSSEHEN", "WIE-AUSSEHEN", prediction) # not in gls.vocab
+    prediction = re.sub(r"ZEIGEN ", "ZEIGEN-BILDSCHIRM ", prediction)
+    prediction = re.sub(r"ZEIGEN$", "ZEIGEN-BILDSCHIRM", prediction)
     #combine single character with '+'
     prediction = re.sub(r"^([A-Z]) ([A-Z][+ ])", r"\1+\2",
             prediction) #"A B+","A B "  -> "A+B+" "A+B" #must be at the start of the string

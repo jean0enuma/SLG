@@ -115,8 +115,10 @@ class VQVAETrainer(BaseTrainer):
         total_recon_hand_loss=[]
         total_vq_loss=[]
         total_perplexity=[]
+        model.quant.reset_usage()
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
         for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
+
             padded_cod_data,padded_mask, input_length_tensor, id_list,data_path=batch
             padded_cod_data=padded_cod_data.float().to(device)
             padded_mask=padded_mask.to(device)
@@ -140,24 +142,28 @@ class VQVAETrainer(BaseTrainer):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.config["lr_parameters"]["grad_clip_norm"])
             scaler.step(optimizer)
             scaler.update()
-            if ema:
-                ema.update()
             total_loss.append(loss.item())
             total_recon_pose_loss.append(recon_pose_loss.item())
             total_recon_hand_loss.append(recon_hand_loss_list.item())
             total_vq_loss.append(loss_vq.item())
             total_perplexity.append(perplexity.item())
             if ((self.iter + 1) % self.replacement_num_batches == 0):
-                model.random_restart(loss_dict['z_e'],threshold=0.5)
+                model.random_restart(loss_dict['z_e'].detach(),threshold=0.5)
             if batch_idx % 100== 0:
                 tqdm.write(f"Avg Loss: {np.mean(total_loss)}")
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_pose_loss)}")
                 tqdm.write(f"Avg Recon Dir Loss: {np.mean(total_recon_hand_loss)}")
                 tqdm.write(f"Avg VQ Loss: {np.mean(total_vq_loss)}")
                 tqdm.write(f"Avg Perplexity: {np.mean(total_perplexity)}")
-
+                torch.cuda.empty_cache()  # 溜まった断片化を掃除する
+            if self.config['lr_parameters']["scheduler_timing"] == "step":
+                if self.config["lr_parameters"]["scheduler_type"] == "CosineAnnealingWarmRestarts":
+                    self.scheduler.step(self.step)
+                else:
+                    self.scheduler.step()
+                self.step += 1
             self.iter+=1
-
+            del loss_dict,loss,batch
 
 
 
@@ -166,6 +172,7 @@ class VQVAETrainer(BaseTrainer):
         recon_hand_avg_loss=np.mean(total_recon_hand_loss).astype(np.float32)
         vq_avg_loss=np.mean(total_vq_loss).astype(np.float32)
         perplexity_avg=np.mean(total_perplexity).astype(np.float32)
+        print(model.quant.usage_summary())
         return {
             "loss": avg_loss,
             "recon_pose_loss": recon_pose_avg_loss,
@@ -180,6 +187,8 @@ class VQVAETrainer(BaseTrainer):
         total_recon_hand_loss=[]
         total_vq_loss=[]
         total_perplexity=[]
+        model.quant.reset_usage()
+
         with torch.no_grad():
             for batch in tqdm(test_loader, total=len(test_loader.dataset) // test_loader.batch_size):
                 padded_cod_data, padded_mask, input_length_tensor, id_list, data_path = batch
@@ -200,11 +209,14 @@ class VQVAETrainer(BaseTrainer):
                 total_recon_hand_loss.append(recon_hand_loss_list.item())
                 total_vq_loss.append(loss_vq.item())
                 total_perplexity.append(perplexity.item())
+                del loss_dict,loss,batch
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_pose_avg_loss=np.mean(total_recon_pose_loss).astype(np.float32)
         recon_hand_avg_loss=np.mean(total_recon_hand_loss).astype(np.float32)
         vq_avg_loss=np.mean(total_vq_loss).astype(np.float32)
         perplexity_avg=np.mean(total_perplexity).astype(np.float32)
+        print(model.quant.usage_summary())
+
         return {
             "loss": avg_loss,
             "recon_pose_loss": recon_pose_avg_loss,
@@ -364,25 +376,28 @@ class VQVAETrainer(BaseTrainer):
 
         with torch.no_grad():
             for batch in tqdm(dataset, total=len(dataset)):
-                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path,center_data,shoulder_length,left_center_data,left_length,right_center_data,right_length = batch
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, center_data, shoulder_length, left_center_data, left_length, right_center_data, right_length = batch
                 padded_cod_data = padded_cod_data.float().unsqueeze(0).to(device)
                 padded_mask = padded_mask.unsqueeze(0).to(device)
                 input_length_tensor = input_length_tensor.unsqueeze(0).to(device)
                 id_list = torch.tensor(id_list).to(device)
                 batch = (padded_cod_data, padded_mask, input_length_tensor, id_list)
-                outputs = model(padded_cod_data, hand_valid_mask=padded_mask, input_length=input_length_tensor)
-                #prev_hist=model.code_usage_histogram_update(padded_cod_data, hand_valid_mask=padded_mask, input_length=input_length_tensor)
-
-                T,J,C=padded_cod_data.shape[1],padded_cod_data.shape[2],padded_cod_data.shape[3]
+                model_output = model(padded_cod_data,hand_valid_mask=padded_mask,input_length=input_length_tensor)
+                output=model_output['output']
+                codes=model_output['codes']
+                prev_hist = model.code_usage_histogram_update(padded_cod_data,prev_hist,input_length=input_length_tensor)
+                output = output.squeeze(0).cpu().numpy()
+                T, J, C = output.shape
                 # outputを元のスケールに戻す
-                output = outputs['x_hat'].reshape(T, J, C)
-                output=output.cpu().numpy()
+                output = output.reshape(T, J, C)
                 output[:, :8] *= shoulder_length.cpu().numpy()[:, None, None]
                 output[:, :8] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                pd_left_center_data=output[:,6]
+                pd_right_center_data=output[:,7]
                 output[:, 8:29] *= shoulder_length.cpu().numpy()[:, None, None] / 2
-                output[:, 8:29] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                output[:, 8:29] += pd_left_center_data[:, None, :]
                 output[:, 29:] *= shoulder_length.cpu().numpy()[:, None, None] / 2
-                output[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                output[:, 29:] += pd_right_center_data[:, None, :]
                 # output=average_movint(output.reshape(T,J*C),window_size=7).reshape(T,J,C)
                 output = np.where(output == 0, np.nan, output)
                 output = apply_savgol_filter(output.transpose(1, 0, 2), window_size=7, poly_order=2).transpose(1, 0, 2)
@@ -399,9 +414,9 @@ class VQVAETrainer(BaseTrainer):
                 padded_cod_data[:, :8] *= shoulder_length.cpu().numpy()[:, None, None]
                 padded_cod_data[:, :8] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
                 padded_cod_data[:, 8:29] *= shoulder_length.cpu().numpy()[:, None, None] / 2
-                padded_cod_data[:, 8:29] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                padded_cod_data[:, 8:29] += left_center_data.cpu().transpose(0, 1).numpy()[:, None, :]
                 padded_cod_data[:, 29:] *= shoulder_length.cpu().numpy()[:, None, None] / 2
-                padded_cod_data[:, 29:] += center_data.cpu().transpose(0, 1).numpy()[:, None, :]
+                padded_cod_data[:, 29:] += right_center_data.cpu().transpose(0, 1).numpy()[:, None, :]
                 # outputの点群を動画として保存
                 # 同時に，元の動画も保存
                 video_size = (256, 256)
@@ -426,7 +441,7 @@ class VQVAETrainer(BaseTrainer):
                 v_writer.release()
                 v_writer_gt.release()
             if prev_hist is not None:
-                save_code_usage_histogram(prev_hist, f"{self.config['save_path']}/visualize/code_usage_histogram.png", top_k=50, title=f"Code Usage Histogram")
-                save_code_usage_probability(prev_hist, f"{self.config['save_path']}/visualize/code_usage_probability.png", top_k=50, title=f"Code Usage Probability ")
+                save_code_usage_histogram(prev_hist, f"{self.config['save_path']}/visualize/code_usage_histogram.png", top_k=10, title=f"Code Usage Histogram")
+                save_code_usage_probability(prev_hist, f"{self.config['save_path']}/visualize/code_usage_probability.png", top_k=10, title=f"Code Usage Probability ")
             return
 

@@ -216,3 +216,9 @@ __marimo__/
 .streamlit/secrets.toml
 wandb/
 /home/caffe/work/SLG/wandb/
+Parameter/phoenix2014-T_dev_17.20.pt
+Parameter/phoenix2014_dev_18.00.pt
+Parameter/CSL_Daily_dev_28.60.pt
+Parameter/*.pt
+Parameter/*.npy
+Parameter/*.npz

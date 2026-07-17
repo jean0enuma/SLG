@@ -44,7 +44,6 @@ class Text2VAETrainer(BaseTrainer):
         total_recon_loss=[]
         total_kl_loss=[]
         total_length_loss=[]
-        total_diffusion_loss=[]
         scaler = torch.cuda.amp.GradScaler(enabled=self.config["lr_parameters"]["amp"])
         for batch_idx, batch in tqdm(enumerate(train_loader), total=len(train_loader.dataset) // train_loader.batch_size):
             padded_cod_data,padded_mask, input_length_tensor, id_list,data_path,sequence=batch
@@ -63,7 +62,6 @@ class Text2VAETrainer(BaseTrainer):
             recon_loss = loss_dict['recon_loss']
             kl_loss = loss_dict['kl_loss']
             length_loss = loss_dict['length_loss']
-            diffusion_loss= loss_dict['diffusion_loss']
             scaler.scale(loss).backward()
             ##grad_clip
             if self.config["lr_parameters"]["grad_clip_norm"] is not None:
@@ -77,7 +75,6 @@ class Text2VAETrainer(BaseTrainer):
             total_recon_loss.append(recon_loss.item())
             total_kl_loss.append(kl_loss.item())
             total_length_loss.append(length_loss.item())
-            total_diffusion_loss.append(diffusion_loss.item())
             if self.config['lr_parameters']["scheduler_timing"] == "step":
                 if self.config["lr_parameters"]["scheduler_type"] == "cosinewarmup":
                     self.scheduler.step(self.step)
@@ -91,19 +88,16 @@ class Text2VAETrainer(BaseTrainer):
                 tqdm.write(f"Avg Recon Pose Loss: {np.mean(total_recon_loss)}")
                 tqdm.write(f"Avg KL Loss: {np.mean(total_kl_loss)}")
                 tqdm.write(f"Avg Length Loss: {np.mean(total_length_loss)}")
-                tqdm.write(f"Avg Diffusion Loss: {np.mean(total_diffusion_loss)}")
 
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
         kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
         length_avg_loss = np.mean(total_length_loss).astype(np.float32)
-        diffusion_avg_loss = np.mean(total_diffusion_loss).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_loss": recon_avg_loss,
             "kl_loss": kl_avg_loss,
             "length_loss": length_avg_loss,
-            'diffusion_loss': diffusion_avg_loss,
         }
     def eval(self, model, criterion, test_loader, device):
         model.eval()
@@ -111,7 +105,6 @@ class Text2VAETrainer(BaseTrainer):
         total_recon_loss=[]
         total_kl_loss=[]
         total_length_loss=[]
-        total_diffusion_loss=[]
         with torch.no_grad():
             for batch in tqdm(test_loader, total=len(test_loader.dataset) // test_loader.batch_size):
                 padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, sequence = batch
@@ -127,23 +120,19 @@ class Text2VAETrainer(BaseTrainer):
                 recon_loss = loss_dict['recon_loss']
                 kl_loss = loss_dict['kl_loss']
                 length_loss= loss_dict['length_loss']
-                diffusion_loss= loss_dict['diffusion_loss']
                 total_loss.append(loss.item())
                 total_recon_loss.append(recon_loss.item())
                 total_kl_loss.append(kl_loss.item())
                 total_length_loss.append(length_loss.item())
-                total_diffusion_loss.append(diffusion_loss.item())
         avg_loss = np.mean(total_loss).astype(np.float32)
         recon_avg_loss = np.mean(total_recon_loss).astype(np.float32)
         kl_avg_loss = np.mean(total_kl_loss).astype(np.float32)
         length_avg_loss = np.mean(total_length_loss).astype(np.float32)
-        diffusion_avg_loss = np.mean(total_diffusion_loss).astype(np.float32)
         return {
             "loss": avg_loss,
             "recon_loss": recon_avg_loss,
             "kl_loss": kl_avg_loss,
             'length_loss': length_avg_loss,
-            'diffusion_loss': diffusion_avg_loss,
         }
     def fit(self,model,optimizer,scheduler,criterion,train_loader,eval_loader,test_loader,device,early_stopping=None):
         if self.config["lr_parameters"]["ema"]:
@@ -153,17 +142,14 @@ class Text2VAETrainer(BaseTrainer):
         train_recon_loss_list=self.config['train_recon_loss_list'] if 'train_recon_pose_loss_list' in self.config.keys() else []
         train_kl_loss_list=self.config['train_kl_loss_list'] if 'train_kl_loss_list' in self.config.keys() else []
         train_length_loss_list=self.config['train_length_loss_list'] if 'train_length_loss_list' in self.config.keys() else []
-        train_diffusion_loss_list=self.config['train_diffusion_loss_list'] if 'train_diffusion_loss_list' in self.config.keys() else []
         eval_loss_list=self.config['eval_loss_list'] if 'eval_loss_list' in self.config.keys() else []
         eval_recon_loss_list=self.config['eval_recon_loss_list'] if 'eval_pose_loss_list' in self.config.keys() else []
         eval_kl_loss_list=self.config['eval_kl_loss_list'] if 'eval_kl_loss_list' in self.config.keys() else []
         eval_length_loss_list=self.config['eval_length_loss_list'] if 'eval_length_loss_list' in self.config.keys() else []
-        eval_diffusion_loss_list=self.config['eval_diffusion_loss_list'] if 'eval_diffusion_loss_list' in self.config.keys() else []
         test_loss_list=self.config['test_loss_list'] if 'test_loss_list' in self.config.keys() else []
         test_recon_loss_list=self.config['test_recon_loss_list'] if 'test_recon_loss_list' in self.config.keys() else []
         test_kl_loss_list=self.config['test_kl_loss_list'] if 'test_kl_loss_list' in self.config.keys() else []
         test_length_loss_list=self.config['test_length_loss_list'] if 'test_length_loss_list' in self.config.keys() else []
-        test_diffusion_loss_list=self.config['test_diffusion_loss_list'] if 'test_diffusion_loss_list' in self.config.keys() else []
         save_path=self.config["save_path"]
         for epoch in range(self.config["init_epoch"], num_epochs):
             #self.generate_scheduler(epoch)
@@ -183,24 +169,21 @@ class Text2VAETrainer(BaseTrainer):
             train_recon_loss_list.append(train_loss['recon_loss'])
             train_kl_loss_list.append(train_loss['kl_loss'])
             train_length_loss_list.append(train_loss['length_loss'])
-            train_diffusion_loss_list.append(train_loss['diffusion_loss'])
 
             eval_loss_list.append(eval_loss['loss'])
             eval_recon_loss_list.append(eval_loss['recon_loss'])
             eval_kl_loss_list.append(eval_loss['kl_loss'])
             eval_length_loss_list.append(eval_loss['length_loss'])
-            eval_diffusion_loss_list.append(eval_loss['diffusion_loss'])
 
             test_loss_list.append(test_loss['loss'])
             test_recon_loss_list.append(test_loss['recon_loss'])
             test_kl_loss_list.append(test_loss['kl_loss'])
             test_length_loss_list.append(test_loss['length_loss'])
-            test_diffusion_loss_list.append(test_loss['diffusion_loss'])
 
             print(f"Epoch {epoch+1}/{num_epochs})")
-            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}, Length Loss: {train_loss['length_loss']:.4f}, Diffusion Loss: {train_loss['diffusion_loss']:.4f}")
-            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}, Length Loss: {eval_loss['length_loss']:.4f}, Diffusion Loss: {eval_loss['diffusion_loss']:.4f}")
-            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}, Length Loss: {test_loss['length_loss']:.4f}, Diffusion Loss: {test_loss['diffusion_loss']:.4f}")
+            print(f"Train Loss: {train_loss['loss']:.4f}, Recon Loss: {train_loss['recon_loss']:.4f}, KL Loss: {train_loss['kl_loss']:.4f}, Length Loss: {train_loss['length_loss']:.4f}")
+            print(f"Eval Loss: {eval_loss['loss']:.4f}, Recon Loss: {eval_loss['recon_loss']:.4f}, KL Loss: {eval_loss['kl_loss']:.4f}, Length Loss: {eval_loss['length_loss']:.4f}")
+            print(f"Test Loss: {test_loss['loss']:.4f}, Recon Loss: {test_loss['recon_loss']:.4f}, KL Loss: {test_loss['kl_loss']:.4f}, Length Loss: {test_loss['length_loss']:.4f}")
 
             #eval_lossとtest_lossのkeyを変更
             eval_loss = {
@@ -208,14 +191,12 @@ class Text2VAETrainer(BaseTrainer):
                 "eval_recon_loss": eval_loss['recon_loss'],
                 "eval_kl_loss": eval_loss['kl_loss'],
                 'eval_length_loss': eval_loss['length_loss'],
-                'eval_diffusion_loss': eval_loss['diffusion_loss'],
             }
             test_loss = {
                 "test_loss": test_loss['loss'],
                 "test_recon_loss": test_loss['recon_loss'],
                 "test_kl_loss": test_loss['kl_loss'],
                 'test_length_loss': test_loss['length_loss'],
-                'test_diffusion_loss': test_loss['diffusion_loss'],
             }
             log_dict={**train_loss,**eval_loss,**test_loss}
             wandb.log(log_dict)
@@ -230,17 +211,14 @@ class Text2VAETrainer(BaseTrainer):
                 "train_recon_loss_list": train_recon_loss_list,
                 "train_kl_loss_list": train_kl_loss_list,
                 'train_length_loss_list': train_length_loss_list,
-                'train_diffusion_loss_list': train_diffusion_loss_list,
                 "eval_loss_list": eval_loss_list,
                 "eval_recon_loss_list": eval_recon_loss_list,
                 "eval_kl_loss_list": eval_kl_loss_list,
                 'eval_length_loss_list': eval_length_loss_list,
-                'eval_diffusion_loss_list': eval_diffusion_loss_list,
                 "test_loss_list": test_loss_list,
                 "test_recon_loss_list": test_recon_loss_list,
                 "test_kl_loss_list": test_kl_loss_list,
                 'test_length_loss_list': test_length_loss_list,
-                'test_diffusion_loss_list': test_diffusion_loss_list,
                 'random': random.getstate(),
                 'np_random': np.random.get_state(),
                 'torch': torch.get_rng_state(),
@@ -254,17 +232,14 @@ class Text2VAETrainer(BaseTrainer):
                     "train_recon_loss": train_recon_loss_list,
                     "train_kl_loss": train_kl_loss_list,
                     'train_length_loss': train_length_loss_list,
-                    'train_diffusion_loss': train_diffusion_loss_list,
                     "eval_loss": eval_loss_list,
                     "eval_recon_loss": eval_recon_loss_list,
                     "eval_kl_loss": eval_kl_loss_list,
                     'eval_length_loss': eval_length_loss_list,
-                    'eval_diffusion_loss': eval_diffusion_loss_list,
                     "test_loss": test_loss_list,
                     "test_recon_loss": test_recon_loss_list,
                     "test_kl_loss": test_kl_loss_list,
                     'test_length_loss': test_length_loss_list,
-                    'test_diffusion_loss': test_diffusion_loss_list,
                 }
             )
             log_data.to_csv(f"{save_path}/log.csv")

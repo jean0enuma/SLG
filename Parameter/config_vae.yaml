@@ -30,7 +30,7 @@ loss_parameters:
     vq_weight: 1.0
     vel_weight: 0.00
 model:
-  kl_weight: 1.0
+  kl_weight: 0.2
   pose_dim: 100
   text_cond: False
   text_encoder_name: "google-bert/bert-base-multilingual-uncased"

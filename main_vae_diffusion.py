@@ -16,6 +16,9 @@ from models.text2pose import Text2Pose
 from models.module.VQ_VAE import VQVAE1D, VQLossWeights
 from models.module.VAE_diffusion import VAETransformerDiffusion
 from SLG_datasets.SLG_datasets_Units import SLGText2UnitsDatasets
+from trainer.VAE_sync_trainer import VAESyncTrainer
+from models.module.VAE_sync import VAE_sync
+
 from loader import *
 from Parameter.Parameter import *
 from trainer.Text2VAE_trainer import Text2VAETrainer
@@ -190,6 +193,29 @@ def main(config, mode, vae_weights,checkpoint):
         dev_data_path += integrate_path(3, phoenix_dev_path)
         test_data_path += integrate_path(3, phoenix_test_path)
         i += 1
+    if config['dataset_parameters']['use_asl']:
+        asl_train_path, asl_dev_path, asl_test_path, asl_train_corpus, asl_dev_corpus, asl_test_corpus = datasets_loader_T(
+            "asl")
+        train_corpus[4] = asl_train_corpus
+        dev_corpus[4] = asl_dev_corpus
+        test_corpus[4] = asl_test_corpus
+        if config['dataset_parameters']['is_processed']:
+            raise NotImplementedError("Processed ASL dataset is not implemented yet.")
+            is_3d = True
+        else:
+            train_cod_root[4] = SKELETON_ASL_CITIZEN_TRAIN_DATADIR_3D
+            dev_cod_root[4] = SKELETON_ASL_CITIZEN_DEV_DATADIR_3D
+            test_cod_root[4] = SKELETON_ASL_CITIZEN_TEST_DATADIR_3D
+
+            train_face_root[4] = FACE_ASL_CITIZEN_TRAIN_DATADIR_3D
+            dev_face_root[4] = FACE_ASL_CITIZEN_DEV_DATADIR_3D
+            test_face_root[4] = FACE_ASL_CITIZEN_TEST_DATADIR_3D
+            is_3d = True
+
+        train_data_path += integrate_path(4, asl_train_path)
+        dev_data_path += integrate_path(4, asl_dev_path)
+        test_data_path += integrate_path(4, asl_test_path)
+        i += 1
     if i == 0:
         raise ValueError("At least one dataset must be selected.")
     config['model']['decoder_num_lang'] = i + 1
@@ -219,7 +245,8 @@ def main(config, mode, vae_weights,checkpoint):
     if ds_train.is_3d:
         config['model']['encoder']['q_input_dim'] = int(config['model']['encoder']['q_input_dim'] * 1.5)  # 3Dの場合の入力サイズ
         config['model']['encoder']['kv_input_dim'] = int(
-            config['model']['encoder']['kv_input_dim'] * 1.5)  # 3Dの場合の出力サイズ
+            config['model']['encoder']['kv_input_dim'] * 1.5)
+        config['model']['pose_dim']=int(config['model']['pose_dim']*1.5)# 3Dの場合の出力サイズ
     postfix = ""
     if config["dataset_parameters"]["use_phoenixT"]:
         postfix = "_phoenixT"
@@ -245,9 +272,10 @@ def main(config, mode, vae_weights,checkpoint):
     print("DataLoaders created.")
     # モデルの作成
     print("---Creating model---")
-    config['model']['kl_weight']=0
-    config['model']['recon_weight']=0
+    #config['model']['kl_weight']=0
+    #config['model']['recon_weight']=0
     model = VAETransformerDiffusion(config['model']).to(device)
+    #model = VAE_sync(config).to(device)
     #modelのmodel.diffusion以外の重みをvae_weightsから読み込む
     if vae_weights != None:
         model_dict = model.state_dict()
@@ -256,8 +284,8 @@ def main(config, mode, vae_weights,checkpoint):
         vae_weights_dict = {k: v for k, v in vae_weights_dict.items() if "diffusion" not in k}
         model_dict.update(vae_weights_dict)
         model.load_state_dict(model_dict)
-    model.is_diffusion=True
-    model.requires_diffusion_grad()
+    #model.is_diffusion=True
+    #model.requires_diffusion_grad()
 
 
     # モデルの保存
@@ -277,7 +305,7 @@ def main(config, mode, vae_weights,checkpoint):
     print("Model created.")
     # optimizer,criterion,lr_schedulerの作成
     print("---Creating optimizer, criterion, and lr_scheduler---")
-    optimizer = optim.Adam(model.parameters(), lr=config["lr_parameters"]['learning_rate'],
+    optimizer = optim.AdamW(model.parameters(), lr=config["lr_parameters"]['learning_rate'],
                             weight_decay=config["lr_parameters"]['weight_decay'])
 
     # criterion = Text2Pose_criterion(config['loss_parameters'])
@@ -289,7 +317,7 @@ def main(config, mode, vae_weights,checkpoint):
             scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(dl_train) * config["lr_parameters"]["epoch"],
                                                              eta_min=config["lr_parameters"]["min_lr"])
     elif config['lr_parameters']['scheduler_type'] == "CosineAnnealingWarmRestarts":
-        scheduler = CosineAnnealingLR(optimizer, warmup_epochs=int(config["lr_parameters"]["epoch"] * 0.02),
+        scheduler = CosineAnnealingLR(optimizer, warmup_epochs=int(config["lr_parameters"]["epoch"] * 0.1),
                                       max_epochs=config["lr_parameters"]["epoch"],
                                       warmup_start_lr=config["lr_parameters"]["min_lr"],
                                       eta_min=config["lr_parameters"]["min_lr"])
@@ -299,7 +327,8 @@ def main(config, mode, vae_weights,checkpoint):
     print("Optimizer, criterion, and lr_scheduler created.")
     # 学習の実行
     print("---Starting training/evaluation---")
-    trainer =Text2VAETrainer(config,scheduler)
+    #trainer =Text2VAETrainer(config,scheduler)
+    trainer=VAESyncTrainer(config, scheduler)
     # trainer=VQVAETrainer(config, scheduler)
     if mode == "train":
         if checkpoint != None and checkpoint.split(".")[-1] == "cpt":
@@ -331,27 +360,28 @@ if __name__ == "__main__":
     # global LOG_DIR
     # "train"か"eval"を指定(変数名を考えて)
     mode = "train"  # Change this to "test" when you want to test
-    vae_weights="/media/caffe/data_storage/CSLR/keyword_models/SLG/VAE/How2Sign_VAE_withoutDM/52/model_epoch52.pth"  # model_epoch9.pth or None
+    vae_weights=None
     checkpoint =None
     # subprocess.run(command, input=("gazouken\n").encode(), check=True)
     # print("無効化完了")
     start = time.time()
     print("Loading config...")
-    with open(f"/home/caffe/work/SLG/Parameter/config_diffusion.yaml", "r") as f:
+    with open(f"/home/caffe/work/SLG/Parameter/config_sync.yaml", "r") as f:
         config = yaml.safe_load(f)
     config['model']['text_cond'] = False
-    with open(f"{'/'.join(vae_weights.split('/')[:-2])}/config_diffusion.yaml", "r") as f:
-        vae_config = yaml.safe_load(f)
-    config['model']['encoder']=vae_config['model']['encoder']
-    config['model']['decoder']=vae_config['model']['decoder']
-    config['model']['is_diffusion']=True
+    if vae_weights != None:
+        with open(f"{'/'.join(vae_weights.split('/')[:-2])}/config_diffusion.yaml", "r") as f:
+            vae_config = yaml.safe_load(f)
+        config['model']['encoder']=vae_config['model']['encoder']
+        config['model']['decoder']=vae_config['model']['decoder']
+        config['model']['is_diffusion']=True
     print("Config loaded.")
 
     # logディレクトリにContinurous_Sign以下のディレクトリ，ファイルをコピー
     if checkpoint != None:
         save_path = checkpoint.split("/")[:-2]
         save_path = "/".join(save_path)
-        with open(f"{save_path}/config_diffusion.yaml", "r") as f:
+        with open(f"{save_path}/config_sync.yaml", "r") as f:
             config = yaml.safe_load(f)
     else:
         while True:
@@ -365,7 +395,7 @@ if __name__ == "__main__":
                 break
         log_create_dir(save_path)
         # copy_dir(PROJECT_DIR, save_path)
-        shutil.copy(f"/home/caffe/work/SLG/Parameter/config_diffusion.yaml", f"{save_path}/config_diffusion.yaml")
+        shutil.copy(f"/home/caffe/work/SLG/Parameter/config_sync.yaml", f"{save_path}/config_sync.yaml")
         copy_dir(PROJECT_DIR, save_path)
         shutil.rmtree(f"{save_path}/Continurous_Sign/wandb")  # wandbディレクトリはコピー後に削除(ログが混ざるのを防ぐため)
 
