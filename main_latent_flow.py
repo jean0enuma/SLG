@@ -689,6 +689,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False,v
         dl_test = torch.utils.data.DataLoader(ds_test, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
         dl_dev= torch.utils.data.DataLoader(ds_dev, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_dev.collate_fn)
         ema=EMA(model, decay=0.9999, warmup_steps=10)
+        """
         # ---- boundary連続性の診断 (最初のdevバッチで1回だけ) ----
         diag_batch = next(iter(dl_dev))
         padded_cod_data, _, input_length_tensor, _, _, text_tokens = diag_batch
@@ -705,6 +706,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False,v
             steps=50, cond=text_emb, cond_mask=context_mask,
             guidance_scale=3.0, lengths=input_length_tensor,
             save_plot=f"{save_path}/sampling_diagnostics.png")
+        """
         ema.load_state_dict(torch.load(f"{save_path}/checkpoint.pth", map_location=device)['ema'])
         checkpoint_weights=torch.load(f"{save_path}/checkpoint.pth", map_location=device)
         print("ema_model training:", ema.ema_model.training,
@@ -737,12 +739,12 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False,v
                 context_mask = text_tokens['attention_mask'].to(device)
                 pred_cods = ema.ema_model.sample(1, input_length_tensor, lengths=input_length_tensor,
                                                  cond=text_emb, cond_mask=context_mask,guidance_scale=3.0,
-                                                 decode="parts")
+                                                 decode="parts",steps=100)
 
                 pred_cods = torch.cat([pred_cods['body'][0], pred_cods['left'][0], pred_cods['right'][0]],
                                       dim=-1).unsqueeze(0)
                 B, T, C, V = pred_cods.shape
-                pred_cods_to3d=reconstruct_joints_from_6d(all_inputs,pred_cods,bones=bones,bone_mask=all_mask)
+                pred_cods_to3d=reconstruct_joints_from_6d(all_inputs,pred_cods,bones=bones,bone_mask=all_mask,is_L_median=True)
                 V3 = pred_cods_to3d.shape[-1]
 
                 for i in range(pred_cods.shape[0]):
@@ -816,7 +818,7 @@ if __name__ == "__main__":
         config["vae"] = vae_config["vae"]
     save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross2"
     dataset=config['dataset']
-    main(config, dataset, save_path, parts="all", visualize=False, used_3d=False, vae_weights=vae_weights)
+    #main(config, dataset, save_path, parts="all", visualize=False, used_3d=False, vae_weights=vae_weights)
     main(config, dataset, save_path, parts="all", visualize=True, used_3d=False, vae_weights=vae_weights)
 
 

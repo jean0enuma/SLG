@@ -149,7 +149,7 @@ class DiTBlock(nn.Module):
     """分解型時空間 DiT ブロック (空間注意 -> 時間注意 -> FFN, adaLN-Zero)."""
 
     def __init__(self, d_model: int, n_heads: int, num_tokens: int,
-                 ffn_ratio: int = 4):
+                 ffn_ratio: int = 4,is_ffn_moe: bool = False):
         super().__init__()
         self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_s = MHSA(d_model, n_heads)
@@ -158,9 +158,12 @@ class DiTBlock(nn.Module):
         self.ln_t = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_t = MHSA(d_model, n_heads)
         self.ln_f = nn.LayerNorm(d_model, elementwise_affine=False)
-        self.ffn = nn.Sequential(
-            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
-            nn.Linear(ffn_ratio * d_model, d_model))
+        if is_ffn_moe:
+            self.ffn = MoEFFN(d_model, ffn_ratio)
+        else:
+            self.ffn = nn.Sequential(
+                nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
+                nn.Linear(ffn_ratio * d_model, d_model))
         self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 9 * d_model))
         nn.init.zeros_(self.mod[1].weight)
         nn.init.zeros_(self.mod[1].bias)
@@ -266,7 +269,7 @@ class CrossCondDiTBlock(nn.Module):
     """テキスト条件付き DiT ブロック (adaLN + cross-attention)."""
 
     def __init__(self, d_model: int, n_heads: int, num_tokens: int,
-                 ffn_ratio: int = 4, is_rope: bool = False):
+                 ffn_ratio: int = 4, is_rope: bool = False,is_ffn_moe: bool = False):
         super().__init__()
         self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_s = MHSA(d_model, n_heads)
@@ -278,9 +281,12 @@ class CrossCondDiTBlock(nn.Module):
         self.ln_x = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_x = MHCA(d_model, n_heads)
         self.ln_f = nn.LayerNorm(d_model, elementwise_affine=False)
-        self.ffn = nn.Sequential(
-            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
-            nn.Linear(ffn_ratio * d_model, d_model))
+        if is_ffn_moe:
+            self.ffn = MoEFFN(d_model, ffn_ratio)
+        else:
+            self.ffn = nn.Sequential(
+                nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
+                nn.Linear(ffn_ratio * d_model, d_model))
         self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 12 * d_model))
         nn.init.zeros_(self.mod[1].weight)
         nn.init.zeros_(self.mod[1].bias)
@@ -319,29 +325,24 @@ class CrossCondDiTBlock(nn.Module):
 class MoEFFN(nn.Module):
     """MoE FFN (expert は 1 つの FFN で共有, adaLN-Zero 変調は共通)."""
 
-    def __init__(self, d_model: int, ffn_ratio: int = 4, num_experts: int = 3):
+    def __init__(self, d_model: int, ffn_ratio: int = 4):
         super().__init__()
-        self.ffn = nn.Sequential(
+        self.ffn_b = nn.Sequential(
             nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
             nn.Linear(ffn_ratio * d_model, d_model))
-        self.num_experts = num_experts
-        self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 3 * d_model))
-        nn.init.zeros_(self.mod[1].weight)
-        nn.init.zeros_(self.mod[1].bias)
-
-    def forward(self, x: torch.Tensor, temb: torch.Tensor,
-                expert_idx: torch.Tensor) -> torch.Tensor:
-        B, T, V, D = x.shape
-        sh, sc, g = self.mod(temb).chunk(3, dim=-1)
-        h = modulate(x, sh[:, None, None, :], sc[:, None, None, :])
-        h = self.ffn(h)
-        g_exp = g[:, None, None, :].expand(B, T, V, D)
-        g_mask = F.one_hot(expert_idx.clamp(0, self.num_experts - 1),
-                           num_classes=self.num_experts).float()
-        g_mask = g_mask.view(B, T, 1, self.num_experts).expand(-1, -1, V, -1)
-        g_masked = (g_exp.unsqueeze(-1) * g_mask).sum(dim=-1)
-        return x + g_masked * h
-
+        self.ffn_r= nn.Sequential(
+            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
+            nn.Linear(ffn_ratio * d_model, d_model))
+        self.ffn_l= nn.Sequential(
+            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
+            nn.Linear(ffn_ratio * d_model, d_model))
+    def forward(self, h: torch.Tensor) -> torch.Tensor:
+        B, T, V, D = h.shape
+        h_b=self.ffn_b(h[:,:,:7])
+        h_l=self.ffn_l(h[:,:,7:27])
+        h_r=self.ffn_r(h[:,:,27:])
+        h = torch.cat([h_b, h_l, h_r], dim=2)
+        return h
 
 class PartDenoiser(nn.Module):
     """潜在トークン列 (B, T', V_part, latent_dim) に対する速度場予測器."""
@@ -430,7 +431,9 @@ class SignLatentFlowMoE(nn.Module):
                  cond_dim: int | None = None,
                  cross_attn: bool = False,
                  shared_lr: bool = False,
-                 train_length_predictor: bool = False):
+                 train_length_predictor: bool = False,
+                 is_ffn_moe: bool = False,
+                 is_rope: bool = False):
         super().__init__()
         self.vae = vae
         self.train_length_predictor = train_length_predictor
@@ -487,19 +490,34 @@ class SignLatentFlowMoE(nn.Module):
             nn.init.trunc_normal_(self.null_context, std=0.02)
             self.expert_high = PartDenoiserXAttn(
                 self.latent_dim, self.num_tokens, d_model, n_heads, depth_high)
-            self.experts_low = nn.ModuleDict({
-                name: PartDenoiserXAttn(self.latent_dim, len(idx),
-                                        d_model, n_heads, depth_low)
-                for name, idx in self.part_index.items()})
-            if shared_lr:
-                self.experts_low['right']=self.experts_low['left']
+            if is_ffn_moe:
+                self.experts_low=PartDenoiserXAttn(self.latent_dim, self.num_tokens, d_model, n_heads, depth_high)
+                #CrossCondDiTBlockのffn,ln_f以外をexpert_highと共有する
+                for name, module in self.expert_high.named_children():
+                    if name not in ['ffn','ln_f']:
+                        self.experts_low._modules[name]=module
+            else:
+
+                self.experts_low = nn.ModuleDict({
+                    name: PartDenoiserXAttn(self.latent_dim, len(idx),
+                                            d_model, n_heads, depth_low)
+                    for name, idx in self.part_index.items()})
+                if shared_lr:
+                    self.experts_low['right']=self.experts_low['left']
         else:
             self.expert_high = PartDenoiser(
                 self.latent_dim, self.num_tokens, d_model, n_heads, depth_high)
-            self.experts_low = nn.ModuleDict({
-                name: PartDenoiser(self.latent_dim, len(idx),
-                                   d_model, n_heads, depth_low)
-                for name, idx in self.part_index.items()})
+            if is_ffn_moe:
+                self.experts_low=PartDenoiser(self.latent_dim, self.num_tokens, d_model, n_heads, depth_low)
+                #DiTBlockのffn,ln_f以外をexpert_highと共有する
+                for name, module in self.expert_high.named_children():
+                    if name not in ['ffn','ln_f']:
+                        self.experts_low._modules[name]=module
+            else:
+                self.experts_low = nn.ModuleDict({
+                    name: PartDenoiser(self.latent_dim, len(idx),
+                                       d_model, n_heads, depth_low)
+                    for name, idx in self.part_index.items()})
 
         self.register_buffer("z_mean", torch.zeros(1))
         self.register_buffer("z_std", torch.ones(1))
@@ -779,6 +797,8 @@ class SignLatentFlowMoE(nn.Module):
                                drop_mask=drop_mask, time_pad=time_pad)
         hi = self.router(t)
         se = (v_pred - v_target).pow(2)
+        #bodyが動く箇所だけ重みをつける
+        #se[:, :, 3:7] = se[:, :, 3:7] * 2
 
         if part_weight is not None:
             w = torch.ones(self.num_tokens, device=z0.device)

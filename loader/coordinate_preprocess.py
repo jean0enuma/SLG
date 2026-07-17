@@ -190,6 +190,196 @@ def build_rotation_from_joints(p_parent, p_child, p_aux):
     # 列ベクトルとして積む → (..., 3, 3)
     R = torch.stack([x, y, z], dim=-1)
     return R
+
+
+# ======================================================================
+# SLERP による欠損フレーム補間 (座標の線形補間の置き換え)
+# ----------------------------------------------------------------------
+# 座標を線形補間すると, 中間フレームで骨が縮む (弦が弧より短い) ため
+# 不自然な骨格になる. ボーン回転を SLERP (球面線形補間) し, ボーン長は
+# 線形補間して FK で座標を復元することで, 骨長を保った自然な補間になる.
+# ======================================================================
+def _matrix_to_quaternion(R):
+    """(..., 3, 3) -> (..., 4) [w, x, y, z]. torch.Tensor."""
+    m00, m01, m02 = R[..., 0, 0], R[..., 0, 1], R[..., 0, 2]
+    m10, m11, m12 = R[..., 1, 0], R[..., 1, 1], R[..., 1, 2]
+    m20, m21, m22 = R[..., 2, 0], R[..., 2, 1], R[..., 2, 2]
+    trace = m00 + m11 + m22
+    q = torch.zeros(*R.shape[:-2], 4, device=R.device, dtype=R.dtype)
+
+    c0 = trace > 0
+    s = torch.sqrt((trace + 1.0).clamp_min(1e-8)) * 2
+    q[..., 0] = torch.where(c0, 0.25 * s, q[..., 0])
+    q[..., 1] = torch.where(c0, (m21 - m12) / s.clamp_min(1e-8), q[..., 1])
+    q[..., 2] = torch.where(c0, (m02 - m20) / s.clamp_min(1e-8), q[..., 2])
+    q[..., 3] = torch.where(c0, (m10 - m01) / s.clamp_min(1e-8), q[..., 3])
+
+    c1 = (~c0) & (m00 > m11) & (m00 > m22)
+    s1 = torch.sqrt((1.0 + m00 - m11 - m22).clamp_min(1e-8)) * 2
+    q[..., 0] = torch.where(c1, (m21 - m12) / s1.clamp_min(1e-8), q[..., 0])
+    q[..., 1] = torch.where(c1, 0.25 * s1, q[..., 1])
+    q[..., 2] = torch.where(c1, (m01 + m10) / s1.clamp_min(1e-8), q[..., 2])
+    q[..., 3] = torch.where(c1, (m02 + m20) / s1.clamp_min(1e-8), q[..., 3])
+
+    c2 = (~c0) & (~c1) & (m11 > m22)
+    s2 = torch.sqrt((1.0 + m11 - m00 - m22).clamp_min(1e-8)) * 2
+    q[..., 0] = torch.where(c2, (m02 - m20) / s2.clamp_min(1e-8), q[..., 0])
+    q[..., 1] = torch.where(c2, (m01 + m10) / s2.clamp_min(1e-8), q[..., 1])
+    q[..., 2] = torch.where(c2, 0.25 * s2, q[..., 2])
+    q[..., 3] = torch.where(c2, (m12 + m21) / s2.clamp_min(1e-8), q[..., 3])
+
+    c3 = (~c0) & (~c1) & (~c2)
+    s3 = torch.sqrt((1.0 + m22 - m00 - m11).clamp_min(1e-8)) * 2
+    q[..., 0] = torch.where(c3, (m10 - m01) / s3.clamp_min(1e-8), q[..., 0])
+    q[..., 1] = torch.where(c3, (m02 + m20) / s3.clamp_min(1e-8), q[..., 1])
+    q[..., 2] = torch.where(c3, (m12 + m21) / s3.clamp_min(1e-8), q[..., 2])
+    q[..., 3] = torch.where(c3, 0.25 * s3, q[..., 3])
+    return F.normalize(q, dim=-1, eps=1e-8)
+
+
+def _quaternion_to_matrix(q):
+    """(..., 4) [w,x,y,z] -> (..., 3, 3). torch.Tensor."""
+    q = F.normalize(q, dim=-1, eps=1e-8)
+    w, x, y, z = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+    R = torch.stack([
+        1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y),
+        2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x),
+        2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y),
+    ], dim=-1)
+    return R.reshape(*q.shape[:-1], 3, 3)
+
+
+def _slerp(q0, q1, t):
+    """quaternion の球面線形補間. q0,q1: (..., 4), t: (..., 1) -> (..., 4).
+    二重被覆 (q と -q が同じ回転) のため符号を揃え, 最短測地線を通る."""
+    q0 = F.normalize(q0, dim=-1, eps=1e-8)
+    q1 = F.normalize(q1, dim=-1, eps=1e-8)
+    dot = (q0 * q1).sum(-1, keepdim=True)
+    q1 = torch.where(dot < 0, -q1, q1)          # 最短経路へ符号反転
+    dot = dot.abs().clamp(max=1.0 - 1e-7)
+    theta = torch.arccos(dot)
+    sin_theta = torch.sin(theta)
+    near = sin_theta < 1e-4                      # ほぼ同一回転 -> 線形補間
+    w0 = torch.where(near, 1.0 - t,
+                     torch.sin((1 - t) * theta) / sin_theta.clamp_min(1e-8))
+    w1 = torch.where(near, t,
+                     torch.sin(t * theta) / sin_theta.clamp_min(1e-8))
+    return F.normalize(w0 * q0 + w1 * q1, dim=-1, eps=1e-8)
+
+
+def _valid_frames(pose, joints, eps=1e-6):
+    """pose: (3, T, J) -> (T,) bool. 使用関節が全ゼロ / NaN のフレームを無効."""
+    p = pose[:, :, joints]
+    zero = np.all(np.abs(np.nan_to_num(p)) < eps, axis=(0, 2))
+    nan = np.isnan(p).any(axis=(0, 2))
+    return ~(zero | nan)
+
+
+def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6):
+    """欠損フレームの骨格を SLERP + FK で補間する.
+
+    補間対象は「最初の有効フレーム 〜 最後の有効フレーム」の内側のみ.
+    その外側 (手が画面外で最初から/最後まで未検出) は補間せず, 元の値
+    (ゼロ or NaN) のまま残す. 存在しない動作を捏造しないため.
+
+    Args:
+        pose:  (3, T, J) ndarray. 欠損フレームは全ゼロ or NaN を想定.
+        bones: [(parent, child, aux), ...]  pose のインデックス系.
+        valid: (T,) bool or None. None なら bones の使用関節から自動判定.
+    Returns:
+        pose_filled: (3, T, J) ndarray
+        valid_new:   (T,) bool. 補間で埋めたフレームも True.
+    """
+    pose = np.asarray(pose, dtype=np.float64)
+    C, T, J = pose.shape
+    assert C == 3, f"expected (3, T, J), got {pose.shape}"
+    used = sorted({j for b in bones for j in b[:2]})
+
+    if valid is None:
+        valid = _valid_frames(pose, used, eps)
+    valid = np.asarray(valid, dtype=bool).copy()
+
+    idx = np.arange(T)
+    vidx = idx[valid]
+    if len(vidx) < 2:
+        return pose, valid                       # 補間できるだけの有効フレームなし
+
+    first, last = int(vidx[0]), int(vidx[-1])
+    target = (~valid) & (idx > first) & (idx < last)
+    if not target.any():
+        return pose, valid                       # 内側に欠損なし
+
+    # ---- 有効フレームの回転・ボーン長を計算 ----
+    x = torch.as_tensor(pose.transpose(1, 0, 2))          # (T, 3, J)
+    p_par, p_chi, p_aux = joints_to_rotation_inputs(x, bones)
+    R = build_rotation_from_joints(p_par, p_chi, p_aux)    # (T, Nb, 3, 3)
+    q = _matrix_to_quaternion(R)                          # (T, Nb, 4)
+    L = (p_chi - p_par).norm(dim=-1)                      # (T, Nb)
+
+    # ---- root 関節 (どのボーンの child にも現れない関節) ----
+    children = {c for _, c, *_ in bones}
+    root = sorted(({p for p, _, *_ in bones} | children) - children)[0]
+
+    # ---- 補間対象フレームを挟む有効フレームを特定 ----
+    tpos = idx[target]
+    after = np.searchsorted(vidx, tpos)
+    i1 = vidx[np.minimum(after, len(vidx) - 1)]           # 次の有効フレーム
+    i0 = vidx[np.maximum(after - 1, 0)]                   # 前の有効フレーム
+    w = (tpos - i0) / np.maximum(i1 - i0, 1)              # (n,)
+    w_t = torch.as_tensor(w, dtype=q.dtype)
+
+    # ---- 回転: SLERP / ボーン長・root: 線形補間 ----
+    q[tpos] = _slerp(q[i0], q[i1], w_t[:, None, None])
+    L[tpos] = L[i0] * (1 - w_t[:, None]) + L[i1] * w_t[:, None]
+
+    pose_out = pose.copy()
+    pose_out[:, tpos, root] = (pose[:, i0, root] * (1 - w)
+                               + pose[:, i1, root] * w)
+
+    # ---- FK: root から木の順に座標を復元 (補間フレームのみ) ----
+    R_new = _quaternion_to_matrix(q)                      # (T, Nb, 3, 3)
+    seg = (R_new[..., :, 0] * L.unsqueeze(-1)).numpy()    # (T, Nb, 3)
+    jp = pose_out.transpose(1, 2, 0).copy()               # (T, J, 3)
+    placed = {root}
+    remaining = list(enumerate(bones))
+    while remaining:
+        rest = []
+        for b, bone in remaining:
+            p, c = bone[0], bone[1]
+            if p in placed:
+                jp[tpos, c] = jp[tpos, p] + seg[tpos, b]
+                placed.add(c)
+            else:
+                rest.append((b, bone))
+        if len(rest) == len(remaining):
+            break                                          # 到達不能ボーン
+        remaining = rest
+
+    pose_out = jp.transpose(2, 0, 1)                      # (3, T, J)
+    valid_new = valid.copy()
+    valid_new[tpos] = True
+    return pose_out, valid_new
+
+
+def slerp_fill_hands(hand_data, bones=None, eps=1e-6):
+    """左右の手 (3, T, 42) を個別に SLERP 補間する.
+    左手=0:21, 右手=21:42 の並びを前提とし, 手ごとに
+    「最初に検出されたフレーム 〜 最後に検出されたフレーム」の内側のみ補間する.
+
+    Returns:
+        filled: (3, T, 42)
+        valid:  (T, 2) bool  [左手, 右手] の有効フレーム
+    """
+    bones = HAND_BONES if bones is None else bones
+    filled = np.asarray(hand_data, dtype=np.float64).copy()
+    lf, lv = slerp_fill_skeleton(filled[:, :, :21], bones, eps=eps)
+    rf, rv = slerp_fill_skeleton(filled[:, :, 21:], bones, eps=eps)
+    filled[:, :, :21] = lf
+    filled[:, :, 21:] = rf
+    valid = np.stack([lv, rv], axis=1)                    # (T, 2)
+    return filled, valid
+
+
 def coordinate_preprocess_6D_rotation(data, data_face,is_face_connect=False,is_sg_filter=False,is_delete_nan=True):
     data = nan_interpolate(data,limit_area="both")
     #data=nan_interpolate_zero(data)
@@ -299,17 +489,48 @@ def nan_interpolate_zero(data):
     return np.array(df)
 
 
+import numpy as np
+import pandas as pd
+
+
 def average_movint(data, window_size=5):
     """
-    移動平均を取る
-    :param data:
-    :return:
+    NaNを除外して移動平均を計算する。
+
+    - 0はNaNとして扱う
+    - window内のNaNは平均計算から除外する
+    - window内がすべてNaNの場合は、結果を0にする
+
+    Parameters
+    ----------
+    data : array-like
+        入力データ
+    window_size : int, default=5
+        移動平均のwindowサイズ
+
+    Returns
+    -------
+    np.ndarray
+        移動平均後のデータ
     """
-    data=np.where(data==0,np.nan,data)
+    data = np.asarray(data, dtype=float)
+
+    # 0をNaNに変換
+    data = np.where(data == 0, np.nan, data)
+
     df = pd.DataFrame(data)
-    df.rolling(window=window_size, center=True).mean()
-    data=np.array(df)
-    return np.where(np.isnan(data),0,data)
+
+    # min_periods=1により、NaN以外が1つでもあれば平均を計算
+    averaged_df = df.rolling(
+        window=window_size,
+        center=True,
+        min_periods=1
+    ).mean()
+
+    averaged_data = averaged_df.to_numpy()
+
+    # window内がすべてNaNだった部分だけ0に戻す
+    return np.nan_to_num(averaged_data, nan=0.0)
 
 def coordinate_preprocess_face(data_face,is_face_connect=False):
     data_face = nan_interpolate(data_face, limit_area="both")
@@ -401,9 +622,22 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
     new_data[2, :, 10] = (new_data[2, :, 11] + new_data[2, :, 12]) / 2
 
+    # ---- body の欠損フレームを SLERP + FK で補間 ----
+    # (BODY_BONES の使用関節 0,10-16 が全ゼロのフレームが対象.
+    #  有効区間の外側は補間しない)
+    new_data, body_valid = slerp_fill_skeleton(new_data, BODY_BONES)
+
     new_hand_data = new_data[:, :, hand_indexes]
     #new_hand_data=np.concatenate(fillna_left_right(new_hand_data),axis=2)
-    new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1]),nan_interpolate(new_hand_data[2])],axis=0)
+    # ---- (旧) 座標の線形補間: 中間フレームで指が縮み, 手形が歪む --------
+    #new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1]),nan_interpolate(new_hand_data[2])],axis=0)
+    # ---- SLERP 補間: 回転を球面補間 + 骨長を保って FK 復元 --------------
+    # 左右の手それぞれ「最初に検出されたフレーム 〜 最後に検出されたフレーム」
+    # の内側のみを補間する (画面外の区間は補間せずゼロのまま残す)
+    new_hand_data = np.where(np.isnan(new_hand_data), 0.0, new_hand_data)
+    new_hand_data, hand_valid = slerp_fill_hands(new_hand_data)
+    # 補間結果を new_data 側 (17:38=左手, 38:59=右手) にも反映
+    new_data[:, :, hand_indexes] = new_hand_data
     #new_hand_dataの(2,S,F)のうち，すべてが0のSのインデックスを取得
     zero_mask = np.all(new_hand_data == 0, axis=(0, 2))  # shape: (S,)
     nan_indexes = np.where(zero_mask)[0]
@@ -450,7 +684,14 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
     new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
     new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
-    #new_data=average_movint(new_data)
+    C,T,J=new_data.shape
+    new_data=average_movint(new_data.transpose(1,0,2).reshape(T,C*J)).reshape(T,C,J).transpose(1,0,2)
+    JF=new_data_face.shape[2]
+    new_data_face=average_movint(new_data_face.transpose(1,0,2).reshape(T,C*JF)).reshape(T,C,JF).transpose(1,0,2)
+    JH=new_hand_data.shape[2]
+    new_hand_data=average_movint(new_hand_data.transpose(1,0,2).reshape(T,C*JH)).reshape(T,C,JH).transpose(1,0,2)
+    JB=new_body_data.shape[2]
+    new_body_data=average_movint(new_body_data.transpose(1,0,2).reshape(T,C*JB)).reshape(T,C,JB).transpose(1,0,2)
     return new_data, new_data_face, new_hand_data, new_body_data
 def normalize_hand(data):
     data= np.where(data==0,np.nan,data)

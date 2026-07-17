@@ -307,7 +307,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False):
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
     epochs = vae_config['lr_parameters']['epoch']
     # scheduler=torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
-    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     loss_fn = vae_loss if used_3d==False else vae_loss_cod
 
     if visualize!=True:
@@ -390,7 +390,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False):
                 scaler.step(optimizer)
                 scaler.update()
                 total_loss+=loss.item()
-            #scheduler.step()
+            scheduler.step()
             avg_loss=total_loss/len(ds_train)
             for batch in dl_dev:
                 model.eval()
@@ -659,12 +659,12 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     dataset = "phoenixT"  # or "CSL-Daily", "how2sign", "phoenix", "AUTSL"
-    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_openpose"
-    #main(config, dataset, save_path, parts="body",visualize=False,used_3d=False)
-    #main(config, dataset, save_path, parts="body",visualize=True,used_3d=False)
+    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp"
+    main(config, dataset, save_path, parts="body",visualize=False,used_3d=False)
+    main(config, dataset, save_path, parts="body",visualize=True,used_3d=False)
 
-    #main(config, dataset, save_path, parts="hands",visualize=False,used_3d=False)
-    #main(config, dataset, save_path, parts="hands",visualize=True,used_3d=False)
+    main(config, dataset, save_path, parts="hands",visualize=False,used_3d=False)
+    main(config, dataset, save_path, parts="hands",visualize=True,used_3d=False)
 
     main(config, dataset, save_path, parts="all",visualize=False,used_3d=False)
     main(config, dataset, save_path,parts="all",visualize=True,used_3d=False)

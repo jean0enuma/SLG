@@ -231,7 +231,7 @@ def make_bone_mask(joint_mask: torch.Tensor, bones=HAND_BONES,
         m = m & valid_rot
     return m
 
-def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None, eps=1e-8):
+def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None, eps=1e-8,is_L_median=False):
     """
     モデル出力の6D表現から骨格座標を復元する(FK).
     ボーン長・root軌跡は参照座標 x_ref から抽出する.
@@ -256,9 +256,11 @@ def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None,
     # --- ① ボーン長: median を外してフレームごとの長さをそのまま使う ---
 
     # 変更前:
-    # L = vec.norm(dim=-1).median(dim=1).values      # (B, Nb)
+    if is_L_median:
+        L = vec.norm(dim=-1).median(dim=1).values      # (B, Nb)
     # 変更後:
-    L = vec.norm(dim=-1)  # (B, T, Nb)  フレームごと
+    else:
+        L = vec.norm(dim=-1)  # (B, T, Nb)  フレームごと
 
     # --- ② seg のブロードキャスト形状を変更 ---
     # 変更前:
@@ -275,8 +277,10 @@ def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None,
 
     # --- ③ 6D -> 回転行列 -> ボーン方向 × 長さ ---
     R = rotation_6d_to_matrix(d6.movedim(-2, -1))            # (B, T, Nb, 3, 3)
-    #seg = R[..., :, 0] * L.view(B, 1, -1, 1)                 # 第1列 = ボーン方向
-    seg = R[..., :, 0] * L.unsqueeze(-1)  # (B,T,Nb,1) 各フレーム固有の長さ
+    if is_L_median:
+        seg = R[..., :, 0] * L.view(B, 1, -1, 1)                 # 第1列 = ボーン方向
+    else:
+        seg = R[..., :, 0] * L.unsqueeze(-1)  # (B,T,Nb,1) 各フレーム固有の長さ
 
     # --- ④ FK: rootから木の順に位置を積算(トポロジカル順で解決) ---
     joints = pos_ref.clone()          # boneに含まれない関節は参照値を保持
