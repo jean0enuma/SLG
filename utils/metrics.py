@@ -381,7 +381,39 @@ def fid(
     if return_stats:
         return value, (mu_h, sig_h), (mu_r, sig_r)
     return value
+def fid_noextract(
+    hypotheses_mu: list,
+    hypotheses_logvar: list,
+    references_mu: list,
+    references_logvar: list,
+    feature_fn: Optional[Callable] = None,
+    batched: bool = False,
+    return_stats: bool = False,
+):
+    """骨格運動の FID (Frechet Distance between real / generated feature dists).
 
+    画像 FID の Inception 特徴を「モーション特徴」に置き換えたもの. 生成分布と
+    実分布の特徴空間でのガウス近似間 Frechet 距離. 低いほど良い. 対応する
+    ペアは不要 (分布同士の比較なので hypotheses と references の要素数・順序は
+    無関係でよい).
+
+    Args:
+        hypotheses: 生成系列の特徴量行列 (N, D) のリスト.
+        references: 実 (GT) 系列の特徴量行列 (N, D) のリスト. hypotheses とペアである必要はない.
+        batched:    feature_fn が一括入力対応なら True.
+        return_stats: True で (fid, (mu_h, sig_h), (mu_r, sig_r)) を返す.
+
+    Returns:
+        fid_value (float), または上記 return_stats 付きタプル.
+    """
+    feat_h_mu= np.asarray(hypotheses_mu)
+    feat_r_mu= np.asarray(references_mu)
+    feat_h_logvar= np.asarray(hypotheses_logvar)
+    feat_r_logvar= np.asarray(references_logvar)
+    value = _frechet_distance(feat_h_mu, np.exp(feat_h_logvar), feat_r_mu, np.exp(feat_r_logvar))
+    if return_stats:
+        return value, (feat_h_mu, np.exp(feat_h_logvar)), (feat_r_mu, np.exp(feat_r_logvar))
+    return value
 # ======================================================================
 # MPJAE  (Mean Per Joint Angle Error) — 関節角度誤差 [degree]
 # ======================================================================

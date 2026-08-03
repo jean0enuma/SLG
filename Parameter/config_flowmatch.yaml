@@ -3,6 +3,7 @@ work_dir: "/home=/caffe/work/SLG/"
 device: "cuda:0"
 is_processed: False
 is_openpose: False
+is_gloss: False
 vae:
   lr_parameters:
     epoch: 20
@@ -29,10 +30,11 @@ vae:
   model:
     bones: "hand"
     blocks_per_stage: 2
-    n_stages: 1
+    n_stages: 3
     dropout: 0.3
     d_model: 256
-    latent_dim: 64
+    latent_dim: 8
+    is_temporal: True
 flow_matching:
   lr_parameters:
     epoch: 500
@@ -49,13 +51,21 @@ flow_matching:
     ema_beta: 0.999
     replacement_num_batches: 100
   model:
-    boundary: 0.5
-    d_model: 256
+    boundary: 1.0
+    d_model: 128
     n_heads: 8
-    depth_high: 2
-    depth_low: 4
+    depth_high: 6
+    depth_low: 2
     cond_dim: 768
     cross_attn: True
+    is_ffn_moe: True
+    shared_lr: False
+    is_rope: True
+    is_separate: False
+    sliding_attn: False
+    window: 5
+    part_heads: 0
+    local_heads: 0
     part_weight:
         body: 1.0
         hand: 2.0

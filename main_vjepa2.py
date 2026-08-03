@@ -144,7 +144,7 @@ def face_hand_crop(hand_cod_data,face_cod_data,data_path,save_path):
                     y_max=new_face_y_max, file_name=f"tmp_video_face.mp4")
 
 
-def sign_video_feature_extractoion(dataset,save_path):
+def sign_video_feature_extraction(dataset,save_path):
 
     # opencvでフレーム数を取得
     model=VJEPAExtractor()

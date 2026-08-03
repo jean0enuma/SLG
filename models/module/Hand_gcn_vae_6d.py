@@ -231,7 +231,79 @@ def make_bone_mask(joint_mask: torch.Tensor, bones=HAND_BONES,
         m = m & valid_rot
     return m
 
-def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None, eps=1e-8,is_L_median=False):
+
+
+def mask_zero_6d_joints(joints_3d, gen_6d, bones, eps=1e-6,
+                        propagate_children=True, zero_value=0.0):
+    """生成6Dが全ゼロ(欠損)のボーンに対応する3D座標を zero_value にする.
+
+    生成モデルが「手が画面外/休止」を全ゼロ6Dとして出力した場合を欠損とみなし,
+    FK復元後の3D座標側に反映する. 6D成分が全て |x| < eps のボーンを欠損と判定.
+
+    Args:
+        joints_3d: (T, 3, J) or (B, T, 3, J)  FK復元後の座標
+        gen_6d:    (T, 6, Nb) or (B, T, 6, Nb)  生成6D (6Dが最後から2番目の軸)
+        bones:     [(parent, child, aux), ...]  Nb 本
+        eps:       ゼロ判定の閾値
+        propagate_children: True なら欠損ボーンの子孫関節も再帰的にゼロ化
+                    (親ボーンが欠損なら FK で子の位置も信頼できないため)
+        zero_value: 欠損時に代入する値 (既定 0.0)
+    Returns:
+        joints_out: joints_3d と同形状. 欠損ボーンの child 関節がゼロ化.
+        joint_valid: (..., T, J) bool  True=有効, False=欠損ゼロ化した関節
+    """
+    squeeze = joints_3d.dim() == 3
+    if squeeze:
+        joints_3d = joints_3d.unsqueeze(0)
+        gen_6d = gen_6d.unsqueeze(0)
+    B, T, C, J = joints_3d.shape
+    assert C == 3, f"expected (B, T, 3, J), got {tuple(joints_3d.shape)}"
+    Nb = gen_6d.shape[-1]
+    assert gen_6d.shape[-2] == 6, \
+        f"expected (B, T, 6, Nb), got {tuple(gen_6d.shape)}"
+    assert len(bones) == Nb, \
+        f"bones ({len(bones)}) != Nb ({Nb})"
+    device = joints_3d.device
+
+    # ---- ボーンごとの欠損判定: 6D成分が全て |x| < eps ----
+    bone_missing = (gen_6d.abs() < eps).all(dim=-2)          # (B, T, Nb)
+
+    # ---- 欠損ボーンの child 関節を集める ----
+    child_idx = torch.as_tensor([b[1] for b in bones], device=device)  # (Nb,)
+    joint_missing = torch.zeros(B, T, J, dtype=torch.bool, device=device)
+    # 各ボーンの欠損を child 関節へ散布
+    joint_missing[..., child_idx] |= bone_missing
+
+    # ---- 子孫への伝播: 親ボーンが欠損なら子孫も欠損 ----
+    if propagate_children:
+        # 親子関係 (child -> parent) を辿れるよう bones から構築
+        parent_of = {b[1]: b[0] for b in bones}
+        # child のトポロジカル順に, 親が欠損なら自身も欠損
+        # (bones はチェーン順とは限らないので反復で伝播)
+        changed = True
+        while changed:
+            changed = False
+            for p, c, *_ in bones:
+                if p in parent_of or True:
+                    # 親関節 p が欠損しているフレームは子 c も欠損
+                    prop = joint_missing[..., p] & ~joint_missing[..., c]
+                    if prop.any():
+                        joint_missing[..., c] |= joint_missing[..., p]
+                        changed = True
+
+    # ---- 欠損関節の座標をゼロ化 ----
+    joints_out = joints_3d.clone()
+    mask = joint_missing.unsqueeze(2)                        # (B, T, 1, J)
+    joints_out = torch.where(mask, torch.full_like(joints_out, zero_value),
+                             joints_out)
+    joint_valid = ~joint_missing
+
+    if squeeze:
+        joints_out = joints_out.squeeze(0)
+        joint_valid = joint_valid.squeeze(0)
+    return joints_out, joint_valid
+
+def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None, eps=1e-5,is_L_median=False):
     """
     モデル出力の6D表現から骨格座標を復元する(FK).
     ボーン長・root軌跡は参照座標 x_ref から抽出する.
@@ -257,7 +329,10 @@ def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None,
 
     # 変更前:
     if is_L_median:
-        L = vec.norm(dim=-1).median(dim=1).values      # (B, Nb)
+        #Lが0以外のボーン長の中央値を使う場合
+        L = vec.norm(dim=-1)
+        L=L.masked_fill(L < eps, float("nan"))  # 0長ボーンは除外
+        L = torch.nanmedian(L, dim=1, keepdim=True).values  #
     # 変更後:
     else:
         L = vec.norm(dim=-1)  # (B, T, Nb)  フレームごと
@@ -283,7 +358,8 @@ def reconstruct_joints_from_6d(x_ref, d6, bones,bone_mask=None, num_joints=None,
         seg = R[..., :, 0] * L.unsqueeze(-1)  # (B,T,Nb,1) 各フレーム固有の長さ
 
     # --- ④ FK: rootから木の順に位置を積算(トポロジカル順で解決) ---
-    joints = pos_ref.clone()          # boneに含まれない関節は参照値を保持
+    #joints = pos_ref.clone()          # boneに含まれない関節は参照値を保持
+    joints=torch.zeros_like(pos_ref)  # (B, T, J, 3)
     joints[..., root, :] = pos_ref[..., root, :]             # root軌跡は参照から
     placed = {root}
     remaining = list(enumerate(bones))

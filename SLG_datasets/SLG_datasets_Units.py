@@ -235,7 +235,7 @@ class SLGText2UnitsDatasets(Dataset):
                 hand_cod_data = torch.tensor(hand_cod_data).float()
                 body_cod_data = torch.tensor(body_cod_data).float()
         pose_data=cod_data.permute(1,2,0) #(T,JC,2or3)
-        hand_cod_data=pose_data[:,8:, :].permute(2,0,1) #(3,T,JC-8)
+        hand_cod_data=pose_data[:,-42:, :].permute(2,0,1) #(3,T,JC-8)
         left_data=hand_cod_data[:, :, :21].permute(1, 2, 0)#(2,T,21)
         right_data=hand_cod_data[:, :, 21:].permute(1, 2, 0)
         left_valid=torch.sum(torch.abs(left_data[:,:,:2]),dim=(1,2))>0 #(T,)
@@ -256,8 +256,8 @@ class SLGText2UnitsDatasets(Dataset):
             # pose_data[:,8:29]で，全てが0.01以下のときは，手が検出されなかったとして，0にする
             hand_mask_l = hand_mask[:, 0]
             hand_mask_r = hand_mask[:, 1]
-            pose_data[:, 8:29][~hand_mask_l] = 0.0
-            pose_data[:, 29:][~hand_mask_r] = 0.0
+            pose_data[:, -42:-21][~hand_mask_l] = 0.0
+            pose_data[:, -21:][~hand_mask_r] = 0.0
         except Exception as e:
             print(f"Error in applying hand mask: {e}")
             print(f"pose_data shape: {pose_data.shape}, hand_mask shape: {hand_mask.shape}")
@@ -273,11 +273,8 @@ class SLGText2UnitsDatasets(Dataset):
                     sequence=  gloss_name[gloss_name.index('_') + 1:]
                 else:
                     sequence=target_corpus[video_name]
-                #sequenceの最後日の文字が数字なら，その数字を削除する
-                if sequence[-1].isdigit():
-                    sequence=sequence[:-1]
                 #sequenceを小文字にする
-                sequence=sequence
+                sequence=sequence.lower()
                 if self.return_length:
                     if self.gloss2class is not None:
                         if self.is_islr:

@@ -44,11 +44,37 @@ def sinusoidal_pe(T: int, d_model: int, device=None) -> torch.Tensor:
     return pe
 
 
-class MHSA(nn.Module):
-    """additive バイアス / key パディングマスク対応の Multi-Head Self-Attention.
-    x: (N, L, D)"""
 
-    def __init__(self, d_model: int, n_heads: int, dropout: float = 0.0):
+
+def build_sliding_window_mask(L: int, window: int, device,
+                              dtype=torch.float32) -> torch.Tensor:
+    """対称 sliding window の additive マスク (L, L) を作る.
+    |i - j| <= window//2 の位置は 0, それ以外は NEG_INF.
+
+    window: 窓の全幅 (各クエリが参照する近傍フレーム数の目安).
+            window=7 なら中心 ±3 フレーム = 計7フレームを参照.
+    """
+    idx = torch.arange(L, device=device)
+    dist = (idx[:, None] - idx[None, :]).abs()  # (L, L) 時間距離
+    half = window // 2
+    allowed = dist <= half  # (L, L) bool
+    mask = torch.where(
+        allowed, torch.zeros((), device=device, dtype=dtype),
+        torch.full((), NEG_INF, device=device, dtype=dtype))
+    return mask  # (L, L) additive
+
+
+class MHSA(nn.Module):
+    """additive バイアス / key パディングマスク / sliding window 対応の
+    Multi-Head Self-Attention. x: (N, L, D)"""
+
+    def __init__(self, d_model: int, n_heads: int, dropout: float = 0.0,
+                 ):
+        """
+        window: sliding window の全幅. None なら全系列参照 (従来動作).
+                時間注意でのみ指定する (空間注意はボーン集合なので窓は不要).
+                コンストラクタで既定窓を持たせ, forward で上書きも可能.
+        """
         super().__init__()
         assert d_model % n_heads == 0
         self.h = n_heads
@@ -58,21 +84,51 @@ class MHSA(nn.Module):
         self.dropout = dropout
 
     def forward(self, x, bias: torch.Tensor | None = None,
-                key_pad: torch.Tensor | None = None):
+                key_pad: torch.Tensor | None = None,
+                window: int | None = None, sliding_attn: bool = False
+                ):
         """
         bias:    (h, L, L)  additive attention バイアス (空間注意のボーン対バイアス)
         key_pad: (N, L) bool  True=パディング (時間注意で使用)
+        sliding_attn: True で sliding window マスクを適用 (時間注意で使う)
+        window:  この呼び出しでの窓幅. None なら self.window を使う.
         """
         N, L, D = x.shape
         qkv = self.qkv(x).view(N, L, 3, self.h, self.dh)
-        q, k, v = qkv.permute(2, 0, 3, 1, 4)          # 各 (N, h, L, dh)
+        q, k, v = qkv.permute(2, 0, 3, 1, 4)  # 各 (N, h, L, dh)
 
         attn_mask = None
         if bias is not None:
-            attn_mask = bias.unsqueeze(0)              # (1, h, L, L)
+            attn_mask = bias.unsqueeze(0)  # (1, h, L, L)
+
+        # ---- sliding window マスク ----
+        win = window
+        if sliding_attn and win is not None and win < L:
+            sw = build_sliding_window_mask(L, win, x.device, dtype=q.dtype)
+            sw = sw.view(1, 1, L, L)  # (1,1,L,L) ブロードキャスト
+            attn_mask = sw if attn_mask is None else attn_mask + sw
+
+        # ---- key パディングマスク ----
         if key_pad is not None:
-            pad = key_pad.view(N, 1, 1, L).float() * NEG_INF
+            pad = key_pad.view(N, 1, 1, L).to(q.dtype) * NEG_INF
             attn_mask = pad if attn_mask is None else attn_mask + pad
+
+        # ---- 全 key がマスクされた行の救済 ----
+        # sliding window とパディングの合成で, あるクエリの参照先が全て
+        # NEG_INF になると softmax が NaN になる. その行は対角(自分自身)だけ
+        # 開けて回避する (境界フレームで起こり得る).
+        if attn_mask is not None:
+            fully = (attn_mask <= NEG_INF / 2).all(dim=-1, keepdim=True)  # (.,.,L,1)
+            if fully.any():
+                eye = torch.zeros_like(attn_mask)
+                diag = torch.arange(L, device=x.device)
+                eye[..., diag, diag] = 0.0  # 対角は0のまま
+                eye = torch.where(
+                    torch.arange(L, device=x.device)[None, None, :, None]
+                    == torch.arange(L, device=x.device)[None, None, None, :],
+                    torch.zeros((), device=x.device, dtype=attn_mask.dtype),
+                    torch.full((), NEG_INF, device=x.device, dtype=attn_mask.dtype))
+                attn_mask = torch.where(fully, eye, attn_mask)
 
         out = F.scaled_dot_product_attention(
             q, k, v, attn_mask=attn_mask,
@@ -80,21 +136,22 @@ class MHSA(nn.Module):
         out = out.transpose(1, 2).reshape(N, L, D)
         return self.proj(out)
 
-
 class STTransformerBlock(nn.Module):
     """空間注意 (ボーン間) -> 時間注意 (フレーム間) -> FFN の分解型ブロック.
     ST-GCN の [GCN -> TCN] に対応. Pre-LN 構成. x: (B, T, V, D)"""
 
     def __init__(self, d_model: int, n_heads: int, num_bones: int,
-                 ffn_ratio: int = 4, dropout: float = 0.0):
+                 ffn_ratio: int = 4, dropout: float = 0.0,is_temporal=True):
         super().__init__()
+        self.is_temporal=is_temporal
         self.ln_s = nn.LayerNorm(d_model)
         self.attn_s = MHSA(d_model, n_heads, dropout)
         # 空間注意の学習可能ボーン対バイアス (グラフ隣接行列の緩い代替, ゼロ初期化)
         self.bone_bias = nn.Parameter(torch.zeros(n_heads, num_bones, num_bones))
 
-        self.ln_t = nn.LayerNorm(d_model)
-        self.attn_t = MHSA(d_model, n_heads, dropout)
+        if is_temporal:
+            self.ln_t = nn.LayerNorm(d_model)
+            self.attn_t = MHSA(d_model, n_heads, dropout)
 
         self.ln_f = nn.LayerNorm(d_model)
         self.ffn = nn.Sequential(
@@ -111,11 +168,12 @@ class STTransformerBlock(nn.Module):
         x = x + self.attn_s(h, bias=self.bone_bias).view(B, T, V, D)
 
         # --- 時間注意: 各ボーンの系列 T が相互参照 ---
-        h = self.ln_t(x).permute(0, 2, 1, 3).reshape(B * V, T, D)
-        kp = (time_pad.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
-              if time_pad is not None else None)
-        h = self.attn_t(h, key_pad=kp).view(B, V, T, D).permute(0, 2, 1, 3)
-        x = x + h
+        if self.is_temporal:
+            h = self.ln_t(x).permute(0, 2, 1, 3).reshape(B * V, T, D)
+            kp = (time_pad.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
+                  if time_pad is not None else None)
+            h = self.attn_t(h, key_pad=kp).view(B, V, T, D).permute(0, 2, 1, 3)
+            x = x + h
 
         # --- FFN ---
         x = x + self.ffn(self.ln_f(x))
@@ -173,7 +231,7 @@ class HandTransformerVAE(nn.Module):
                  d_model: int = 128, n_heads: int = 8,
                  blocks_per_stage: int = 1, n_stages: int = 3,
                  latent_dim: int = 32, ffn_ratio: int = 4,
-                 dropout: float = 0.0):
+                 dropout: float = 0.0,is_temporal=True):
         super().__init__()
         self.num_bones = len(bones)
         self.d_model = d_model
@@ -197,7 +255,7 @@ class HandTransformerVAE(nn.Module):
 
         def make_stage():
             return nn.ModuleList([
-                STTransformerBlock(d_model, n_heads, V, ffn_ratio, dropout)
+                STTransformerBlock(d_model, n_heads, V, ffn_ratio, dropout,is_temporal=is_temporal)
                 for _ in range(blocks_per_stage)])
 
         # ---- Encoder ----

@@ -351,9 +351,9 @@ class SignLanguageTransformer(nn.Module):
         text_vocab_size: int = 2887 + 4,    # +4: special tokens
         d_model: int = 512,
         n_heads: int = 8,
-        num_layers: int = 3,
+        num_layers: int = 2,
         d_ff: int = 2048,
-        dropout: float = 0.1,
+        dropout: float = 0.3,
         txt_pad_idx: int = 0,
         txt_bos_idx: int = 1,
         txt_eos_idx: int = 2,
@@ -503,7 +503,7 @@ class SignLanguageTransformer(nn.Module):
             finished |= next_tok.squeeze(1).eq(self.txt_eos_idx)
             if finished.all():
                 break
-        return ys[:, 1:]  # <bos> を除く
+        return ys[:, 1:].cpu().tolist() # <bos> を除く
 
     # ---- 推論: beam search 翻訳 --------------------------------------------
     @torch.no_grad()

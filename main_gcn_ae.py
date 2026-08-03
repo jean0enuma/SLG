@@ -300,9 +300,10 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False):
     vae_config=config["vae"]
     model_config=vae_config['model']
     model=HandTransformerVAE(in_channels=in_channels,bones=bones,n_stages=model_config['n_stages'],blocks_per_stage=model_config['blocks_per_stage'],
-                             dropout=model_config['dropout'],d_model=model_config['d_model'],latent_dim=model_config['latent_dim'])
+                             dropout=model_config['dropout'],d_model=model_config['d_model'],latent_dim=model_config['latent_dim'],is_temporal=model_config['is_temporal'])
     with open(f"{save_path}/config_vae.yaml", "w") as f:
         yaml.dump(config, f)
+    print(model)
     model=model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
     epochs = vae_config['lr_parameters']['epoch']
@@ -573,9 +574,9 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False):
                         outputs = outputs.detach().cpu()
 
                         left_pred_coordinates = reconstruct_joints_from_6d(left_inputs, outputs[:left_inputs.shape[0]],
-                                                                           bones=bones, bone_mask=left_mask)
+                                                                           bones=bones, bone_mask=left_mask,is_L_median=False)
                         right_pred_coordinates = reconstruct_joints_from_6d(right_inputs, outputs[left_inputs.shape[0]:],
-                                                                            bones=bones, bone_mask=right_mask)
+                                                                            bones=bones, bone_mask=right_mask,is_L_median=False)
 
                     # pred_coordinatesとnew_inputsをプロットして動画に保存する
                     for i in range(left_pred_coordinates.shape[0]):
@@ -608,7 +609,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False):
                         #print("入力の時間分散:", new_inputs.std(dim=1).mean().item())
                         all_inputs = all_inputs.detach().cpu()
                         outputs = outputs.detach().cpu()
-                        pred_coordinates = reconstruct_joints_from_6d(all_inputs, outputs, bones=bones, bone_mask=new_mask)
+                        pred_coordinates = reconstruct_joints_from_6d(all_inputs, outputs, bones=bones, bone_mask=new_mask,is_L_median=False)
                     # pred_coordinatesとnew_inputsをプロットして動画に保存する
                     for i in range(pred_coordinates.shape[0]):
                         pred_video_path = f"{save_path}/visualize/{parts}/{os.path.basename(data_path[i])}.mp4"
@@ -643,7 +644,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False):
                         new_mask = make_bone_mask(body_mask, bones=bones)
                         new_inputs = new_inputs.detach().cpu()
                         x_rt = reconstruct_joints_from_6d(body_inputs, new_inputs, bones=bones, bone_mask=new_mask)
-                        pred_coordinates = reconstruct_joints_from_6d(body_inputs, outputs, bones=bones, bone_mask=new_mask)
+                        pred_coordinates = reconstruct_joints_from_6d(body_inputs, outputs, bones=bones, bone_mask=new_mask,is_L_median=False)
                     # pred_coordinatesとnew_inputsをプロットして動画に保存する
                     for i in range(pred_coordinates.shape[0]):
                         pred_video_path = f"{save_path}/visualize/{parts}/{os.path.basename(data_path[i])}.mp4"
@@ -659,14 +660,15 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     dataset = "phoenixT"  # or "CSL-Daily", "how2sign", "phoenix", "AUTSL"
-    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp"
+    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent8_stride4"
     main(config, dataset, save_path, parts="body",visualize=False,used_3d=False)
+    main(config, dataset, save_path, parts="hands",visualize=False,used_3d=False)
+    main(config, dataset, save_path, parts="all",visualize=False,used_3d=False)
+
     main(config, dataset, save_path, parts="body",visualize=True,used_3d=False)
 
-    main(config, dataset, save_path, parts="hands",visualize=False,used_3d=False)
     main(config, dataset, save_path, parts="hands",visualize=True,used_3d=False)
 
-    main(config, dataset, save_path, parts="all",visualize=False,used_3d=False)
     main(config, dataset, save_path,parts="all",visualize=True,used_3d=False)
 
     #save_path = "./results_3d"

@@ -2,6 +2,7 @@ import os,glob,shutil,random
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import torch
 import numpy as np
+import yaml
 
 from models.evaluation.sign_language_transformer import SignLanguageTransformer,JointLoss
 from utils.metrics import *
@@ -11,7 +12,9 @@ from loader.coordinate_preprocess import *
 from loader.data_loader import *
 from SLG_datasets.SLTdatasets import SLTDatasets
 import pandas as pd
-from models.module.Hand_gcn_vae_6d import bones_used_joints
+from models.module.Hand_gcn_vae_6d import bones_used_joints, hand_joints_to_6d
+from models.module.transformer6d_vae import HandTransformerVAE
+
 torch.autograd.set_detect_anomaly(False)
 # seedを固定
 torch.manual_seed(0)
@@ -81,7 +84,7 @@ def create_word_tokenizer(corpus,key='annotation'):
     index2word[1] = 'bos_token'
     index2word[2] = 'eos_token'
     return word2index, index2word
-def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=None):
+def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=None,vae_weights=None):
     print("---Loading datasets---")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -204,15 +207,15 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
     ds_train =SLTDatasets(train_data_path, train_cod_root, train_face_root, is_3d=True,
                                      is_processed=False, is_sg_filter=False,
                                      trainable=True, tokenizer=tokenizer,texts_corpus=train_corpus,
-                                     scale_ratio=(0.8,1.2),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=is_openpose)
+                                     scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=is_openpose)
     ds_dev = SLTDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False, is_3d=True,
                                    is_processed=False, is_sg_filter=False,
                                    tokenizer=tokenizer,texts_corpus=dev_corpus,
-                                   scale_ratio=(0.8,1.2),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=is_openpose)
+                                   scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=is_openpose)
     ds_test = SLTDatasets(test_data_path, test_cod_root, test_face_root, trainable=False, is_3d=True,
                                     is_processed=False, is_sg_filter=False,
                                     tokenizer=tokenizer,texts_corpus=test_corpus,
-                                    scale_ratio=(0.8,1.2),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=is_openpose)
+                                    scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=is_openpose)
     dl_train=torch.utils.data.DataLoader(ds_train, batch_size=32, shuffle=True, num_workers=4, collate_fn=ds_train.collate_fn,drop_last=True)
     dl_dev=torch.utils.data.DataLoader(ds_dev, batch_size=32, shuffle=False, num_workers=4, collate_fn=ds_dev.collate_fn)
     if evaluation==False:
@@ -223,17 +226,19 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
     gloss_vocab_size=len(gloss2class)
     print("translation vocab size:", trans_vocab_size)
     print("gloss vocab size:", gloss_vocab_size)
-    model=SignLanguageTransformer(input_size=144,
+    model=SignLanguageTransformer(input_size=282,
                                   gloss_vocab_size=gloss_vocab_size,
                                   text_vocab_size=trans_vocab_size,)
+
+
     model=model.to(device)
     bones=ALL_BONES if not is_openpose else ALL_BONES_OPENPOSE
 
-    optimizer=torch.optim.Adam(model.parameters(),lr=3e-4,betas=(0.9,0.998),weight_decay=1e-4)
+    optimizer=torch.optim.AdamW(model.parameters(),lr=2e-4,betas=(0.9,0.998),weight_decay=1e-4)
     scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.7, patience=3)
     #scheduler=torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20,30], gamma=0.2)
-    criterion=JointLoss(txt_pad_idx=tokenizer['pad_token'],blank_idx=gloss2class['blank'],lambda_r=5.0,lambda_t=1.0)
-    epochs=40
+    criterion=JointLoss(txt_pad_idx=tokenizer['pad_token'],blank_idx=gloss2class['blank'],lambda_r=1.0,lambda_t=1.0)
+    epochs=80
     batch = next(iter(dl_train))
     pd_, _, lens, *_ = batch
     inv_l = inv_r = tot = 0
@@ -265,9 +270,11 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 gls_lengths=gls_attn_mask.sum(dim=1).long().to(device)
                 gls_tokens=gloss_tokens['input_ids'].to(device)
                 input_length_tensor = input_length_tensor.to(device)
-                all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
-                                                                                            False,is_openpose=is_openpose)
-                new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+
+                #new_inputs=all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+
                 new_inputs=new_inputs.reshape(new_inputs.shape[0],new_inputs.shape[1],-1)
                 # エポックごとに train の数バッチで測る
                 z, _ = model.encode(new_inputs, input_length_tensor)
@@ -305,7 +312,9 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     input_length_tensor = input_length_tensor.to(device)
                     all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
                                                                                                     False,is_openpose=is_openpose)
-                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                    #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                     z, _ = model.encode(new_inputs, input_length_tensor)
                     pred = model.gloss_output_layer(z).argmax(-1)
@@ -333,7 +342,9 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     input_length_tensor = input_length_tensor.to(device)
                     all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
                                                                                                     False,is_openpose=is_openpose)
-                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                    #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                     gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
                     total, lr_, lt_ = criterion(gloss_log_probs, input_length_tensor, gls_tokens, gls_lengths,
@@ -344,8 +355,18 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
             scheduler.step(np.mean(dev_avg_loss))
             if np.mean(dev_avg_loss) < min_dev_loss:
                 min_dev_loss = np.mean(dev_avg_loss)
-                torch.save(model.state_dict(), os.path.join(save_path, "best_model.pth"))
+            torch.save(model.state_dict(), os.path.join(save_path, "best_model.pth"))
     else:
+        if os.path.exists(f"{vae_weights}/config_vae.yaml"):
+            with open(f"{vae_weights}/config_vae.yaml", "r") as f:
+                vae_config = yaml.safe_load(f)
+        vae_config=vae_config['vae']['model']
+        vae = HandTransformerVAE(in_channels=6, bones=ALL_BONES, n_stages=vae_config['n_stages'],
+                                 blocks_per_stage=vae_config['blocks_per_stage'],
+                                 dropout=vae_config['dropout'], d_model=vae_config['d_model'],
+                                 latent_dim=vae_config['latent_dim'], is_temporal=vae_config['is_temporal'])
+        vae.load_state_dict(torch.load(f"{vae_weights}/best_model_all.pth", map_location=device))
+        vae=vae.to(device)
         model.load_state_dict(torch.load(os.path.join(save_path, "best_model.pth")))
         model.eval()
         ref_list=[]
@@ -356,24 +377,171 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
         if eval_data!=None:
             dev_eval_data=eval_data['dev']
             test_eval_data=eval_data['test']
-            test_cod_root={1:eval_data['test']}
-            dev_cod_root={1:eval_data['dev']}
-            dl_dev=torch.utils.data.DataLoader(SLTDatasets(dev_data_path, dev_cod_root, dev_face_root, trainable=False, is_3d=True,
+            test_cod_eval_root={1:eval_data['test']}
+            dev_cod_eval_root={1:eval_data['dev']}
+
+            dl_dev = torch.utils.data.DataLoader(ds_dev, batch_size=1, shuffle=False, num_workers=4,
+                                                 collate_fn=ds_dev.collate_fn)
+            ds_dev_eval=SLTDatasets(dev_data_path, dev_cod_eval_root, dev_face_root, trainable=False, is_3d=True,
                                    is_processed=False, is_sg_filter=False,
                                    tokenizer=tokenizer,texts_corpus=dev_corpus,
-                                   scale_ratio=(0.8,1.2),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=True), batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_dev.collate_fn)
-            ds_test= SLTDatasets(test_data_path, test_cod_root, test_face_root, trainable=False, is_3d=True,
+                                   scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=True)
+            dl_dev_eval=torch.utils.data.DataLoader(ds_dev_eval, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_dev.collate_fn)
+            ds_test_eval= SLTDatasets(test_data_path, test_cod_eval_root, test_face_root, trainable=False, is_3d=True,
                                     is_processed=False, is_sg_filter=False,
                                     tokenizer=tokenizer,texts_corpus=test_corpus,
-                                    scale_ratio=(0.8,1.2),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=True)
-            dl_test=torch.utils.data.DataLoader(ds_test, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
+                                    scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=True)
+            dl_test_eval=torch.utils.data.DataLoader(ds_test_eval, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
             dev_save_path=f"{os.path.dirname(dev_eval_data)}"
             test_save_path=f"{os.path.dirname(test_eval_data)}"
+
         else:
             dev_save_path=test_save_path=save_path
-        for sigma in [0.0, 0.002, 0.005, 0.01, 0.02, 0.05]:
+            dl_test_eval=None
+            dl_dev_eval=None
+        gt_dict_dev = {}
+        gt_dict_test={}
+        gen_dict_dev = {}
+        gen_dict_test={}
+        with torch.no_grad():
+            for batch in dl_dev:
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
+                padded_cod_data = padded_cod_data.float().to(device)
+                txt = text_tokens['input_ids']
+                B, _ = txt.shape
+                txt_input = txt[:, :-1].to(device)
+                txt_target = txt[:, 1:].to(device)
+                gls_attn_mask = gloss_tokens['attention_mask']
+                gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
+                gls_tokens = gloss_tokens['input_ids'].to(device)
+                input_length_tensor = input_length_tensor.to(device)
+                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+
+                #new_inputs=all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
+                new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                gt_dict_dev[data_path[0]]= new_inputs[0]
+                new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
+                #new_inputs += torch.randn_like(new_inputs)
+                gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
+
+
+                #translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+                translate_word=model.translate_greedy(new_inputs, input_length_tensor)
+
+                gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
+                #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
+                pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
+                ref_tokens=txt[0].tolist()
+                ref_sentence=" ".join([decoder[token] for token in ref_tokens if token not in [0,1,2]])
+
+                pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
+                ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
+                print("Predicted sentence:", pred_sentence)
+                print("Reference sentence:", ref_sentence)
+                print("Predicted gloss:", pred_gloss)
+                print("Reference gloss:", ref_gloss)
+                pred_list.append(pred_sentence)
+                ref_list.append(ref_sentence)
+                pred_gloss_list.append(pred_gloss)
+                ref_gloss_list.append(ref_gloss)
+
+        bleu_score=bleu(pred_list,ref_list)
+        rouge_score=rouge(pred_list,ref_list)
+        wer_score=wer(pred_gloss_list,ref_gloss_list)
+        print("BLEU score:", bleu_score)
+        print("ROUGE score:", rouge_score)
+        print("WER score:", wer_score)
+        with open(os.path.join(dev_save_path, "evaluation_dev_results_gt.txt"), "w") as f:
+            """
+            f.write("Predicted sentences:\n")
+            for pred in pred_list:
+                f.write(pred + "\n")
+            f.write("\nReference sentences:\n")
+            for ref in ref_list:
+                f.write(ref + "\n")
+            f.write("\nPredicted glosses:\n")
+            for pred_gloss in pred_gloss_list:
+                f.write(pred_gloss + "\n")
+            f.write("\nReference glosses:\n")
+            for ref_gloss in ref_gloss_list:
+                f.write(ref_gloss + "\n")
+            """
+            f.write(f"\nBLEU score: {bleu_score}\n")
+            f.write(f"ROUGE score: {rouge_score}\n")
+            f.write(f"WER score: {wer_score}\n")
+        ref_list=[]
+        pred_list=[]
+        pred_gloss_list=[]
+        ref_gloss_list=[]
+        with torch.no_grad():
+            for batch in dl_test:
+                padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
+                padded_cod_data = padded_cod_data.float().to(device)
+                txt = text_tokens['input_ids']
+                B, _ = txt.shape
+                txt_input = txt[:, :-1].to(device)
+                txt_target = txt[:, 1:].to(device)
+                gls_attn_mask = gloss_tokens['attention_mask']
+                gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
+                gls_tokens = gloss_tokens['input_ids'].to(device)
+                input_length_tensor = input_length_tensor.to(device)
+                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+
+                #new_inputs=all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
+                new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                gt_dict_test[data_path[0]] = new_inputs[0]
+                new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
+                #new_inputs += torch.randn_like(new_inputs)
+                gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
+
+                #translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+                translate_word=model.translate_greedy(new_inputs, input_length_tensor)
+                gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
+                #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
+                pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
+                ref_tokens=txt[0].tolist()
+                ref_sentence=" ".join([decoder[token] for token in ref_tokens if token not in [0,1,2]])
+
+                pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
+                ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
+                #print("Predicted sentence:", pred_sentence)
+                #print("Reference sentence:", ref_sentence)
+                #print("Predicted gloss:", pred_gloss)
+                #print("Reference gloss:", ref_gloss)
+                pred_list.append(pred_sentence)
+                ref_list.append(ref_sentence)
+                pred_gloss_list.append(pred_gloss)
+                ref_gloss_list.append(ref_gloss)
+
+        bleu_score=bleu(pred_list,ref_list)
+        rouge_score=rouge(pred_list,ref_list)
+        wer_score=wer(pred_gloss_list,ref_gloss_list)
+        print("BLEU score:", bleu_score)
+        print("ROUGE score:", rouge_score)
+        print("WER score:", wer_score)
+        with open(os.path.join(test_save_path, "evaluation_test_results_gt.txt"), "w") as f:
+            """
+            f.write("Predicted sentences:\n")
+            for pred in pred_list:
+                f.write(pred + "\n")
+            f.write("\nReference sentences:\n")
+            for ref in ref_list:
+                f.write(ref + "\n")
+            f.write("\nPredicted glosses:\n")
+            for pred_gloss in pred_gloss_list:
+                f.write(pred_gloss + "\n")
+            f.write("\nReference glosses:\n")
+            for ref_gloss in ref_gloss_list:
+                f.write(ref_gloss + "\n")
+            """
+            f.write(f"\nBLEU score: {bleu_score}\n")
+            f.write(f"ROUGE score: {rouge_score}\n")
+            f.write(f"WER score: {wer_score}\n")
+        if eval_data!=None:
             with torch.no_grad():
-                for batch in dl_dev:
+                for batch in dl_dev_eval:
                     padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
                     padded_cod_data = padded_cod_data.float().to(device)
                     txt = text_tokens['input_ids']
@@ -384,13 +552,19 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
                     gls_tokens = gloss_tokens['input_ids'].to(device)
                     input_length_tensor = input_length_tensor.to(device)
-                    all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
-                                                                                                    False,is_openpose=is_openpose)
-                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                    all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+
+                    #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                    gen_dict_dev[data_path[0]] = new_inputs[0]
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
-                    new_inputs += torch.randn_like(new_inputs) * sigma
+                    #new_inputs += torch.randn_like(new_inputs)
                     gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
-                    translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+
+                    #translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+                    translate_word = model.translate_greedy(new_inputs, input_length_tensor)
+
                     gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
                     #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
                     pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
@@ -399,10 +573,10 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
 
                     pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
                     ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
-                    #print("Predicted sentence:", pred_sentence)
-                    #print("Reference sentence:", ref_sentence)
-                    #print("Predicted gloss:", pred_gloss)
-                    #print("Reference gloss:", ref_gloss)
+                    print("Predicted sentence:", pred_sentence)
+                    print("Reference sentence:", ref_sentence)
+                    print("Predicted gloss:", pred_gloss)
+                    print("Reference gloss:", ref_gloss)
                     pred_list.append(pred_sentence)
                     ref_list.append(ref_sentence)
                     pred_gloss_list.append(pred_gloss)
@@ -411,7 +585,6 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
             bleu_score=bleu(pred_list,ref_list)
             rouge_score=rouge(pred_list,ref_list)
             wer_score=wer(pred_gloss_list,ref_gloss_list)
-            print(f"------ Evaluation results with sigma={sigma} ---")
             print("BLEU score:", bleu_score)
             print("ROUGE score:", rouge_score)
             print("WER score:", wer_score)
@@ -438,7 +611,7 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
             pred_gloss_list=[]
             ref_gloss_list=[]
             with torch.no_grad():
-                for batch in dl_test:
+                for batch in dl_test_eval:
                     padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
                     padded_cod_data = padded_cod_data.float().to(device)
                     txt = text_tokens['input_ids']
@@ -449,14 +622,20 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
                     gls_tokens = gloss_tokens['input_ids'].to(device)
                     input_length_tensor = input_length_tensor.to(device)
-                    all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
-                                                                                                    False,is_openpose=is_openpose)
-                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                    all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+
+                    #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                    gen_dict_test[data_path[0]] = new_inputs[0]
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
-                    new_inputs += torch.randn_like(new_inputs) * sigma
+                    #new_inputs += torch.randn_like(new_inputs)
                     gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
-                    translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+
+                    #translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
                     gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
+                    translate_word = model.translate_greedy(new_inputs, input_length_tensor)
+
                     #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
                     pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
                     ref_tokens=txt[0].tolist()
@@ -464,10 +643,10 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
 
                     pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
                     ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
-                    #print("Predicted sentence:", pred_sentence)
-                    #print("Reference sentence:", ref_sentence)
-                    #print("Predicted gloss:", pred_gloss)
-                    #print("Reference gloss:", ref_gloss)
+                    print("Predicted sentence:", pred_sentence)
+                    print("Reference sentence:", ref_sentence)
+                    print("Predicted gloss:", pred_gloss)
+                    print("Reference gloss:", ref_gloss)
                     pred_list.append(pred_sentence)
                     ref_list.append(ref_sentence)
                     pred_gloss_list.append(pred_gloss)
@@ -476,7 +655,6 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
             bleu_score=bleu(pred_list,ref_list)
             rouge_score=rouge(pred_list,ref_list)
             wer_score=wer(pred_gloss_list,ref_gloss_list)
-            print(f"------ Evaluation results with sigma={sigma} ---")
             print("BLEU score:", bleu_score)
             print("ROUGE score:", rouge_score)
             print("WER score:", wer_score)
@@ -498,120 +676,32 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 f.write(f"\nBLEU score: {bleu_score}\n")
                 f.write(f"ROUGE score: {rouge_score}\n")
                 f.write(f"WER score: {wer_score}\n")
+            def sort_dict_by_path(gt_dict,gen_dict):
+                gt_mu_list=[]
+                gt_logvar_list=[]
+                gen_mu_list=[]
+                gen_logvar_list=[]
+                for path in sorted(gt_dict.keys()):
+                    gt_mu_list.append(gt_dict[path]['mu'])
+                    gen_mu_list.append(gen_dict[path]['mu'])
+                    gt_logvar_list.append(gt_dict[path]['logvar'])
+                    gen_logvar_list.append(gen_dict[path]['logvar'])
+                return gt_mu_list,gen_mu_list,gt_logvar_list,gen_logvar_list
+            """
+            gt_mu_list_dev,gen_mu_list_dev,gt_logvar_list_dev,gen_logvar_list_dev=sort_dict_by_path(gt_dict_dev,gen_dict_dev)
+            gt_mu_list_test,gen_mu_list_test,gt_logvar_list_test,gen_logvar_list_test=sort_dict_by_path(gt_dict_test,gen_dict_test)
+            fid_lower=fid_noextract(gt_mu_list_test[:200],gt_logvar_list_test[:200],gt_mu_list_test[200:400],gt_logvar_list_test[200:400])
+            fid_dev=fid_noextract(gen_mu_list_dev,gen_logvar_list_dev,gt_mu_list_dev,gt_logvar_list_dev)
+            fid_test=fid_noextract(gen_mu_list_test,gen_logvar_list_test,gt_mu_list_test,gt_logvar_list_test)
+            print("FID score lower:", fid_lower)
+            print("FID score dev:", fid_dev)
+            print("FID score test:", fid_test)
+            with open(os.path.join(dev_save_path, "evaluation_dev_results.txt"), "a") as f:
+                f.write(f"\nFID score: {fid_dev}\n")
+            with open(os.path.join(test_save_path, "evaluation_test_results.txt"), "a") as f:
+                f.write(f"\nFID score: {fid_test}\n")
+            """
 
-
-# -*- coding: utf-8 -*-
-"""
-固定1バッチ過学習テスト (決定打)
-main() の Dataset 構築部分の直後にこの関数を呼ぶか，main を少し改造して実行．
-
-    overfit_test(dl_train, model, device)
-
-判定基準は末尾のコメント参照．
-"""
-
-
-def overfit_test(dl_train, device, normalize_batch, bones,
-                 gloss_vocab_size, trans_vocab_size, tokenizer, gloss2class,
-                 n_samples=8, iters=2000, lr=3e-4):
-    # ---- 1バッチだけ取得して固定 ----
-    batch = next(iter(dl_train))
-    padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
-    padded_cod_data = padded_cod_data[:n_samples].float().to(device)
-    input_length_tensor = input_length_tensor[:n_samples].to(device)
-
-    txt = text_tokens['input_ids'][:n_samples]
-    txt_input = txt[:, :-1].to(device)
-    txt_target = txt[:, 1:].to(device)
-    gls_tokens = gloss_tokens['input_ids'][:n_samples].to(device)
-    gls_lengths = gloss_tokens['attention_mask'][:n_samples].sum(dim=1).long().to(device)
-    B = padded_cod_data.shape[0]
-
-    # ---- 前処理 (学習ループと完全に同一) ----
-    all_inputs, *_ = normalize_batch(padded_cod_data, False)
-    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
-    new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
-
-    # ---- 事前チェック: このバッチの CTC 実行可能性と特徴の統計 ----
-    print("=" * 60)
-    for b in range(B):
-        tgt = gls_tokens[b, :gls_lengths[b]]
-        dups = (tgt[1:] == tgt[:-1]).sum().item()
-        feasible = input_length_tensor[b] >= gls_lengths[b] + dups
-        print(f"  sample{b}: T={int(input_length_tensor[b]):4d}  N={int(gls_lengths[b]):2d}"
-              f"  feasible={bool(feasible)}")
-    print(f"  features: mean={new_inputs.mean():.3f} std={new_inputs.std():.3f}"
-          f"  per-dim std min={new_inputs.reshape(-1, new_inputs.shape[-1]).std(0).min():.4f}")
-    print("=" * 60)
-
-    # ---- モデルを新規作成 (崩壊済み ckpt を使わない) ----
-    model = SignLanguageTransformer(
-        input_size=new_inputs.shape[-1],
-        gloss_vocab_size=gloss_vocab_size,
-        text_vocab_size=trans_vocab_size,
-    ).to(device)
-    criterion = JointLoss(txt_pad_idx=tokenizer['pad_token'],
-                          blank_idx=gloss2class['blank'], lambda_r=1.0, lambda_t=0.0)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.998))
-
-    # ---- 過学習ループ ----
-    model.train()
-    for it in range(iters + 1):
-        glp, wl = model(new_inputs, input_length_tensor, txt_input)
-        total, lr_, _ = criterion(glp, input_length_tensor, gls_tokens, gls_lengths,
-                                  wl, txt_target, batch_size=B)
-        optimizer.zero_grad()
-        total.backward()
-
-        if it % 200 == 0:
-            # 勾配が入力側まで届いているか
-            g_in = model.sgn_embed.proj.weight.grad
-            g_out = model.gloss_output_layer.weight.grad
-            model.eval()
-            with torch.no_grad():
-                z, _ = model.encode(new_inputs, input_length_tensor)
-                pred = model.gloss_output_layer(z).argmax(-1)
-                blanks = sum((pred[b, :input_length_tensor[b]] == 0).sum().item() for b in range(B))
-                total_f = int(input_length_tensor.sum())
-                hyp = model.recognize_greedy(new_inputs, input_length_tensor)
-            model.train()
-            print(f"iter {it:4d} | L_R={lr_.item():8.4f} | blank率={blanks/total_f:.3f}"
-                  f" | grad(in)={g_in.norm():.2e} grad(out)={g_out.norm():.2e}")
-            print(f"     ref: {gls_tokens[0, :gls_lengths[0]].tolist()}")
-            print(f"     hyp: {hyp[0]}")
-        optimizer.step()
-
-    # ---- 最終判定 ----
-    model.eval()
-    hyps = model.recognize_greedy(new_inputs, input_length_tensor)
-    n_ok = sum(hyps[b] == gls_tokens[b, :gls_lengths[b]].tolist() for b in range(B))
-    print("=" * 60)
-    print(f"暗記成功: {n_ok}/{B}")
-    print("=" * 60)
-
-
-# ============================================================
-# 結果の読み方
-# ------------------------------------------------------------
-# A. 暗記成功 (7/8 以上，L_R < 0.5)
-#    → パイプラインは正常．全データで崩壊するのは
-#      「信号量 (特徴の質) vs タスク難度」か最適化設定の問題．
-#      対処: 正規化を有効化 (main側 normalize_batch を used_3d=True に)，
-#            lr/λ_R 探索，学習を長く，データ拡張
-#
-# B. blank率は下がる (~0.6) が暗記しきらない (L_R が 2〜5 で停滞)
-#    → 学習は機能している．iters を 5000 に増やして再確認．
-#      それでも停滞なら特徴の識別力不足
-#
-# C. blank率 0.99 のまま，L_R がほぼ一定
-#    → 構造的バグが残存．grad(in) を確認:
-#       - grad(in) ≈ 1e-8 以下 → 勾配消失．特徴の per-dim std を確認
-#         (std ≈ 0 の次元だらけ = ほぼ定数の特徴が入っている)
-#       - grad(in) が正常値 → new_inputs と gls_tokens の対応を再疑
-#
-# D. feasible=False のサンプルがある
-#    → input_length_tensor のバグ (即修正対象)
-# ============================================================
 
 
 if __name__=="__main__":
@@ -622,8 +712,9 @@ if __name__=="__main__":
         }
     }
     dataset = "phoenixT"
-    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_nonorm_temporal_rescale"
-    eval_data={"dev":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_separate/visualize_dev/csv",
-                "test":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_separate/visualize_test/csv"}
-    main(config, dataset, save_path, evaluation=False,is_openpose=False)
-    main(config, dataset, save_path, evaluation=True,is_openpose=False)
+    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_3d"
+    eval_data={"dev":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride2_ffn_moe_parts_attn2/visualize_dev/csv",
+                "test":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride2_ffn_moe_parts_attn2/visualize_test/csv"}
+    vae_weights="/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent8_stride2"
+    #main(config, dataset, save_path, evaluation=False,is_openpose=False)
+    main(config, dataset, save_path, evaluation=True,is_openpose=False,eval_data=eval_data,vae_weights=vae_weights)

@@ -27,9 +27,187 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-from models.module.transformer6d_vae import MHSA, sinusoidal_pe, NEG_INF
+from models.module.transformer6d_vae import MHSA, sinusoidal_pe, NEG_INF,build_sliding_window_mask
+
+class MoEMHSA(MHSA):
+    """Mixture-of-Experts Multi-Head Self-Attention. ヘッドごとに複数の
+    専門家を持ち, ルーティングで1つを選択して attention を計算する.
+    """
+
+    def __init__(self, d_model, n_heads, n_experts=2, dropout=0.0):
+        super().__init__(d_model, n_heads, dropout)
+        self.moe_q=MoEFFN(d_model, ffn_ratio=2)
+        self.moe_k=MoEFFN(d_model, ffn_ratio=2)
+    def forward(self, x, bias: torch.Tensor | None = None,
+                key_pad: torch.Tensor | None = None,
+                window: int | None = None, sliding_attn: bool = False,is_low: bool=False
+                ):
+        B,T,V,D=x.shape
+        x=x.reshape(B*T,V,D)
+        N=B*T
+        qkv = self.qkv(x).view(N, V, 3, self.h, self.dh)
+        q, k, v = qkv.permute(2, 0, 3, 1, 4)  # (N,H,V,dh)
+        _,H,dH,_=q.shape
+
+        if is_low==True:
+            q_moe=self.moe_q(x)#(N,V,D)
+            k_moe=self.moe_k(x)
+            q=q.permute(0,2,1,3).reshape(N,V,D)
+            k=k+k_moe.permute(0,2,1,3).reshape(N,V,D)
+            q=q+q_moe.permute(0,2,1,3).reshape(N,H,V,dH)
+            k=k.permute(0,2,1,3).reshape(N,H,V,dH)
+
+        attn_mask = None
+        if bias is not None:
+            attn_mask = bias.unsqueeze(0)  # (1, h, L, L)
+
+        # ---- sliding window マスク ----
+        win = window
+        if sliding_attn and win is not None and win < V:
+            sw = build_sliding_window_mask(V, win, x.device, dtype=q.dtype)
+            sw = sw.view(1, 1, V, V)  # (1,1,L,L) ブロードキャスト
+            attn_mask = sw if attn_mask is None else attn_mask + sw
+
+        # ---- key パディングマスク ----
+        if key_pad is not None:
+            pad = key_pad.view(B, 1, 1, V).to(q.dtype) * NEG_INF
+            attn_mask = pad if attn_mask is None else attn_mask + pad
+
+        # ---- 全 key がマスクされた行の救済 ----
+        # sliding window とパディングの合成で, あるクエリの参照先が全て
+        # NEG_INF になると softmax が NaN になる. その行は対角(自分自身)だけ
+        # 開けて回避する (境界フレームで起こり得る).
+        if attn_mask is not None:
+            fully = (attn_mask <= NEG_INF / 2).all(dim=-1, keepdim=True)  # (.,.,L,1)
+            if fully.any():
+                eye = torch.zeros_like(attn_mask)
+                diag = torch.arange(V, device=x.device)
+                eye[..., diag, diag] = 0.0  # 対角は0のまま
+                eye = torch.where(
+                    torch.arange(V, device=x.device)[None, None, :, None]
+                    == torch.arange(V, device=x.device)[None, None, None, :],
+                    torch.zeros((), device=x.device, dtype=attn_mask.dtype),
+                    torch.full((), NEG_INF, device=x.device, dtype=attn_mask.dtype))
+                attn_mask = torch.where(fully, eye, attn_mask)
+
+        out = F.scaled_dot_product_attention(
+            q, k, v, attn_mask=attn_mask,
+            dropout_p=self.dropout if self.training else 0.0)
+        out = out.transpose(1, 2).reshape(B, V, D)
+        return self.proj(out)
+def build_part_bias(part_sizes, n_heads, part_heads, device, dtype,
+                    cross_init=NEG_INF):
+    """空間注意用: 一部のヘッドを部位内に制限するbiasを作る.
+    part_heads 個のヘッドは同部位のみ(異部位を cross_init で抑制),
+    残りのヘッドは全ボーン参照(bias 0).
+    返り値: (n_heads, V, V)
+    """
+    V = sum(part_sizes)
+    bias = torch.zeros(n_heads, V, V, device=device, dtype=dtype)
+    # 部位内マスク (同部位=0, 異部位=cross_init)
+    part_mask = torch.full((V, V), cross_init, device=device, dtype=dtype)
+    off = 0
+    for s in part_sizes:
+        part_mask[off:off + s, off:off + s] = 0.0
+        off += s
+    # 先頭 part_heads 個を部位内制限, 残りは全結合(0のまま)
+    bias[:part_heads] = part_mask.unsqueeze(0)
+    return bias
 
 
+def build_temporal_head_mask(L, n_heads, local_heads, window, device, dtype):
+    """時間注意用: 一部のヘッドを sliding window に, 残りを全系列に.
+    local_heads 個が窓幅 window の局所, 残りが全フレーム参照.
+    返り値: (n_heads, L, L)
+    """
+    idx = torch.arange(L, device=device)
+    dist = (idx[:, None] - idx[None, :]).abs()
+    local = torch.where(dist <= window // 2,
+                        torch.zeros((), device=device, dtype=dtype),
+                        torch.full((), NEG_INF, device=device, dtype=dtype))
+    mask = torch.zeros(n_heads, L, L, device=device, dtype=dtype)
+    mask[:local_heads] = local.unsqueeze(0)  # 局所ヘッド
+    # 残りは全系列 (0のまま)
+    return mask
+
+class HeadSplitMHSA(nn.Module):
+    """ヘッドごとに異なる mask を適用する MHSA. 時間注意では RoPE を併用可.
+
+    空間用: part_sizes + part_heads で一部ヘッドを部位内に制限.
+    時間用: temporal=True + local_heads + window で一部を sliding window,
+            is_rope=True で q,k に RoPE を適用 (時間順序を相対符号化).
+    """
+
+    def __init__(self, d_model, n_heads,
+                 part_sizes=None, part_heads=None, cross_init=NEG_INF,
+                 temporal=False, local_heads=None, window=None,
+                 is_rope=False, learnable_bias=False,
+                 rope_base=10000.0, dropout=0.0):
+        super().__init__()
+        assert d_model % n_heads == 0
+        self.h, self.dh = n_heads, d_model // n_heads
+        self.qkv = nn.Linear(d_model, 3 * d_model)
+        self.proj = nn.Linear(d_model, d_model)
+        self.dropout = dropout
+        self.temporal = temporal
+        self.part_sizes = part_sizes
+        self.part_heads = part_heads if part_heads is not None else n_heads // 2
+        self.local_heads = local_heads if local_heads is not None else n_heads // 2
+        self.window = window
+        self.cross_init = cross_init
+
+        self.is_rope = is_rope and temporal  # RoPE は時間軸のみ
+        if self.is_rope:
+            self.rope = RotaryEmbedding(self.dh, base=rope_base)
+
+        self.learnable_bias = learnable_bias
+        if learnable_bias and part_sizes is not None:
+            b = build_part_bias(part_sizes, n_heads, self.part_heads,
+                                torch.device('cpu'), torch.float32, cross_init)
+            self.part_bias = nn.Parameter(b,requires_grad=False)
+            for s in part_sizes:
+                self.part_bias[:, :s, :s].requires_grad = True
+
+    def forward(self, x, extra_bias=None, key_pad=None):
+        N, L, D = x.shape
+        qkv = self.qkv(x).view(N, L, 3, self.h, self.dh)
+        q, k, v = qkv.permute(2, 0, 3, 1, 4)  # (N, H, L, dh)
+
+        # ---- RoPE (時間軸のみ, q,k に適用. v は回さない) ----
+        if self.is_rope:
+            cos, sin = self.rope(L, x.device, q.dtype)
+            q = apply_rope(q, cos, sin)
+            k = apply_rope(k, cos, sin)
+
+        # ---- ヘッド別 mask ----
+        if self.temporal:
+            hb = build_temporal_head_mask(L, self.h, self.local_heads,
+                                          self.window, x.device, q.dtype)
+        elif self.learnable_bias:
+            hb = self.part_bias.to(x.device, q.dtype)
+        else:
+            hb = build_part_bias(self.part_sizes, self.h, self.part_heads,
+                                 x.device, q.dtype, self.cross_init)
+        attn_mask = hb.unsqueeze(0)  # (1, H, L, L)
+
+        if extra_bias is not None:
+            attn_mask = attn_mask + extra_bias.unsqueeze(0)
+        if key_pad is not None:
+            attn_mask = attn_mask + key_pad.view(N, 1, 1, L).to(q.dtype) * NEG_INF
+
+        # 全マスク行の救済
+        fully = (attn_mask <= NEG_INF / 2).all(dim=-1, keepdim=True)
+        if fully.any():
+            di = torch.arange(L, device=x.device)
+            eye = torch.where(di[:, None] == di[None, :],
+                              torch.zeros((), device=x.device, dtype=attn_mask.dtype),
+                              torch.full((), NEG_INF, device=x.device, dtype=attn_mask.dtype))
+            attn_mask = torch.where(fully, eye, attn_mask)
+
+        out = F.scaled_dot_product_attention(
+            q, k, v, attn_mask=attn_mask,
+            dropout_p=self.dropout if self.training else 0.0)
+        return self.proj(out.transpose(1, 2).reshape(N, L, D))
 # ----------------------------------------------------------------------
 # 1. RoPE 本体
 # ----------------------------------------------------------------------
@@ -87,7 +265,9 @@ class RoPEMHSA(nn.Module):
         self.rope = RotaryEmbedding(self.dh, base=rope_base)
 
     def forward(self, x, bias: torch.Tensor | None = None,
-                key_pad: torch.Tensor | None = None):
+                key_pad: torch.Tensor | None = None,
+                window: int | None = None, sliding_attn: bool = False
+                ):
         N, L, D = x.shape
         qkv = self.qkv(x).view(N, L, 3, self.h, self.dh)
         q, k, v = qkv.permute(2, 0, 3, 1, 4)          # 各 (N, h, L, dh)
@@ -98,16 +278,42 @@ class RoPEMHSA(nn.Module):
 
         attn_mask = None
         if bias is not None:
-            attn_mask = bias.unsqueeze(0)
+            attn_mask = bias.unsqueeze(0)  # (1, h, L, L)
+
+        # ---- sliding window マスク ----
+        win = window
+        if sliding_attn and win is not None and win < L:
+            sw = build_sliding_window_mask(L, win, x.device, dtype=q.dtype)
+            sw = sw.view(1, 1, L, L)  # (1,1,L,L) ブロードキャスト
+            attn_mask = sw if attn_mask is None else attn_mask + sw
+
+        # ---- key パディングマスク ----
         if key_pad is not None:
-            pad = key_pad.view(N, 1, 1, L).float() * NEG_INF
+            pad = key_pad.view(N, 1, 1, L).to(q.dtype) * NEG_INF
             attn_mask = pad if attn_mask is None else attn_mask + pad
+
+        # ---- 全 key がマスクされた行の救済 ----
+        # sliding window とパディングの合成で, あるクエリの参照先が全て
+        # NEG_INF になると softmax が NaN になる. その行は対角(自分自身)だけ
+        # 開けて回避する (境界フレームで起こり得る).
+        if attn_mask is not None:
+            fully = (attn_mask <= NEG_INF / 2).all(dim=-1, keepdim=True)  # (.,.,L,1)
+            if fully.any():
+                eye = torch.zeros_like(attn_mask)
+                diag = torch.arange(L, device=x.device)
+                eye[..., diag, diag] = 0.0  # 対角は0のまま
+                eye = torch.where(
+                    torch.arange(L, device=x.device)[None, None, :, None]
+                    == torch.arange(L, device=x.device)[None, None, None, :],
+                    torch.zeros((), device=x.device, dtype=attn_mask.dtype),
+                    torch.full((), NEG_INF, device=x.device, dtype=attn_mask.dtype))
+                attn_mask = torch.where(fully, eye, attn_mask)
 
         out = F.scaled_dot_product_attention(
             q, k, v, attn_mask=attn_mask,
             dropout_p=self.dropout if self.training else 0.0)
-        return self.proj(out.transpose(1, 2).reshape(N, L, D))
-
+        out = out.transpose(1, 2).reshape(N, L, D)
+        return self.proj(out)
 
 # ----------------------------------------------------------------------
 # 3. 部位分割の定義
@@ -149,7 +355,8 @@ class DiTBlock(nn.Module):
     """分解型時空間 DiT ブロック (空間注意 -> 時間注意 -> FFN, adaLN-Zero)."""
 
     def __init__(self, d_model: int, n_heads: int, num_tokens: int,
-                 ffn_ratio: int = 4,is_ffn_moe: bool = False):
+                 ffn_ratio: int = 4,is_ffn_moe: bool = False,
+):
         super().__init__()
         self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_s = MHSA(d_model, n_heads)
@@ -238,7 +445,7 @@ class RoPEDiTBlock(nn.Module):
 
 
 class MHCA(nn.Module):
-    """Multi-Head Cross-Attention. query = 骨格潜在トークン, KV = テキストトークン."""
+    """Multi-Head Cross-Attention (QK-Norm導入版). query = 骨格潜在トークン, KV = テキストトークン."""
 
     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.0):
         super().__init__()
@@ -247,30 +454,49 @@ class MHCA(nn.Module):
         self.dh = d_model // n_heads
         self.q = nn.Linear(d_model, d_model)
         self.kv = nn.Linear(d_model, 2 * d_model)
+
+        # モダリティ間のスケールを揃えるためのQK-Normを追加
+        self.q_norm = nn.LayerNorm(self.dh)
+        self.k_norm = nn.LayerNorm(self.dh)
+
         self.proj = nn.Linear(d_model, d_model)
         self.dropout = dropout
 
-    def forward(self, x, ctx, ctx_pad: torch.Tensor | None = None):
+    def forward(self, x, ctx, ctx_pad: torch.Tensor | None = None,return_weights: bool = False):
         N, L, D = x.shape
         S = ctx.shape[1]
-        q = self.q(x).view(N, L, self.h, self.dh).transpose(1, 2)
-        k, v = self.kv(ctx).view(N, S, 2, self.h, self.dh) \
-                           .permute(2, 0, 3, 1, 4)
+
+        # Queryの処理と正規化
+        q = self.q(x).view(N, L, self.h, self.dh)
+        q = self.q_norm(q).transpose(1, 2)  # (N, h, L, dh)
+
+        # Key, Valueの処理と正規化
+        k, v = self.kv(ctx).view(N, S, 2, self.h, self.dh).permute(2, 0, 3, 1, 4)
+        k = self.k_norm(k)  # (N, h, S, dh)
+
         attn_mask = None
         if ctx_pad is not None:
-            attn_mask = ctx_pad.view(N, 1, 1, S).float() * NEG_INF
+            attn_mask = ctx_pad.view(N, 1, 1, S).to(q.dtype) * NEG_INF
+
+
         out = F.scaled_dot_product_attention(
             q, k, v, attn_mask=attn_mask,
             dropout_p=self.dropout if self.training else 0.0)
+        if return_weights:
+            dh=self.dh
+            with torch.no_grad():
+                attn = torch.softmax(q @ k.transpose(-1, -2) / math.sqrt(dh) + attn_mask, dim=-1)
+            return self.proj(out.transpose(1, 2).reshape(N, L, D)),attn
         return self.proj(out.transpose(1, 2).reshape(N, L, D))
-
 
 class CrossCondDiTBlock(nn.Module):
     """テキスト条件付き DiT ブロック (adaLN + cross-attention)."""
 
     def __init__(self, d_model: int, n_heads: int, num_tokens: int,
-                 ffn_ratio: int = 4, is_rope: bool = False,is_ffn_moe: bool = False):
+                 ffn_ratio: int = 4, is_rope: bool = False,is_ffn_moe: bool = False,sliding_attn: bool = False,window: int = 5):
         super().__init__()
+        self.sliding_attn = sliding_attn
+        self.window = window
         self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_s = MHSA(d_model, n_heads)
         self.token_bias = nn.Parameter(
@@ -281,8 +507,136 @@ class CrossCondDiTBlock(nn.Module):
         self.ln_x = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_x = MHCA(d_model, n_heads)
         self.ln_f = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.ffn = MoEFFN(d_model, ffn_ratio//2)
+        self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 9 * d_model))
+        self.mod_f=nn.Sequential(nn.SiLU(), nn.Linear(d_model, 3 * d_model))
+        self.mod_moe_f=nn.Sequential(nn.SiLU(), nn.Linear(d_model, 3 * d_model))
+        nn.init.zeros_(self.mod[1].weight)
+        nn.init.zeros_(self.mod[1].bias)
+        nn.init.zeros_(self.mod_f[1].weight)
+        nn.init.zeros_(self.mod_f[1].bias)
+        nn.init.zeros_(self.mod_moe_f[1].weight)
+        nn.init.zeros_(self.mod_moe_f[1].bias)
+
+    def forward(self, x: torch.Tensor, temb: torch.Tensor,
+                context: torch.Tensor,
+                ctx_pad: torch.Tensor | None = None,
+                time_pad: torch.Tensor | None = None, is_low=True) -> torch.Tensor:
+        B, T, V, D = x.shape
+        (sh_s, sc_s, g_s, sh_t, sc_t, g_t,
+         sh_x, sc_x, g_x,) = self.mod(temb).chunk(9, dim=-1)
+        if is_low:
+            (sh_f, sc_f, g_f) = self.mod_moe_f(temb).chunk(3, dim=-1)
+        else:
+            (sh_f, sc_f, g_f) = self.mod_f(temb).chunk(3, dim=-1)
+
+        h = modulate(self.ln_s(x), sh_s, sc_s).reshape(B * T, V, D)
+        h = self.attn_s(h, bias=self.token_bias).view(B, T, V, D)
+        x = x + g_s[:, None, None, :] * h
+
+        h = modulate(self.ln_t(x), sh_t, sc_t)
+        h = h.permute(0, 2, 1, 3).reshape(B * V, T, D)
+        kp = (time_pad.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
+              if time_pad is not None else None)
+        h = self.attn_t(h, key_pad=kp,sliding_attn=self.sliding_attn,window=self.window).view(B, V, T, D).permute(0, 2, 1, 3)
+        x = x + g_t[:, None, None, :] * h
+
+        h = modulate(self.ln_x(x), sh_x, sc_x).reshape(B, T * V, D)
+        h = self.attn_x(h, context, ctx_pad=ctx_pad).view(B, T, V, D)
+        x = x + g_x[:, None, None, :] * h
+        h = self.ffn(modulate(self.ln_f(x), sh_f, sc_f))
+        x = x + g_f[:, None, None, :] * h
+
+        if time_pad is not None:
+            x = x.masked_fill(time_pad[:, :, None, None], 0.0)
+        return x
+class CrossCondBaseFFNMoEDiTBlock(nn.Module):
+    """テキスト条件付き DiT ブロック (adaLN + cross-attention)."""
+
+    def __init__(self, d_model: int, n_heads: int, num_tokens: int,
+                 ffn_ratio: int = 4, is_rope: bool = False,sliding_attn: bool = False,window: int = 5,local_heads: int|None = None,
+                 part_heads: int|None = None):
+        super().__init__()
+        self.sliding_attn = sliding_attn
+        self.window = window
+        self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.attn_s = HeadSplitMHSA(d_model,n_heads,learnable_bias=False,part_sizes=[7,20,20],part_heads=part_heads)
+        self.ln_t = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.attn_t =HeadSplitMHSA(d_model,n_heads,temporal=True,window=window,is_rope=is_rope,learnable_bias=False,local_heads=local_heads)
+
+        self.ln_x = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.attn_x = MHCA(d_model, n_heads)
+        self.ln_f = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
+            nn.Linear(ffn_ratio * d_model, d_model))
+        self.moe_ffn=MoEFFN(d_model, 2)
+        self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 9 * d_model))
+        self.mod_f=nn.Sequential(nn.SiLU(), nn.Linear(d_model, 3 * d_model))
+        nn.init.zeros_(self.mod[1].weight)
+        nn.init.zeros_(self.mod[1].bias)
+        nn.init.zeros_(self.mod_f[1].weight)
+        nn.init.zeros_(self.mod_f[1].bias)
+
+    def forward(self, x: torch.Tensor, temb: torch.Tensor,
+                context: torch.Tensor,
+                ctx_pad: torch.Tensor | None = None,
+                time_pad: torch.Tensor | None = None,is_low=False,return_attn_weights:bool =False) -> torch.Tensor:
+        B, T, V, D = x.shape
+        (sh_s, sc_s, g_s, sh_t, sc_t, g_t,
+         sh_x, sc_x, g_x,) = self.mod(temb).chunk(9, dim=-1)
+        (sh_f, sc_f, g_f) = self.mod_f(temb).chunk(3, dim=-1)
+
+        h = modulate(self.ln_s(x), sh_s, sc_s).reshape(B * T, V, D)
+        h = self.attn_s(h).view(B, T, V, D)
+        x = x + g_s[:, None, None, :] * h
+
+        h = modulate(self.ln_t(x), sh_t, sc_t)
+        h = h.permute(0, 2, 1, 3).reshape(B * V, T, D)
+        kp = (time_pad.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
+              if time_pad is not None else None)
+
+        h = self.attn_t(h, key_pad=kp).view(B, V, T, D).permute(0, 2, 1, 3)
+        x = x + g_t[:, None, None, :] * h
+
+        h = modulate(self.ln_x(x), sh_x, sc_x).reshape(B, T * V, D)
+        if return_attn_weights:
+            h,attn_weights= self.attn_x(h,context, ctx_pad=ctx_pad,return_weights=True)
+            h= h.view(B, T, V, D)
+        else:
+            h = self.attn_x(h, context, ctx_pad=ctx_pad).view(B, T, V, D)
+        x = x + g_x[:, None, None, :] * h
+
+        h_ln = modulate(self.ln_f(x), sh_f, sc_f)
+        if is_low:
+            h=self.ffn(h_ln)+self.moe_ffn(h_ln)
+        else:
+            h=self.ffn(h_ln)
+        x = x + g_f[:, None, None, :] * h
+
+        if time_pad is not None:
+            x = x.masked_fill(time_pad[:, :, None, None], 0.0)
+        if return_attn_weights:
+            return x,attn_weights
+        return x
+
+class CrossCondSeparateDiTBlock(nn.Module):
+    """テキスト条件付き DiT ブロック (adaLN + cross-attention)."""
+
+    def __init__(self, d_model: int, n_heads: int, num_tokens: int,
+                 ffn_ratio: int = 4, is_rope: bool = False,is_ffn_moe: bool = False):
+        super().__init__()
+        self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.attn_s = MoESpatialMHSA
+        self.token_bias = nn.Parameter(
+            torch.zeros(n_heads, num_tokens, num_tokens))
+        self.ln_t = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.attn_t = MoETemporalMHSA(d_model, n_heads,is_rope=is_rope)
+        self.ln_x = nn.LayerNorm(d_model, elementwise_affine=False)
+        self.attn_x = MHCA(d_model, n_heads)
+        self.ln_f = nn.LayerNorm(d_model, elementwise_affine=False)
         if is_ffn_moe:
-            self.ffn = MoEFFN(d_model, ffn_ratio)
+            self.ffn = MoEFFN(d_model, ffn_ratio//2)
         else:
             self.ffn = nn.Sequential(
                 nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
@@ -299,15 +653,13 @@ class CrossCondDiTBlock(nn.Module):
         (sh_s, sc_s, g_s, sh_t, sc_t, g_t,
          sh_x, sc_x, g_x, sh_f, sc_f, g_f) = self.mod(temb).chunk(12, dim=-1)
 
-        h = modulate(self.ln_s(x), sh_s, sc_s).reshape(B * T, V, D)
+        h = modulate(self.ln_s(x), sh_s, sc_s)
         h = self.attn_s(h, bias=self.token_bias).view(B, T, V, D)
         x = x + g_s[:, None, None, :] * h
 
         h = modulate(self.ln_t(x), sh_t, sc_t)
-        h = h.permute(0, 2, 1, 3).reshape(B * V, T, D)
-        kp = (time_pad.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
-              if time_pad is not None else None)
-        h = self.attn_t(h, key_pad=kp).view(B, V, T, D).permute(0, 2, 1, 3)
+        kp = (time_pad if time_pad is not None else None)
+        h = self.attn_t(h, key_pad=kp)
         x = x + g_t[:, None, None, :] * h
 
         h = modulate(self.ln_x(x), sh_x, sc_x).reshape(B, T * V, D)
@@ -320,22 +672,26 @@ class CrossCondDiTBlock(nn.Module):
         if time_pad is not None:
             x = x.masked_fill(time_pad[:, :, None, None], 0.0)
         return x
-
-
 class MoEFFN(nn.Module):
     """MoE FFN (expert は 1 つの FFN で共有, adaLN-Zero 変調は共通)."""
 
     def __init__(self, d_model: int, ffn_ratio: int = 4):
         super().__init__()
         self.ffn_b = nn.Sequential(
-            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
-            nn.Linear(ffn_ratio * d_model, d_model))
+            nn.Linear(d_model,  d_model//ffn_ratio), nn.GELU(),
+            nn.Linear(d_model//ffn_ratio, d_model))
         self.ffn_r= nn.Sequential(
-            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
-            nn.Linear(ffn_ratio * d_model, d_model))
+            nn.Linear(d_model, d_model//ffn_ratio), nn.GELU(),
+            nn.Linear(d_model//ffn_ratio, d_model))
         self.ffn_l= nn.Sequential(
-            nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
-            nn.Linear(ffn_ratio * d_model, d_model))
+            nn.Linear(d_model, d_model//ffn_ratio), nn.GELU(),
+            nn.Linear(d_model//ffn_ratio, d_model))
+        nn.init.zeros_(self.ffn_b[-1].weight)
+        nn.init.zeros_(self.ffn_b[-1].bias)
+        nn.init.zeros_(self.ffn_r[-1].weight)
+        nn.init.zeros_(self.ffn_r[-1].bias)
+        nn.init.zeros_(self.ffn_l[-1].weight)
+        nn.init.zeros_(self.ffn_l[-1].bias)
     def forward(self, h: torch.Tensor) -> torch.Tensor:
         B, T, V, D = h.shape
         h_b=self.ffn_b(h[:,:,:7])
@@ -343,7 +699,47 @@ class MoEFFN(nn.Module):
         h_r=self.ffn_r(h[:,:,27:])
         h = torch.cat([h_b, h_l, h_r], dim=2)
         return h
+class MoESpatialMHSA(nn.Module):
+    """MoE MHSA (expert は 1 つの MHSA で共有, adaLN-Zero 変調は共通)."""
 
+    def __init__(self, d_model: int, n_heads: int):
+        super().__init__()
+        self.attn_b = MHSA(d_model, n_heads)
+        self.attn_r = MHSA(d_model, n_heads)
+        self.attn_l = MHSA(d_model, n_heads)
+
+    def forward(self, h: torch.Tensor, bias: torch.Tensor | None = None) -> torch.Tensor:
+        B,T, V, D = h.shape
+        h=h.reshape(B*T, V, D)
+        h_b=self.attn_b(h[:,:-40], bias=bias[:,:-40,:-40])
+        h_l=self.attn_l(h[:,-40:-20], bias=bias[:,-40:-20,-40:-20])
+        h_r=self.attn_r(h[:,-20:], bias=bias[:,-20:,-20:])
+        h = torch.cat([h_b, h_l, h_r], dim=1)
+        h=h.view(B, T, V, D)
+        return h
+class MoETemporalMHSA(nn.Module):
+    """MoE MHSA (expert は 1 つの MHSA で共有, adaLN-Zero 変調は共通)."""
+
+    def __init__(self, d_model: int, n_heads: int,is_rope: bool = False):
+        super().__init__()
+        self.attn_b = MHSA(d_model, n_heads) if not is_rope else RoPEMHSA(d_model, n_heads)
+        self.attn_r = MHSA(d_model, n_heads) if not is_rope else RoPEMHSA(d_model, n_heads)
+        self.attn_l = MHSA(d_model, n_heads) if not is_rope else RoPEMHSA(d_model, n_heads)
+
+    def forward(self, h: torch.Tensor, key_pad: torch.Tensor | None = None) -> torch.Tensor:
+        B, T, V, D = h.shape
+        h_b=h[:,:,:7].permute(0, 2, 1, 3).reshape(B * 7, T, D)
+        h_l=h[:,:,7:27].permute(0, 2, 1, 3).reshape(B * 20, T, D)
+        h_r=h[:,:,27:].permute(0, 2, 1, 3).reshape(B * 20, T, D)
+        key_pad=key_pad.unsqueeze(1).expand(B, V, T) if key_pad is not None else None
+        key_pad_b=key_pad[:,:7].reshape(B * 7, T) if key_pad is not None else None
+        key_pad_l=key_pad[:,7:27].reshape(B * 20, T) if key_pad is not None else None
+        key_pad_r=key_pad[:,27:].reshape(B * 20, T) if key_pad is not None else None
+        h_b=self.attn_b(h_b, key_pad=key_pad_b).view(B, 7, T, D).permute(0, 2, 1, 3)
+        h_l=self.attn_l(h_l, key_pad=key_pad_l).view(B, 20, T, D).permute(0, 2, 1, 3)
+        h_r=self.attn_r(h_r, key_pad=key_pad_r).view(B, 20, T, D).permute(0, 2, 1, 3)
+        h = torch.cat([h_b, h_l, h_r], dim=2)
+        return h
 class PartDenoiser(nn.Module):
     """潜在トークン列 (B, T', V_part, latent_dim) に対する速度場予測器."""
 
@@ -379,21 +775,52 @@ class PartDenoiser(nn.Module):
 
 class PartDenoiserXAttn(PartDenoiser):
     def __init__(self, latent_dim, num_tokens, d_model=256, n_heads=8,
-                 depth=6, ffn_ratio=4):
+                 depth=6, ffn_ratio=4,is_rope=False,window: int | None = None, sliding_attn: bool = False,is_base=True,local_heads: int | None = None,
+                 part_heads: int | None = None):
         super().__init__(latent_dim, num_tokens, d_model, n_heads, 0, ffn_ratio)
+        self.is_rope=is_rope
+        if is_base==True:
+            self.blocks = nn.ModuleList([
+                CrossCondBaseFFNMoEDiTBlock(d_model, n_heads, num_tokens, ffn_ratio,is_rope=is_rope,sliding_attn=sliding_attn,window=window,local_heads=local_heads,part_heads=part_heads)
+                for _ in range(depth)])
+        else:
+            self.blocks = nn.ModuleList([
+                CrossCondDiTBlock(d_model, n_heads, num_tokens, ffn_ratio,is_rope=is_rope,sliding_attn=sliding_attn,window=window)
+                for _ in range(depth)])
+
+    def forward(self, z, temb, context, ctx_pad=None, time_pad=None, is_low=False,return_attn_weights: bool = False):
+        h = self.proj_in(z) + self.token_emb
+        if not self.is_rope:
+            h = h + sinusoidal_pe(h.shape[1], self.d_model,
+                              h.device)[None, :, None, :]
+        attn_weights_list=[]
+        for blk in self.blocks:
+            if return_attn_weights:
+                h,attn_weights= blk(h, temb, context, ctx_pad=ctx_pad, time_pad=time_pad, is_low=is_low,return_attn_weights=True)
+                attn_weights_list.append(attn_weights)
+            else:
+                h = blk(h, temb, context, ctx_pad=ctx_pad, time_pad=time_pad, is_low=is_low)
+        sh, sc = self.mod_out(temb).chunk(2, dim=-1)
+        return self.proj_out(modulate(self.norm_out(h), sh, sc)), attn_weights_list
+
+class PartDenoiserXAttnSeparate(PartDenoiser):
+    def __init__(self, latent_dim, num_tokens, d_model=256, n_heads=8,
+                 depth=6, ffn_ratio=4,is_rope=False,is_ffn_moe=False):
+        super().__init__(latent_dim, num_tokens, d_model, n_heads, 0, ffn_ratio)
+        self.is_rope=is_rope
         self.blocks = nn.ModuleList([
-            CrossCondDiTBlock(d_model, n_heads, num_tokens, ffn_ratio)
+            CrossCondSeparateDiTBlock(d_model, n_heads, num_tokens, ffn_ratio,is_rope=is_rope,is_ffn_moe=is_ffn_moe)
             for _ in range(depth)])
 
     def forward(self, z, temb, context, ctx_pad=None, time_pad=None):
         h = self.proj_in(z) + self.token_emb
-        h = h + sinusoidal_pe(h.shape[1], self.d_model,
-                              h.device)[None, :, None, :]
+        if self.is_rope:
+            h = h + sinusoidal_pe(h.shape[1], self.d_model,
+                                  h.device)[None, :, None, :]
         for blk in self.blocks:
             h = blk(h, temb, context, ctx_pad=ctx_pad, time_pad=time_pad)
         sh, sc = self.mod_out(temb).chunk(2, dim=-1)
         return self.proj_out(modulate(self.norm_out(h), sh, sc))
-
 
 # ----------------------------------------------------------------------
 # 5. Wan2.2 風 MoE ルーティング
@@ -420,7 +847,7 @@ class TimestepRouter:
 class SignLatentFlowMoE(nn.Module):
     """凍結 VAE の潜在空間で速度場を学習する MoE Flow Matching."""
 
-    def __init__(self, vae: nn.Module,
+    def __init__(self, vae: nn.Module|None=None,
                  hand_vae: nn.Module | None = None,
                  body_vae: nn.Module | None = None,
                  part_index: Dict[str, List[int]] | None = None,
@@ -430,10 +857,12 @@ class SignLatentFlowMoE(nn.Module):
                  depth_high: int = 6, depth_low: int = 4,
                  cond_dim: int | None = None,
                  cross_attn: bool = False,
-                 shared_lr: bool = False,
                  train_length_predictor: bool = False,
-                 is_ffn_moe: bool = False,
-                 is_rope: bool = False):
+                 is_rope: bool = False,
+                 sliding_attn: bool = False,
+                 window=None,
+                 part_heads: int | None = None,
+                 local_heads: int | None = None):
         super().__init__()
         self.vae = vae
         self.train_length_predictor = train_length_predictor
@@ -452,11 +881,14 @@ class SignLatentFlowMoE(nn.Module):
                 p.requires_grad_(False)
         if not self.part_decoders:
             self.part_decoders = None   # sample の "is None" 判定と整合
-
-        for p in self.vae.parameters():
-            p.requires_grad_(False)
-        self.latent_dim = vae.latent_dim
-        self.num_tokens = vae.num_bones
+        if self.vae!=None:
+            for p in self.vae.parameters():
+                p.requires_grad_(False)
+            self.latent_dim = vae.latent_dim
+            self.num_tokens = vae.num_bones
+        else:
+            self.latent_dim=6
+            self.num_tokens=47
         self.part_index = part_index or default_part_index()
         assert sorted(sum(self.part_index.values(), [])) \
             == list(range(self.num_tokens)), "part_index がトークン全体を分割していません"
@@ -489,35 +921,8 @@ class SignLatentFlowMoE(nn.Module):
             self.null_context = nn.Parameter(torch.zeros(1, 1, d_model))
             nn.init.trunc_normal_(self.null_context, std=0.02)
             self.expert_high = PartDenoiserXAttn(
-                self.latent_dim, self.num_tokens, d_model, n_heads, depth_high)
-            if is_ffn_moe:
-                self.experts_low=PartDenoiserXAttn(self.latent_dim, self.num_tokens, d_model, n_heads, depth_high)
-                #CrossCondDiTBlockのffn,ln_f以外をexpert_highと共有する
-                for name, module in self.expert_high.named_children():
-                    if name not in ['ffn','ln_f']:
-                        self.experts_low._modules[name]=module
-            else:
-
-                self.experts_low = nn.ModuleDict({
-                    name: PartDenoiserXAttn(self.latent_dim, len(idx),
-                                            d_model, n_heads, depth_low)
-                    for name, idx in self.part_index.items()})
-                if shared_lr:
-                    self.experts_low['right']=self.experts_low['left']
-        else:
-            self.expert_high = PartDenoiser(
-                self.latent_dim, self.num_tokens, d_model, n_heads, depth_high)
-            if is_ffn_moe:
-                self.experts_low=PartDenoiser(self.latent_dim, self.num_tokens, d_model, n_heads, depth_low)
-                #DiTBlockのffn,ln_f以外をexpert_highと共有する
-                for name, module in self.expert_high.named_children():
-                    if name not in ['ffn','ln_f']:
-                        self.experts_low._modules[name]=module
-            else:
-                self.experts_low = nn.ModuleDict({
-                    name: PartDenoiser(self.latent_dim, len(idx),
-                                       d_model, n_heads, depth_low)
-                    for name, idx in self.part_index.items()})
+                self.latent_dim, self.num_tokens, d_model, n_heads, depth_high,is_rope=is_rope,sliding_attn=sliding_attn,window=window,part_heads=part_heads,local_heads=local_heads)
+            self.experts_low=self.expert_high
 
         self.register_buffer("z_mean", torch.zeros(1))
         self.register_buffer("z_std", torch.ones(1))
@@ -531,8 +936,6 @@ class SignLatentFlowMoE(nn.Module):
         self.length_predictor=nn.TransformerEncoder(l_encoder, num_layers=2)
         self.length_fc=nn.Linear(cond_dim,1)
         if not self.train_length_predictor:
-            for p in self.parameters():
-                p.requires_grad_(True)
             for p in self.length_predictor.parameters():
                 p.requires_grad_(False)
             for p in self.length_fc.parameters():
@@ -560,6 +963,10 @@ class SignLatentFlowMoE(nn.Module):
     # ---- 潜在の入出力 ---------------------------------------------
     @torch.no_grad()
     def set_latent_stats(self, d6_batch, lengths=None):
+        if self.vae is None:
+            self.z_mean = torch.zeros(1, device=d6_batch.device)
+            self.z_std = torch.ones(1, device=d6_batch.device)
+            return
         mu, _ = self.vae.encode(d6_batch, lengths)
         valid = self._length_mask(lengths, mu.shape[1], mu.device)
         m = mu[valid] if valid is not None else mu
@@ -620,9 +1027,12 @@ class SignLatentFlowMoE(nn.Module):
               f"std={self.z_std.item():.6f}, count={total_count:,}")
 
     def _encode(self, d6, lengths=None):
-        with torch.no_grad():
-            mu, _ = self.vae.encode(d6, lengths)
-        return (mu - self.z_mean) / self.z_std
+        if self.vae!=None:
+            with torch.no_grad():
+                mu, _ = self.vae.encode(d6, lengths)
+            return (mu - self.z_mean) / self.z_std
+        else:
+            return d6.movedim(-2,-1)
 
     def hand_encode(self, d6, lengths=None):
         left_hand_d6 = d6[:, :, :, -40:-20]
@@ -640,6 +1050,8 @@ class SignLatentFlowMoE(nn.Module):
         return (mu - self.z_mean_body) / self.z_std_body
 
     def _decode(self, z, T_target):
+        if self.vae is None:
+            return z.movedim(-2,-1)
         return self.vae.decode(z * self.z_std + self.z_mean, T_target=T_target)
 
     # ---- 条件埋め込み ------------------------------------------------
@@ -699,9 +1111,13 @@ class SignLatentFlowMoE(nn.Module):
     def _length_mask(self, lengths, T_lat: int, device):
         if lengths is None:
             return None
+
         lengths = torch.as_tensor(lengths, device=device)
-        lat_len = torch.div(lengths + self.vae.t_stride - 1,
-                            self.vae.t_stride, rounding_mode="floor")
+        if self.vae!=None:
+            lat_len = torch.div(lengths + self.vae.t_stride - 1,
+                                self.vae.t_stride, rounding_mode="floor")
+        else:
+            lat_len=torch.div(lengths,1, rounding_mode="floor")
         t = torch.arange(T_lat, device=device).unsqueeze(0)
         return t < lat_len.clamp(min=1).unsqueeze(1)
 
@@ -710,7 +1126,8 @@ class SignLatentFlowMoE(nn.Module):
                  context: torch.Tensor | None = None,
                  context_mask: torch.Tensor | None = None,
                  drop_mask: torch.Tensor | None = None,
-                 time_pad: torch.Tensor | None = None) -> torch.Tensor:
+                 time_pad: torch.Tensor | None = None,
+                 return_attn_weights: bool =False) -> torch.Tensor:
         """[FIX-0] 返り値はテンソル1本. hi が必要なら self.router(t) を使う.
         z_t: (B, T', V, ld), t: (B,)
         context: (B, S, cond_dim) テキストトークン列 (adaLN のみの場合は
@@ -733,40 +1150,53 @@ class SignLatentFlowMoE(nn.Module):
             tp = time_pad[hi] if time_pad is not None else None
             if self.cross_attn:
                 cp = ctx_pad[hi] if ctx_pad is not None else None
-                out[hi] = self.expert_high(z_t[hi], temb[hi], context=ctx[hi],
-                                           ctx_pad=cp, time_pad=tp)
+                out[hi],attn_weights = self.expert_high(z_t[hi], temb[hi], context=ctx[hi],
+                                           ctx_pad=cp, time_pad=tp,is_low=False,return_attn_weights=return_attn_weights)
             else:
                 out[hi] = self.expert_high(z_t[hi], temb[hi], time_pad=tp)
         if (~hi).any():
             lo = ~hi
             z_lo, temb_lo = z_t[lo], temb[lo]
             tp = time_pad[lo] if time_pad is not None else None
-            out_lo = torch.empty(z_lo.shape, dtype=out_dtype,
-                                 device=z_lo.device)
+            #out_lo = torch.empty(z_lo.shape, dtype=out_dtype,
+            #                     device=z_lo.device)
             if self.cross_attn:
                 ctx_lo = ctx[lo]                                   # [FIX-1]
                 cp = ctx_pad[lo] if ctx_pad is not None else None
-                for name, idx in self.part_index.items():
-                    out_lo[:, :, idx] = self.experts_low[name](
-                        z_lo[:, :, idx], temb_lo, context=ctx_lo,
-                        ctx_pad=cp, time_pad=tp)
+                out_lo,attn_weights = self.experts_low(z_lo, temb_lo, context=ctx_lo,
+                                          ctx_pad=cp, time_pad=tp,is_low=True,return_attn_weights=return_attn_weights)
             else:
-                for name, idx in self.part_index.items():
-                    out_lo[:, :, idx] = self.experts_low[name](
-                        z_lo[:, :, idx], temb_lo, time_pad=tp)
+                out_lo = self.experts_low(z_lo, temb_lo, time_pad=tp,is_low=True)
             out[lo] = out_lo
+        if return_attn_weights:
+            return out,attn_weights
         return out
+    def constractive_loss(self, z_0: torch.Tensor,context: torch.Tensor,
+                          t=0.05,
+                          context_mask: torch.Tensor | None = None,
+                          drop_mask: torch.Tensor | None = None,
+                          time_pad: torch.Tensor | None = None,
+                          return_attn_weights: bool =False) -> torch.Tensor:
+        B, T, V, ld = z_0.shape
+        t=torch.full((B,),t,device=z_0.device)
+        eps = torch.randn_like(z_0)
+        z_t = (1 - t.view(B, 1, 1, 1)) * z_0 + t.view(B, 1, 1, 1) * eps
+        v_target = eps - z_0
+        #TODO: Context learningを実装する
+
 
     # ---- 学習 -------------------------------------------------------
     def training_loss(self, d6: torch.Tensor, lengths=None,
                       cond: torch.Tensor | None = None,
                       cond_mask: torch.Tensor | None = None,
                       cond_drop_prob: float = 0.1,
-                      part_weight: Dict[str, float] | None = None):
+                      part_weight: Dict[str, float] | None = None,
+                      all_mask: torch.Tensor | None = None) -> tuple[torch.Tensor, dict]:
         """
         d6:   (B, T, 6, Nb)  全骨格の6D特徴
         cond: (B, S, cond_dim) テキストトークン列. None で無条件学習
         cond_mask: (B, S) True=有効トークン (HF attention_mask 互換)
+        all_mask: (B,T,V) True=有効トークン. None で長さマスクを自動生成
         """
         if self.train_length_predictor:
             # 長さ予測器の損失を計算
@@ -797,13 +1227,16 @@ class SignLatentFlowMoE(nn.Module):
                                drop_mask=drop_mask, time_pad=time_pad)
         hi = self.router(t)
         se = (v_pred - v_target).pow(2)
-        #bodyが動く箇所だけ重みをつける
-        #se[:, :, 3:7] = se[:, :, 3:7] * 2
+        if all_mask is not None and all_mask.shape == se.shape[:3]:
+            se = se * all_mask[:, :, :, None].float()
+        se[:, :, 3:7] = se[:, :, 3:7] * 2
+
 
         if part_weight is not None:
+            # 各部位が同等に寄与するよう、ボーン数で正規化してから重み付け
             w = torch.ones(self.num_tokens, device=z0.device)
             for name, idx in self.part_index.items():
-                w[idx] = part_weight.get(name, 1.0)
+                w[idx] = part_weight.get(name, 1.0) / len(idx) * (self.num_tokens / 3)
             se = se * w.view(1, 1, -1, 1)
         if valid is not None:
             m = valid[:, :, None, None].float()
@@ -823,7 +1256,8 @@ class SignLatentFlowMoE(nn.Module):
                guidance_scale: float = 1.0,
                lengths: torch.Tensor | Sequence[int] | None = None,
                solver: str = "heun",
-               decode: str = "full", trim: bool = True, device=None):
+               decode: str = "full", trim: bool = True, device=None,
+               is_dynamic=False):
         """
         cond: (n, S, cond_dim) テキストトークン列. None で無条件生成
         cond_mask: (n, S) True=有効トークン
@@ -837,7 +1271,10 @@ class SignLatentFlowMoE(nn.Module):
         if lengths is not None:
             lengths = torch.as_tensor(lengths, device=device)
             T = int(lengths.max().item())
-        T_lat = max(1, T // self.vae.t_stride)
+        if self.vae!=None:
+            T_lat = max(1, T // self.vae.t_stride)
+        else:
+            T_lat=T
         valid = self._length_mask(lengths, T_lat, device)
         time_pad = ~valid if valid is not None else None
 
@@ -845,17 +1282,25 @@ class SignLatentFlowMoE(nn.Module):
                         device=device)
         ts = torch.linspace(1.0, 0.0, steps + 1, device=device)
 
+        # sample関数内の get_velocity を以下に置き換える
         def get_velocity(z_in, t_in):
-            """CFG 込みの速度場. Heun ではこれを1つの場として積分する."""
+            """CFG 込みの速度場. t (タイムステップ) に応じて動的にスケールを調整する."""
             if use_cfg:
                 v_c = self.velocity(z_in, t_in, context=cond,
                                     context_mask=cond_mask, time_pad=time_pad)
-                # [FIX-2] 無条件分岐: context=None -> null_cond / null_context
                 v_u = self.velocity(z_in, t_in, context=None,
                                     time_pad=time_pad)
-                return v_u + guidance_scale * (v_c - v_u)
+
+                # 動的CFG: t_in は 1.0(初期) -> 0.0(終盤) へ変化する
+                # 初期ほどテキストの条件を強くし、終盤は弱くする (Flux.1等のアプローチ)
+                cur_t = t_in.mean().item()
+                dynamic_scale = 1.0 + (guidance_scale - 1.0) * cur_t
+                if is_dynamic:
+                    return v_u + dynamic_scale * (v_c - v_u)
+                else:
+                    return v_u + guidance_scale * (v_c - v_u)
             return self.velocity(z_in, t_in, context=cond,
-                                 context_mask=cond_mask, time_pad=time_pad)
+                                 context_mask=cond_mask, time_pad=time_pad,return_attn_weights=True)
 
         # ---- (旧) Euler 法: 1次精度, 全体誤差 O(dt) --------------------
         # for i in range(steps):
@@ -880,15 +1325,26 @@ class SignLatentFlowMoE(nn.Module):
         for i in range(steps):
             t_now = ts[i].expand(n)
             dt = ts[i] - ts[i + 1]                       # > 0
-
-            v1 = get_velocity(z, t_now)
+            if not use_cfg:
+                v1,attn_weights = get_velocity(z, t_now)
+                attn=attn_weights[-1]
+                print("t:", t_now.mean().item())
+                print("エントロピー:", -(attn * attn.log()).sum(-1).mean().item())
+                print("最大注意:", attn.max(-1)[0].mean().item())
+                # テキストトークン別の平均注意
+                print("トークン別注意:", attn.mean(dim=(0, 1, 2)))  # (S,)
+            else:
+                v1 = get_velocity(z, t_now)
             z_pred = z - dt * v1                         # predictor (Euler)
 
             if solver == "euler" or i == steps - 1:
                 z = z_pred
             else:
                 t_next = ts[i + 1].expand(n)
-                v2 = get_velocity(z_pred, t_next)
+                if not use_cfg:
+                    v2,_ = get_velocity(z_pred, t_next)
+                else:
+                    v2 = get_velocity(z_pred, t_next)
                 z = z - dt * 0.5 * (v1 + v2)             # corrector (台形則)
 
         def _trim(x):
@@ -916,7 +1372,23 @@ class SignLatentFlowMoE(nn.Module):
 
     def set_router(self, fn: Callable[[torch.Tensor], torch.Tensor] | None):
         self.router.set_rule(fn)
+class LayerWeightedBERT(nn.Module):
+    def __init__(self, text_encoder, n_layers=12, use_layers=(5,6,7,8,9)):
+        super().__init__()
+        self.encoder = text_encoder
+        for p in self.encoder.parameters():
+            p.requires_grad_(False)          # 凍結
+        self.use_layers = use_layers
+        # 各層のスカラー重み (softmaxで正規化)
+        self.layer_weights = nn.Parameter(torch.zeros(len(use_layers)))
 
+    def forward(self, **tokens):
+        out = self.encoder(**tokens, output_hidden_states=True)
+        # 選んだ層をスタック (L_sel, B, S, 768)
+        hs = torch.stack([out.hidden_states[i] for i in self.use_layers], dim=0)
+        w = torch.softmax(self.layer_weights, dim=0)      # (L_sel,)
+        text_emb = (w[:, None, None, None] * hs).sum(0)    # (B, S, 768)
+        return text_emb
 
 # ----------------------------------------------------------------------
 # 7. 動作確認

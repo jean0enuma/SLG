@@ -275,20 +275,61 @@ def _valid_frames(pose, joints, eps=1e-6):
     return ~(zero | nan)
 
 
-def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6):
+def _fill_outside(pose_out, valid, bones, used, q, L, root):
+    """有効区間の外側 (最初の有効フレーム以前 / 最後の有効フレーム以降) を
+    端の有効フレームの回転・骨長で SLERP 外挿する (定数外挿).
+
+    外挿先の2点目が存在しないため, 端フレームの回転 q[end], 骨長 L[end],
+    root 位置を全外側フレームにコピーし (= SLERP の w=0/1 の縮退), FK で
+    座標を復元する. 内側 SLERP と表現が一貫する.
+
+    Args:
+        pose_out: (3, T, J) ndarray (in-place で root を更新)
+        valid:    (T,) bool  有効フレーム
+        bones, used, q (T,Nb,4), L (T,Nb), root: 呼び出し側から共有
+    Returns:
+        outside:  (T,) bool  外挿で埋めたフレーム
+    """
+    T = pose_out.shape[1]
+    idx = np.arange(T)
+    vidx = idx[valid]
+    outside = np.zeros(T, dtype=bool)
+    if len(vidx) == 0:
+        return outside
+    first, last = int(vidx[0]), int(vidx[-1])
+
+    pre = idx[idx < first]                            # 先頭側の外側フレーム
+    post = idx[idx > last]                            # 末尾側の外側フレーム
+    if len(pre) > 0:                                  # 最初の検出姿勢を延長
+        q[pre] = q[first].clone().unsqueeze(0)
+        L[pre] = L[first].clone().unsqueeze(0)
+        pose_out[:, pre, root] = pose_out[:, first:first + 1, root]
+        outside[pre] = True
+    if len(post) > 0:                                 # 最後の検出姿勢を延長
+        q[post] = q[last].clone().unsqueeze(0)
+        L[post] = L[last].clone().unsqueeze(0)
+        pose_out[:, post, root] = pose_out[:, last:last + 1, root]
+        outside[post] = True
+    return outside
+
+
+def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6,
+                        fill_outside=True):
     """欠損フレームの骨格を SLERP + FK で補間する.
 
-    補間対象は「最初の有効フレーム 〜 最後の有効フレーム」の内側のみ.
-    その外側 (手が画面外で最初から/最後まで未検出) は補間せず, 元の値
-    (ゼロ or NaN) のまま残す. 存在しない動作を捏造しないため.
+    - 有効区間の内側の欠損: SLERP (回転) + 線形 (骨長・root) + FK で補間.
+    - 有効区間の外側 (fill_outside=True): 端の有効フレームの回転・骨長を
+      SLERP 外挿 (定数外挿) して FK で復元. 内側補間と表現が一貫する.
+      静止した端姿勢のため valid には含めない (存在しない動作を捏造しない).
 
     Args:
         pose:  (3, T, J) ndarray. 欠損フレームは全ゼロ or NaN を想定.
         bones: [(parent, child, aux), ...]  pose のインデックス系.
         valid: (T,) bool or None. None なら bones の使用関節から自動判定.
+        fill_outside: True で外側を端姿勢で SLERP 外挿.
     Returns:
         pose_filled: (3, T, J) ndarray
-        valid_new:   (T,) bool. 補間で埋めたフレームも True.
+        valid_new:   (T,) bool. 内側の補間フレームは True, 外側外挿は False.
     """
     pose = np.asarray(pose, dtype=np.float64)
     C, T, J = pose.shape
@@ -301,13 +342,14 @@ def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6):
 
     idx = np.arange(T)
     vidx = idx[valid]
-    if len(vidx) < 2:
-        return pose, valid                       # 補間できるだけの有効フレームなし
+    if len(vidx) < 1:
+        return pose, valid                           # 有効フレームが皆無
 
     first, last = int(vidx[0]), int(vidx[-1])
-    target = (~valid) & (idx > first) & (idx < last)
-    if not target.any():
-        return pose, valid                       # 内側に欠損なし
+    target = (~valid) & (idx > first) & (idx < last)  # 内側の欠損
+    has_outside = fill_outside and (first > 0 or last < T - 1)
+    if not target.any() and not has_outside:
+        return pose, valid                            # 補間対象なし
 
     # ---- 有効フレームの回転・ボーン長を計算 ----
     x = torch.as_tensor(pose.transpose(1, 0, 2))          # (T, 3, J)
@@ -320,23 +362,30 @@ def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6):
     children = {c for _, c, *_ in bones}
     root = sorted(({p for p, _, *_ in bones} | children) - children)[0]
 
-    # ---- 補間対象フレームを挟む有効フレームを特定 ----
-    tpos = idx[target]
-    after = np.searchsorted(vidx, tpos)
-    i1 = vidx[np.minimum(after, len(vidx) - 1)]           # 次の有効フレーム
-    i0 = vidx[np.maximum(after - 1, 0)]                   # 前の有効フレーム
-    w = (tpos - i0) / np.maximum(i1 - i0, 1)              # (n,)
-    w_t = torch.as_tensor(w, dtype=q.dtype)
-
-    # ---- 回転: SLERP / ボーン長・root: 線形補間 ----
-    q[tpos] = _slerp(q[i0], q[i1], w_t[:, None, None])
-    L[tpos] = L[i0] * (1 - w_t[:, None]) + L[i1] * w_t[:, None]
-
     pose_out = pose.copy()
-    pose_out[:, tpos, root] = (pose[:, i0, root] * (1 - w)
-                               + pose[:, i1, root] * w)
+    valid_new = valid.copy()
 
-    # ---- FK: root から木の順に座標を復元 (補間フレームのみ) ----
+    # ---- 内側: SLERP (回転) + 線形 (骨長・root) ----
+    if target.any():
+        tpos = idx[target]
+        after = np.searchsorted(vidx, tpos)
+        i1 = vidx[np.minimum(after, len(vidx) - 1)]       # 次の有効フレーム
+        i0 = vidx[np.maximum(after - 1, 0)]               # 前の有効フレーム
+        w = (tpos - i0) / np.maximum(i1 - i0, 1)          # (n,)
+        w_t = torch.as_tensor(w, dtype=q.dtype)
+        q[tpos] = _slerp(q[i0], q[i1], w_t[:, None, None])
+        L[tpos] = L[i0] * (1 - w_t[:, None]) + L[i1] * w_t[:, None]
+        pose_out[:, tpos, root] = (pose[:, i0, root] * (1 - w)
+                                   + pose[:, i1, root] * w)
+        valid_new[tpos] = True
+
+    # ---- 外側: 端姿勢を SLERP 外挿 (定数外挿). q, L, root を書き込む ----
+    outside = np.zeros(T, dtype=bool)
+    if fill_outside:
+        outside = _fill_outside(pose_out, valid_new, bones, used, q, L, root)
+
+    # ---- FK: 内側 + 外側の全補間フレームを root から木の順に復元 ----
+    fill_pos = idx[target | outside]
     R_new = _quaternion_to_matrix(q)                      # (T, Nb, 3, 3)
     seg = (R_new[..., :, 0] * L.unsqueeze(-1)).numpy()    # (T, Nb, 3)
     jp = pose_out.transpose(1, 2, 0).copy()               # (T, J, 3)
@@ -347,7 +396,7 @@ def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6):
         for b, bone in remaining:
             p, c = bone[0], bone[1]
             if p in placed:
-                jp[tpos, c] = jp[tpos, p] + seg[tpos, b]
+                jp[fill_pos, c] = jp[fill_pos, p] + seg[fill_pos, b]
                 placed.add(c)
             else:
                 rest.append((b, bone))
@@ -356,8 +405,7 @@ def slerp_fill_skeleton(pose, bones, valid=None, eps=1e-6):
         remaining = rest
 
     pose_out = jp.transpose(2, 0, 1)                      # (3, T, J)
-    valid_new = valid.copy()
-    valid_new[tpos] = True
+    # valid_new: 内側補間は True, 外側外挿は False のまま (静止端姿勢)
     return pose_out, valid_new
 
 
@@ -489,48 +537,17 @@ def nan_interpolate_zero(data):
     return np.array(df)
 
 
-import numpy as np
-import pandas as pd
-
-
 def average_movint(data, window_size=5):
     """
-    NaNを除外して移動平均を計算する。
-
-    - 0はNaNとして扱う
-    - window内のNaNは平均計算から除外する
-    - window内がすべてNaNの場合は、結果を0にする
-
-    Parameters
-    ----------
-    data : array-like
-        入力データ
-    window_size : int, default=5
-        移動平均のwindowサイズ
-
-    Returns
-    -------
-    np.ndarray
-        移動平均後のデータ
+    移動平均を取る
+    :param data:
+    :return:
     """
-    data = np.asarray(data, dtype=float)
-
-    # 0をNaNに変換
-    data = np.where(data == 0, np.nan, data)
-
+    data=np.where(data==0,np.nan,data)
     df = pd.DataFrame(data)
-
-    # min_periods=1により、NaN以外が1つでもあれば平均を計算
-    averaged_df = df.rolling(
-        window=window_size,
-        center=True,
-        min_periods=1
-    ).mean()
-
-    averaged_data = averaged_df.to_numpy()
-
-    # window内がすべてNaNだった部分だけ0に戻す
-    return np.nan_to_num(averaged_data, nan=0.0)
+    df.rolling(window=window_size, center=True).mean()
+    data=np.array(df)
+    return np.where(np.isnan(data),0,data)
 
 def coordinate_preprocess_face(data_face,is_face_connect=False):
     data_face = nan_interpolate(data_face, limit_area="both")
@@ -636,6 +653,8 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     # の内側のみを補間する (画面外の区間は補間せずゼロのまま残す)
     new_hand_data = np.where(np.isnan(new_hand_data), 0.0, new_hand_data)
     new_hand_data, hand_valid = slerp_fill_hands(new_hand_data)
+    new_hand_data[:,:,:21]=new_hand_data[:,:,:21]*hand_valid[:,0][np.newaxis,:,np.newaxis]
+    new_hand_data[:,:,21:]=new_hand_data[:,:,21:]*hand_valid[:,1][np.newaxis,:,np.newaxis]
     # 補間結果を new_data 側 (17:38=左手, 38:59=右手) にも反映
     new_data[:, :, hand_indexes] = new_hand_data
     #new_hand_dataの(2,S,F)のうち，すべてが0のSのインデックスを取得
@@ -684,14 +703,7 @@ def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=
     new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
     new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
     new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
-    C,T,J=new_data.shape
-    new_data=average_movint(new_data.transpose(1,0,2).reshape(T,C*J)).reshape(T,C,J).transpose(1,0,2)
-    JF=new_data_face.shape[2]
-    new_data_face=average_movint(new_data_face.transpose(1,0,2).reshape(T,C*JF)).reshape(T,C,JF).transpose(1,0,2)
-    JH=new_hand_data.shape[2]
-    new_hand_data=average_movint(new_hand_data.transpose(1,0,2).reshape(T,C*JH)).reshape(T,C,JH).transpose(1,0,2)
-    JB=new_body_data.shape[2]
-    new_body_data=average_movint(new_body_data.transpose(1,0,2).reshape(T,C*JB)).reshape(T,C,JB).transpose(1,0,2)
+    #new_data=average_movint(new_data)
     return new_data, new_data_face, new_hand_data, new_body_data
 def normalize_hand(data):
     data= np.where(data==0,np.nan,data)

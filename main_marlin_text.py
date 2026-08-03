@@ -1,5 +1,5 @@
 import os,shutil
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 from transformers import (
     AutoModelForCausalLM, AutoProcessor, AutoModel, AutoImageProcessor,
     AutoModelForMultimodalLM,BitsAndBytesConfig,AutoModelForCausalLM
@@ -254,6 +254,97 @@ def sign_language_description(dataset,save_path):
     df=pd.DataFrame(train_text)
     df.to_json(test_save_path,  force_ascii=False, lines=True, orient='records')
     os.remove(f"{save_path}/tmp.mp4")
+def sign_language_description_T(dataset,save_path):
+    descriptor=sign_language_description_generator()
+    if dataset=="CSL-Daily":
+        ext="jpg"
+    else:
+        ext="png"
+    train_path, dev_path, test_path, train_target_corpus, dev_target_corpus, test_target_corpus=datasets_loader_T(dataset)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path, exist_ok=True)
+    #textデータはjsonl形式で保存する
+    train_save_path=f"{save_path}/train_sign_description.jsonl"
+    dev_save_path=f"{save_path}/dev_sign_description.jsonl"
+    test_save_path=f"{save_path}/test_sign_description.jsonl"
+
+    train_text=[]
+    for data_path in train_path:
+        file_name=os.path.basename(data_path)
+        seq=train_target_corpus[train_target_corpus["id"] == file_name]["annotation"].values[0]
+        print(f"Processing {data_path}...")
+        if os.path.basename(data_path)[-3:]!="mp4":
+            data_id=os.path.basename(data_path)
+            create_video(data_path,save_path,file_name=f"tmp.mp4",ext=ext)
+            video_path=f"{save_path}/tmp.mp4"
+        else:
+            data_id=os.path.basename(data_path).split(".")[0]
+            recreate_video(data_path,save_path,file_name=f"tmp.mp4",fps=1)
+            video_path=f"{save_path}/tmp.mp4"
+        response=descriptor.generate_marlin(video_path)
+        print(f"Generated description for {data_id}:\n {response}...")  # Print first 100 characters of the response
+        train_text.append({"data_id": data_id, "description": response,"is_flip":False,"seq":seq})
+        #左右反転の場合も取り入れる
+        #responseのrightとleftを入れ替える
+        response_flip=response.replace("right","|temp|").replace("left","right").replace("|temp|","left")
+        response_flip=response_flip.replace("Right","|temp|").replace("Left","Right").replace("|temp|","Left")
+        response_flip=response_flip.replace("RIGHT","|temp|").replace("LEFT","RIGHT").replace("|temp|","LEFT")
+        print(f"Generated flipped description for {data_id}:\n {response_flip}...")
+        train_text.append({"data_id": data_id, "description": response_flip,"is_flip":True,"seq":seq})
+    df=pd.DataFrame(train_text)
+    df.to_json(train_save_path,  force_ascii=False, lines=True, orient='records')
+
+    train_text=[]
+    for data_path in dev_path:
+        file_name = os.path.basename(data_path)
+        seq = dev_target_corpus[dev_target_corpus["id"] == file_name]["annotation"].values[0]
+        print(f"Processing {data_path}...")
+        if os.path.basename(data_path)[-3:] != "mp4":
+            data_id = os.path.basename(data_path)
+            create_video(data_path, save_path, file_name=f"tmp.mp4", ext=ext)
+            video_path = f"{save_path}/tmp.mp4"
+        else:
+            data_id = os.path.basename(data_path).split(".")[0]
+            recreate_video(data_path, save_path, file_name=f"tmp.mp4", fps=1)
+            video_path = f"{save_path}/tmp.mp4"
+        response = descriptor.generate_marlin(video_path)
+        print(f"Generated description for {data_id}:\n {response}...")  # Print first 100 characters of the response
+        train_text.append({"data_id": data_id, "description": response, "is_flip": False, "seq": seq})
+        # 左右反転の場合も取り入れる
+        # responseのrightとleftを入れ替える
+        response_flip = response.replace("right", "|temp|").replace("left", "right").replace("|temp|", "left")
+        response_flip = response_flip.replace("Right", "|temp|").replace("Left", "Right").replace("|temp|", "Left")
+        response_flip = response_flip.replace("RIGHT", "|temp|").replace("LEFT", "RIGHT").replace("|temp|", "LEFT")
+        print(f"Generated flipped description for {data_id}:\n {response_flip}...")
+        train_text.append({"data_id": data_id, "description": response_flip, "is_flip": True, "seq": seq})
+    df=pd.DataFrame(train_text)
+    df.to_json(dev_save_path,  force_ascii=False, lines=True, orient='records')
+    train_text=[]
+    for data_path in test_path:
+        file_name = os.path.basename(data_path)
+        seq = test_target_corpus[test_target_corpus["id"] == file_name]["annotation"].values[0]
+        print(f"Processing {data_path}...")
+        if os.path.basename(data_path)[-3:] != "mp4":
+            data_id = os.path.basename(data_path)
+            create_video(data_path, save_path, file_name=f"tmp.mp4", ext=ext)
+            video_path = f"{save_path}/tmp.mp4"
+        else:
+            data_id = os.path.basename(data_path).split(".")[0]
+            recreate_video(data_path, save_path, file_name=f"tmp.mp4", fps=1)
+            video_path = f"{save_path}/tmp.mp4"
+        response = descriptor.generate_marlin(video_path)
+        print(f"Generated description for {data_id}:\n {response}...")  # Print first 100 characters of the response
+        train_text.append({"data_id": data_id, "description": response, "is_flip": False, "seq": seq})
+        # 左右反転の場合も取り入れる
+        # responseのrightとleftを入れ替える
+        response_flip = response.replace("right", "|temp|").replace("left", "right").replace("|temp|", "left")
+        response_flip = response_flip.replace("Right", "|temp|").replace("Left", "Right").replace("|temp|", "Left")
+        response_flip = response_flip.replace("RIGHT", "|temp|").replace("LEFT", "RIGHT").replace("|temp|", "LEFT")
+        print(f"Generated flipped description for {data_id}:\n {response_flip}...")
+        train_text.append({"data_id": data_id, "description": response_flip, "is_flip": True, "seq": seq})
+    df=pd.DataFrame(train_text)
+    df.to_json(test_save_path,  force_ascii=False, lines=True, orient='records')
+    os.remove(f"{save_path}/tmp.mp4")
 def extract_class_centroid(dataset,save_path):
     if dataset=="CSL-Daily":
         ext="jpg"
@@ -291,7 +382,7 @@ if __name__=="__main__":
     #video_path="/home/caffe/work/signer0_sample431_color.mp4"
     #response=generate_marlin(video_path)
     #print(response)
-    sign_language_description("AUTSL",save_path="/media/caffe/data_storage/AUTSL/pose_description")
+    sign_language_description_T("phoenixT",save_path="/media/caffe/data_storage/phoenix/PHOENIX-2014-T-release-v3/PHOENIX-2014-T/features/pose_description")
     """
     Please provide a detailed description of the sign language user’s posture and movements in this video, focusing particularly on the arms, both hands, and facial expressions.
 Please format your answer according to the table below.
