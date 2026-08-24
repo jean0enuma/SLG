@@ -28,6 +28,7 @@ import torch.nn.functional as F
 
 
 from models.module.transformer6d_vae import MHSA, sinusoidal_pe, NEG_INF,build_sliding_window_mask
+from torch.utils.checkpoint import checkpoint
 
 class MoEMHSA(MHSA):
     """Mixture-of-Experts Multi-Head Self-Attention. ヘッドごとに複数の
@@ -146,7 +147,8 @@ class HeadSplitMHSA(nn.Module):
         super().__init__()
         assert d_model % n_heads == 0
         self.h, self.dh = n_heads, d_model // n_heads
-        self.qkv = nn.Linear(d_model, 3 * d_model)
+        self.q = nn.Linear(d_model,  d_model)
+        self.kv= nn.Linear(d_model, 2 * d_model)
         self.proj = nn.Linear(d_model, d_model)
         self.dropout = dropout
         self.temporal = temporal
@@ -155,6 +157,10 @@ class HeadSplitMHSA(nn.Module):
         self.local_heads = local_heads if local_heads is not None else n_heads // 2
         self.window = window
         self.cross_init = cross_init
+
+        # モダリティ間のスケールを揃えるためのQK-Normを追加
+        self.q_norm = nn.LayerNorm(self.dh)
+        self.k_norm = nn.LayerNorm(self.dh)
 
         self.is_rope = is_rope and temporal  # RoPE は時間軸のみ
         if self.is_rope:
@@ -168,10 +174,88 @@ class HeadSplitMHSA(nn.Module):
             for s in part_sizes:
                 self.part_bias[:, :s, :s].requires_grad = True
 
-    def forward(self, x, extra_bias=None, key_pad=None):
+    def build_scheduled_part_bias(self,part_sizes, n_heads, sched_heads, alpha_t,
+                                  device, dtype):
+        """空間注意用: sched_heads 個のヘッドで異部位への注意を -alpha_t で弱める.
+        alpha_t 大 -> 部位内限定 (細部), alpha_t 0 -> 全結合 (大域).
+
+        part_sizes: 各部位のトークン数 (例 (7,20,20))
+        sched_heads: スケジュール対象のヘッド数 (残りは常に全結合)
+        alpha_t: (B,) or scalar. 抑制の強さ. t の関数で外から与える.
+        返り値: (B, n_heads, V, V) additive bias
+        """
+        V = sum(part_sizes)
+        # 異部位=1, 同部位=0 のマスク
+        cross = torch.ones(V, V, device=device, dtype=dtype)
+        off = 0
+        for s in part_sizes:
+            cross[off:off + s, off:off + s] = 0.0
+            off += s
+
+        if alpha_t.dim() == 0:
+            alpha_t = alpha_t.view(1)
+        B = alpha_t.shape[0]
+        bias = torch.zeros(B, n_heads, V, V, device=device, dtype=dtype)
+        a = alpha_t.view(B, 1, 1, 1)
+        # 先頭 sched_heads 個だけ異部位を -alpha_t で抑制, 残りは全結合(0)
+        bias[:, :sched_heads] = -a * cross[None, None]
+        return bias
+
+    def build_scheduled_temporal_bias(self,L, n_heads, sched_heads, window, alpha_t,
+                                      device, dtype):
+        """時間注意用: sched_heads 個のヘッドで窓外への注意を -alpha_t で弱める.
+        alpha_t 大 -> 近傍限定 (sliding window, 細部・局所),
+        alpha_t 0 -> 全系列参照 (大域・長距離文脈).
+
+        空間版の「異部位」を「窓外フレーム」に置き換えた時間版.
+        NEG_INF で完全遮断する従来の sliding window と違い, -alpha_t の
+        有限抑制なので「窓外も見にくいが見られる」柔らかい制約になり,
+        alpha_t を t でスケジュールすれば離散的な head 分割が連続化する.
+
+        L: 系列長 (フレーム数)
+        sched_heads: sliding window 化するヘッド数 (残りは常に全系列)
+        window: 窓の全幅 (中心 ±window//2 が窓内)
+        alpha_t: (B,) or scalar. 窓外抑制の強さ.
+        返り値: (B, n_heads, L, L) additive bias
+        """
+        idx = torch.arange(L, device=device)
+        dist = (idx[:, None] - idx[None, :]).abs()  # (L, L) 時間距離
+        half = window // 2
+        # 窓外=1, 窓内=0 のマスク (空間版の cross に対応)
+        outside = (dist > half).to(dtype)  # (L, L)
+
+        if alpha_t.dim() == 0:
+            alpha_t = alpha_t.view(1)
+        B = alpha_t.shape[0]
+        bias = torch.zeros(B, n_heads, L, L, device=device, dtype=dtype)
+        a = alpha_t.view(B, 1, 1, 1)
+        # 先頭 sched_heads 個だけ窓外を -alpha_t で抑制, 残りは全系列(0)
+        bias[:, :sched_heads] = -a * outside[None, None]
+        return bias
+
+    def alpha_schedule(self,t, boundary=0.875, tau=0.1, alpha_max=4.0):
+        """t -> alpha_t. sigmoid スケジュール.
+        t 小 (低ノイズ, データ寄り) -> alpha_max (局所/部位内限定, 細部)
+        t 大 (高ノイズ, ノイズ寄り) -> 0 (全系列/全結合, 大域)
+
+        tau -> 0 で boundary での離散切り替え (従来 Wan) に一致.
+        tau 大で滑らかな連続遷移.
+        """
+        return alpha_max * torch.sigmoid((boundary - t) / tau)
+    def forward(self, x, extra_bias=None, key_pad=None, alpha_t=None):
+        """alpha_t: (Bt,) or None.
+        None のとき従来の離散 mask (build_temporal_head_mask / build_part_bias).
+        与えられたとき連続スケジュール bias (窓外/異部位を -alpha_t で抑制).
+        Bt は「時間注意なら B*V, 空間注意なら B*T」に一致する必要がある
+        (各サンプルの t を該当次元へ展開して渡す)."""
         N, L, D = x.shape
-        qkv = self.qkv(x).view(N, L, 3, self.h, self.dh)
-        q, k, v = qkv.permute(2, 0, 3, 1, 4)  # (N, H, L, dh)
+        # Queryの処理と正規化
+        q = self.q(x).view(N, L, self.h, self.dh)
+        q = self.q_norm(q).transpose(1, 2)  # (N, h, L, dh)
+
+        # Key, Valueの処理と正規化
+        k, v = self.kv(x).view(N, L, 2, self.h, self.dh).permute(2, 0, 3, 1, 4)
+        k = self.k_norm(k)  # (N, h, S, dh)
 
         # ---- RoPE (時間軸のみ, q,k に適用. v は回さない) ----
         if self.is_rope:
@@ -180,15 +264,28 @@ class HeadSplitMHSA(nn.Module):
             k = apply_rope(k, cos, sin)
 
         # ---- ヘッド別 mask ----
-        if self.temporal:
-            hb = build_temporal_head_mask(L, self.h, self.local_heads,
-                                          self.window, x.device, q.dtype)
-        elif self.learnable_bias:
-            hb = self.part_bias.to(x.device, q.dtype)
+        if alpha_t is not None:
+            # 連続スケジュール: alpha_t で窓外/異部位を有限抑制
+            if self.temporal:
+                sched = self.local_heads
+                hb = self.build_scheduled_temporal_bias(
+                    L, self.h, sched, self.window, alpha_t, x.device, q.dtype)
+            else:
+                sched = self.part_heads
+                hb = self.build_scheduled_part_bias(
+                    self.part_sizes, self.h, sched, alpha_t, x.device, q.dtype)
+            attn_mask = hb                       # (Bt, H, L, L) 既にバッチ次元あり
         else:
-            hb = build_part_bias(self.part_sizes, self.h, self.part_heads,
-                                 x.device, q.dtype, self.cross_init)
-        attn_mask = hb.unsqueeze(0)  # (1, H, L, L)
+            # 従来の離散 mask
+            if self.temporal:
+                hb = build_temporal_head_mask(L, self.h, self.local_heads,
+                                              self.window, x.device, q.dtype)
+            elif self.learnable_bias:
+                hb = self.part_bias.to(x.device, q.dtype)
+            else:
+                hb = build_part_bias(self.part_sizes, self.h, self.part_heads,
+                                     x.device, q.dtype, self.cross_init)
+            attn_mask = hb.unsqueeze(0)  # (1, H, L, L)
 
         if extra_bias is not None:
             attn_mask = attn_mask + extra_bias.unsqueeze(0)
@@ -555,10 +652,15 @@ class CrossCondBaseFFNMoEDiTBlock(nn.Module):
 
     def __init__(self, d_model: int, n_heads: int, num_tokens: int,
                  ffn_ratio: int = 4, is_rope: bool = False,sliding_attn: bool = False,window: int = 5,local_heads: int|None = None,
-                 part_heads: int|None = None):
+                 part_heads: int|None = None,
+                 boundary: float = 0.875, tau: float = 0.1, alpha_max: float = 4.0):
         super().__init__()
         self.sliding_attn = sliding_attn
         self.window = window
+        # 連続スケジュール attention のハイパラ
+        self.boundary = boundary
+        self.tau = tau
+        self.alpha_max = alpha_max
         self.ln_s = nn.LayerNorm(d_model, elementwise_affine=False)
         self.attn_s = HeadSplitMHSA(d_model,n_heads,learnable_bias=False,part_sizes=[7,20,20],part_heads=part_heads)
         self.ln_t = nn.LayerNorm(d_model, elementwise_affine=False)
@@ -571,24 +673,40 @@ class CrossCondBaseFFNMoEDiTBlock(nn.Module):
             nn.Linear(d_model, ffn_ratio * d_model), nn.GELU(),
             nn.Linear(ffn_ratio * d_model, d_model))
         self.moe_ffn=MoEFFN(d_model, 2)
-        self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 9 * d_model))
+        self.mod = nn.Sequential(nn.SiLU(), nn.Linear(d_model, 6 * d_model))
+        self.mod_g_x=nn.Sequential(nn.SiLU(), nn.Linear(d_model, d_model))
         self.mod_f=nn.Sequential(nn.SiLU(), nn.Linear(d_model, 3 * d_model))
         nn.init.zeros_(self.mod[1].weight)
         nn.init.zeros_(self.mod[1].bias)
         nn.init.zeros_(self.mod_f[1].weight)
         nn.init.zeros_(self.mod_f[1].bias)
+        #学習安定化のため
+        nn.init.zeros_(self.attn_x.proj.weight)
+        nn.init.zeros_(self.attn_x.proj.bias)
 
     def forward(self, x: torch.Tensor, temb: torch.Tensor,
                 context: torch.Tensor,
                 ctx_pad: torch.Tensor | None = None,
-                time_pad: torch.Tensor | None = None,is_low=False,return_attn_weights:bool =False) -> torch.Tensor:
+                time_pad: torch.Tensor | None = None,is_low=False,return_attn_weights:bool =False,
+                t: torch.Tensor | None = None) -> torch.Tensor:
+        """t: (B,) 生の時刻. 与えると連続スケジュール attention を使う.
+        None なら従来の離散 head 分割."""
         B, T, V, D = x.shape
-        (sh_s, sc_s, g_s, sh_t, sc_t, g_t,
-         sh_x, sc_x, g_x,) = self.mod(temb).chunk(9, dim=-1)
+        (sh_s, sc_s, g_s, sh_t, sc_t, g_t,) = self.mod(temb).chunk(6, dim=-1)
         (sh_f, sc_f, g_f) = self.mod_f(temb).chunk(3, dim=-1)
 
+        # ---- 連続スケジュール用 alpha_t を各注意の flatten 次元に展開 ----
+        alpha_s = alpha_t = None
+        if t is not None:
+            a = self.attn_s.alpha_schedule(
+                t, boundary=self.boundary, tau=self.tau, alpha_max=self.alpha_max)
+            # 空間注意: (B*T,) 各フレームに同じ t のalpha を展開
+            alpha_s = a[:, None].expand(B, T).reshape(B * T)
+            # 時間注意: (B*V,) 各ボーンに同じ t のalpha を展開
+            alpha_t = a[:, None].expand(B, V).reshape(B * V)
+
         h = modulate(self.ln_s(x), sh_s, sc_s).reshape(B * T, V, D)
-        h = self.attn_s(h).view(B, T, V, D)
+        h = self.attn_s(h, alpha_t=alpha_s).view(B, T, V, D)
         x = x + g_s[:, None, None, :] * h
 
         h = modulate(self.ln_t(x), sh_t, sc_t)
@@ -596,16 +714,16 @@ class CrossCondBaseFFNMoEDiTBlock(nn.Module):
         kp = (time_pad.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
               if time_pad is not None else None)
 
-        h = self.attn_t(h, key_pad=kp).view(B, V, T, D).permute(0, 2, 1, 3)
+        h = self.attn_t(h, key_pad=kp, alpha_t=alpha_t).view(B, V, T, D).permute(0, 2, 1, 3)
         x = x + g_t[:, None, None, :] * h
 
-        h = modulate(self.ln_x(x), sh_x, sc_x).reshape(B, T * V, D)
+        h = self.ln_x(x).reshape(B, T * V, D)
         if return_attn_weights:
             h,attn_weights= self.attn_x(h,context, ctx_pad=ctx_pad,return_weights=True)
             h= h.view(B, T, V, D)
         else:
             h = self.attn_x(h, context, ctx_pad=ctx_pad).view(B, T, V, D)
-        x = x + g_x[:, None, None, :] * h
+        x = x + h
 
         h_ln = modulate(self.ln_f(x), sh_f, sc_f)
         if is_low:
@@ -776,19 +894,22 @@ class PartDenoiser(nn.Module):
 class PartDenoiserXAttn(PartDenoiser):
     def __init__(self, latent_dim, num_tokens, d_model=256, n_heads=8,
                  depth=6, ffn_ratio=4,is_rope=False,window: int | None = None, sliding_attn: bool = False,is_base=True,local_heads: int | None = None,
-                 part_heads: int | None = None):
+                 part_heads: int | None = None,boundary: float = 0.875, tau: float = 0.1, alpha_max: float = 4.0):
         super().__init__(latent_dim, num_tokens, d_model, n_heads, 0, ffn_ratio)
         self.is_rope=is_rope
         if is_base==True:
             self.blocks = nn.ModuleList([
-                CrossCondBaseFFNMoEDiTBlock(d_model, n_heads, num_tokens, ffn_ratio,is_rope=is_rope,sliding_attn=sliding_attn,window=window,local_heads=local_heads,part_heads=part_heads)
+                CrossCondBaseFFNMoEDiTBlock(d_model, n_heads, num_tokens, ffn_ratio,is_rope=is_rope,sliding_attn=sliding_attn,window=window,local_heads=local_heads,part_heads=part_heads,
+boundary=boundary, tau=tau, alpha_max=alpha_max)
                 for _ in range(depth)])
         else:
             self.blocks = nn.ModuleList([
                 CrossCondDiTBlock(d_model, n_heads, num_tokens, ffn_ratio,is_rope=is_rope,sliding_attn=sliding_attn,window=window)
                 for _ in range(depth)])
 
-    def forward(self, z, temb, context, ctx_pad=None, time_pad=None, is_low=False,return_attn_weights: bool = False):
+    def forward(self, z, temb, context, ctx_pad=None, time_pad=None, is_low=False,
+                return_attn_weights: bool = False, return_feat: bool = False,
+                t: torch.Tensor | None = None):
         h = self.proj_in(z) + self.token_emb
         if not self.is_rope:
             h = h + sinusoidal_pe(h.shape[1], self.d_model,
@@ -796,12 +917,18 @@ class PartDenoiserXAttn(PartDenoiser):
         attn_weights_list=[]
         for blk in self.blocks:
             if return_attn_weights:
-                h,attn_weights= blk(h, temb, context, ctx_pad=ctx_pad, time_pad=time_pad, is_low=is_low,return_attn_weights=True)
+                h,attn_weights= blk(h, temb, context, ctx_pad=ctx_pad, time_pad=time_pad, is_low=is_low,return_attn_weights=True, t=t)
                 attn_weights_list.append(attn_weights)
             else:
-                h = blk(h, temb, context, ctx_pad=ctx_pad, time_pad=time_pad, is_low=is_low)
+                h = checkpoint(blk, h, temb, context, ctx_pad, time_pad, is_low,
+                               False, t, use_reentrant=False)
+        # contrastive 用: 最終ブロック出力 (cross-attn 通過後, proj_out 手前) を保持
+        feat = h                                          # (B, T', V, d_model)
         sh, sc = self.mod_out(temb).chunk(2, dim=-1)
-        return self.proj_out(modulate(self.norm_out(h), sh, sc)), attn_weights_list
+        out = self.proj_out(modulate(self.norm_out(h), sh, sc))
+        if return_feat:
+            return out, feat
+        return out, attn_weights_list
 
 class PartDenoiserXAttnSeparate(PartDenoiser):
     def __init__(self, latent_dim, num_tokens, d_model=256, n_heads=8,
@@ -842,6 +969,73 @@ class TimestepRouter:
 
 
 # ----------------------------------------------------------------------
+# 5.5 Contrastive 用ヘッド (text-sign アライメント)
+# ----------------------------------------------------------------------
+class _AttnPool(nn.Module):
+    """学習可能クエリ 1 本で系列を 1 ベクトルに要約する attention pooling.
+    masked mean より表現力が高く, 重要トークンを選んで集約できる."""
+
+    def __init__(self, d_model: int, n_heads: int = 8):
+        super().__init__()
+        self.q = nn.Parameter(torch.randn(1, 1, d_model) * 0.02)
+        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
+
+    def forward(self, x, key_pad=None):
+        # x: (B, L, D), key_pad: (B, L) True=パディング
+        q = self.q.expand(x.size(0), -1, -1)
+        out, _ = self.attn(q, x, x, key_padding_mask=key_pad)   # (B, 1, D)
+        return out.squeeze(1)                                   # (B, D)
+
+
+class SignContrastiveHead(nn.Module):
+    """denoiser 中間表現 (B,T',V,D) を 1 ベクトルへ射影する手話側ヘッド."""
+
+    def __init__(self, d_model: int, proj_dim: int = 256, n_heads: int = 8):
+        super().__init__()
+        self.pool = _AttnPool(d_model, n_heads)
+        self.proj = nn.Sequential(
+            nn.Linear(d_model, proj_dim), nn.GELU(),
+            nn.Linear(proj_dim, proj_dim))
+
+    def forward(self, feat, valid=None):
+        # feat: (B, T', V, D), valid: (B, T') True=有効フレーム
+        B, T, V, D = feat.shape
+        h = feat.reshape(B, T * V, D)
+        kp = None
+        if valid is not None:
+            kp = ~valid[:, :, None].expand(B, T, V).reshape(B, T * V)  # True=pad
+        z = self.pool(h, key_pad=kp)
+        return F.normalize(self.proj(z), dim=-1)               # (B, proj_dim)
+
+
+class TextContrastiveHead(nn.Module):
+    """BERT トークン列 (B,S,cond_dim) を軽い Transformer + pooling で
+    1 ベクトルへ射影するテキスト側ヘッド."""
+
+    def __init__(self, cond_dim: int, proj_dim: int = 256,
+                  n_heads: int = 8):
+        super().__init__()
+        self.pool = _AttnPool(cond_dim, n_heads)
+        self.proj = nn.Sequential(
+            nn.Linear(cond_dim, proj_dim), nn.GELU(),
+            nn.Linear(proj_dim, proj_dim))
+
+    def forward(self, ctx, ctx_mask):
+        # ctx: (B, S, cond_dim), ctx_mask: (B, S) True=有効トークン
+        pad = ~ctx_mask if ctx_mask is not None else None      # True=pad
+        z = self.pool(ctx, key_pad=pad)
+        return F.normalize(self.proj(z), dim=-1)               # (B, proj_dim)
+
+
+def info_nce(sign_z, text_z, temp: float = 0.07):
+    """対称 InfoNCE. sign_z, text_z: (B, P) 正規化済み. 対角が正例."""
+    logits = sign_z @ text_z.t() / temp                        # (B, B)
+    labels = torch.arange(sign_z.size(0), device=sign_z.device)
+    return 0.5 * (F.cross_entropy(logits, labels)
+                  + F.cross_entropy(logits.t(), labels))
+
+
+# ----------------------------------------------------------------------
 # 6. Flow Matching 本体
 # ----------------------------------------------------------------------
 class SignLatentFlowMoE(nn.Module):
@@ -862,9 +1056,12 @@ class SignLatentFlowMoE(nn.Module):
                  sliding_attn: bool = False,
                  window=None,
                  part_heads: int | None = None,
-                 local_heads: int | None = None):
+                 local_heads: int | None = None,
+                 c_weight: float = 0.1,
+                 tau: float = 0.1, alpha_max: float = 4.0):
         super().__init__()
         self.vae = vae
+        self.c_weight=c_weight
         self.train_length_predictor = train_length_predictor
         # [FIX-4] part_decoders を後段の None 代入で上書きしない
         self.part_decoders = dict(part_decoders) if part_decoders else {}
@@ -921,8 +1118,15 @@ class SignLatentFlowMoE(nn.Module):
             self.null_context = nn.Parameter(torch.zeros(1, 1, d_model))
             nn.init.trunc_normal_(self.null_context, std=0.02)
             self.expert_high = PartDenoiserXAttn(
-                self.latent_dim, self.num_tokens, d_model, n_heads, depth_high,is_rope=is_rope,sliding_attn=sliding_attn,window=window,part_heads=part_heads,local_heads=local_heads)
+                self.latent_dim, self.num_tokens, d_model, n_heads, depth_high,is_rope=is_rope,sliding_attn=sliding_attn
+                ,window=window,part_heads=part_heads,local_heads=local_heads,boundary=boundary, tau=tau, alpha_max=alpha_max)
             self.experts_low=self.expert_high
+
+            # ---- contrastive 用ヘッド (text-sign アライメント) ----
+            self.sign_ctr_head = SignContrastiveHead(vae.latent_dim, proj_dim=32,
+                                                     n_heads=n_heads)
+            self.text_ctr_head = TextContrastiveHead(cond_dim, proj_dim=32,
+                                                     n_heads=8)
 
         self.register_buffer("z_mean", torch.zeros(1))
         self.register_buffer("z_std", torch.ones(1))
@@ -1127,19 +1331,33 @@ class SignLatentFlowMoE(nn.Module):
                  context_mask: torch.Tensor | None = None,
                  drop_mask: torch.Tensor | None = None,
                  time_pad: torch.Tensor | None = None,
-                 return_attn_weights: bool =False) -> torch.Tensor:
+                 return_attn_weights: bool =False,
+                 return_feat: bool = False) -> torch.Tensor:
         """[FIX-0] 返り値はテンソル1本. hi が必要なら self.router(t) を使う.
         z_t: (B, T', V, ld), t: (B,)
         context: (B, S, cond_dim) テキストトークン列 (adaLN のみの場合は
                  (B, cond_dim) のプーリング済みも許容). None で無条件.
         context_mask: (B, S) True=有効トークン (HF attention_mask 互換)
-        time_pad: (B, T') True=パディングフレーム."""
+        time_pad: (B, T') True=パディングフレーム.
+        return_feat: True で denoiser 最終ブロック出力 (B,T',V,d_model) も返す
+                     (contrastive 用. 全サンプルが同一 t のときのみ想定)."""
         B = z_t.shape[0]
         cond = self._pool_context(context, context_mask)
         temb = self._combine_emb(t, cond, drop_mask)
         if self.cross_attn:
             ctx, ctx_pad = self._prepare_context(
                 context, context_mask, drop_mask, B, z_t.device)
+
+        # contrastive 用: 全サンプル同一 t の低ノイズを想定し, expert を1つに固定
+        # (router で分割せず, 対応する expert に一括で流して中間表現を取る)
+        if return_feat:
+            assert self.cross_attn, "return_feat は cross_attn=True 前提"
+            is_low = bool((t < self.router.boundary).all().item())
+            expert = self.experts_low if is_low else self.expert_high
+            out, feat = expert(z_t, temb, context=ctx, ctx_pad=ctx_pad,
+                               time_pad=time_pad, is_low=is_low,
+                               return_feat=True, t=t)
+            return out, feat
 
         out_dtype = torch.get_autocast_dtype("cuda") \
             if torch.is_autocast_enabled() else z_t.dtype
@@ -1151,7 +1369,8 @@ class SignLatentFlowMoE(nn.Module):
             if self.cross_attn:
                 cp = ctx_pad[hi] if ctx_pad is not None else None
                 out[hi],attn_weights = self.expert_high(z_t[hi], temb[hi], context=ctx[hi],
-                                           ctx_pad=cp, time_pad=tp,is_low=False,return_attn_weights=return_attn_weights)
+                                           ctx_pad=cp, time_pad=tp,is_low=False,return_attn_weights=return_attn_weights,
+                                           t=t[hi])
             else:
                 out[hi] = self.expert_high(z_t[hi], temb[hi], time_pad=tp)
         if (~hi).any():
@@ -1164,25 +1383,71 @@ class SignLatentFlowMoE(nn.Module):
                 ctx_lo = ctx[lo]                                   # [FIX-1]
                 cp = ctx_pad[lo] if ctx_pad is not None else None
                 out_lo,attn_weights = self.experts_low(z_lo, temb_lo, context=ctx_lo,
-                                          ctx_pad=cp, time_pad=tp,is_low=True,return_attn_weights=return_attn_weights)
+                                          ctx_pad=cp, time_pad=tp,is_low=True,return_attn_weights=return_attn_weights,
+                                          t=t[lo])
             else:
                 out_lo = self.experts_low(z_lo, temb_lo, time_pad=tp,is_low=True)
             out[lo] = out_lo
         if return_attn_weights:
             return out,attn_weights
         return out
-    def constractive_loss(self, z_0: torch.Tensor,context: torch.Tensor,
-                          t=0.05,
+    def constractive_loss(self, z_0: torch.Tensor, context: torch.Tensor,
+                          t: float = 0.5,
                           context_mask: torch.Tensor | None = None,
-                          drop_mask: torch.Tensor | None = None,
                           time_pad: torch.Tensor | None = None,
-                          return_attn_weights: bool =False) -> torch.Tensor:
+                          temp: float = 0.7) -> tuple[torch.Tensor, dict]:
+        """text-sign contrastive loss (InfoNCE).
+
+        全サンプル共通の低ノイズ t で z_0 を denoiser に通し, cross-attn 通過後の
+        中間表現を手話ベクトルへ, BERT トークン列をテキストベクトルへ射影して
+        対称 InfoNCE を取る. cross-attn の重みに勾配を流し, テキスト区別を学ばせる.
+
+        - ノイズは全サンプル共通の低ノイズ (FM 損失の各サンプル別ノイズとは独立).
+          これによりノイズレベル差でなくテキスト対応で類似度が決まる.
+        - CFG ドロップは渡さない (無条件化すると正例が壊れるため常に条件付き).
+
+        Args:
+            z_0:  (B, T', V, ld)  クリーンな標準化済み潜在
+            context: (B, S, cond_dim)  BERT トークン列
+            t:    低ノイズレベル (既定 0.05). わずかなノイズで denoiser に復元処理をさせる
+            context_mask: (B, S) True=有効トークン
+            time_pad: (B, T') True=パディングフレーム
+        Returns:
+            loss, logs
+        """
+        assert self.cross_attn, "constractive_loss は cross_attn=True 前提"
         B, T, V, ld = z_0.shape
-        t=torch.full((B,),t,device=z_0.device)
+        device = z_0.device
+
+        # 全サンプル共通の低ノイズを付与 (FM とは別のノイズ源)
+        t_vec = torch.full((B,), t, device=device)
         eps = torch.randn_like(z_0)
-        z_t = (1 - t.view(B, 1, 1, 1)) * z_0 + t.view(B, 1, 1, 1) * eps
-        v_target = eps - z_0
-        #TODO: Context learningを実装する
+        z_t = (1 - t_vec.view(B, 1, 1, 1)) * z_0 + t_vec.view(B, 1, 1, 1) * eps
+
+        # denoiser 中間表現を取得 (drop_mask=None で常に条件付き)
+        out, feat = self.velocity(z_t, t_vec, context=context,
+                                context_mask=context_mask, drop_mask=None,
+                                time_pad=time_pad, return_feat=True)
+
+        z1_pred=z_t-t*out
+        z1_pred=z1_pred.reshape(B,T,V,ld)
+        # 有効フレームマスク (time_pad の否定)
+        valid = ~time_pad if time_pad is not None else None
+
+        sign_z = self.sign_ctr_head(z1_pred, valid=valid)          # (B, P)
+        text_z = self.text_ctr_head(context,context_mask.bool())      # (B, P)
+
+        loss = info_nce(sign_z, text_z, temp=temp)
+
+        # 診断: 正例類似度 vs 負例類似度 (分離できているか)
+        with torch.no_grad():
+            sim = sign_z @ text_z.t()                           # (B, B)
+            pos = sim.diag().mean().item()
+            neg = (sim.sum() - sim.diag().sum()) / (B * (B - 1) + 1e-8)
+            logs = {"ctr": loss.item(), "ctr_pos_sim": pos,
+                    "ctr_neg_sim": neg.item(),
+                    "ctr_gap": pos - neg.item()}
+        return loss, logs
 
 
     # ---- 学習 -------------------------------------------------------
@@ -1212,6 +1477,8 @@ class SignLatentFlowMoE(nn.Module):
         B, T_lat = z0.shape[0], z0.shape[1]
         valid = self._length_mask(lengths, T_lat, z0.device)
         time_pad = ~valid if valid is not None else None
+        c_loss,c_logs=self.constractive_loss(z0,cond, t=0.05, context_mask=cond_mask, time_pad=time_pad)
+
 
         t = torch.rand(B, device=z0.device)
         eps = torch.randn_like(z0)
@@ -1243,6 +1510,7 @@ class SignLatentFlowMoE(nn.Module):
             loss = (se * m).sum() / (m.sum() * se.shape[2] * se.shape[3] + 1e-8)
         else:
             loss = se.mean()
+        loss= loss + self.c_weight*c_loss
 
         logs = {"fm": loss.item(),
                 "frac_high_noise": hi.float().mean().item()}

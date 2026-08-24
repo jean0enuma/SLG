@@ -713,8 +713,8 @@ if __name__=="__main__":
     }
     dataset = "phoenixT"
     save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_3d"
-    eval_data={"dev":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride2_ffn_moe_parts_attn2/visualize_dev/csv",
-                "test":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride2_ffn_moe_parts_attn2/visualize_test/csv"}
+    eval_data={"dev":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4__attn_raw/visualize_dev/csv",
+                "test":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4__attn_raw/visualize_test/csv"}
     vae_weights="/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent8_stride2"
     #main(config, dataset, save_path, evaluation=False,is_openpose=False)
     main(config, dataset, save_path, evaluation=True,is_openpose=False,eval_data=eval_data,vae_weights=vae_weights)

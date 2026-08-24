@@ -349,8 +349,11 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False,v
                             boundary=model_config['boundary'],
                               d_model=model_config['d_model'], n_heads=model_config['n_heads'],
                               depth_high=model_config['depth_high'], depth_low=model_config['depth_low'],
-                              cond_dim=model_config['cond_dim'],cross_attn=model_config['cross_attn'],is_ffn_moe=model_config['is_ffn_moe'],shared_lr=model_config['shared_lr'],
-                            is_rope=model_config['is_rope'],sliding_attn=model_config['sliding_attn'],window=model_config['window'],local_heads=model_config['local_heads'],part_heads=model_config['part_heads']  ) # テキスト埋め込み次元 (例: T5系)
+                              cond_dim=model_config['cond_dim'],cross_attn=model_config['cross_attn'],
+                            is_rope=model_config['is_rope'],sliding_attn=model_config['sliding_attn'],
+                            window=model_config['window'],local_heads=model_config['local_heads'],
+                            part_heads=model_config['part_heads'] ,
+                            tau=model_config['tau'],alpha_max=model_config['alpha_max']) # テキスト埋め込み次元 (例: T5系)
 
     with open(f"{save_path}/flow_match.yaml", "w") as f:
         yaml.dump(config, f)
@@ -804,7 +807,7 @@ def main(config, dataset,save_path,parts="hands",visualize=False,used_3d=False,v
                                                  decode="parts",steps=100)
                 g2 = torch.cat([g2['body'][0], g2['left'][0], g2['right'][0]],
                                       dim=-1).unsqueeze(0)
-                sensitivity=0.3
+                sensitivity=(g1 - g2).abs().mean().item()
                 print(f"条件感度 {sensitivity:.3f} / 同条件ばらつき {floor:.3f} / 生成スケール {scale:.3f}")
                 print(f"比: 感度/ばらつき = {sensitivity / floor:.2f}")
                 print("条件感度:", (g1 - g2).abs().mean().item())
@@ -890,7 +893,7 @@ if __name__ == "__main__":
         with open(f"{vae_weights}/config_vae.yaml", "r") as f:
             vae_config = yaml.safe_load(f)
         config["vae"] = vae_config["vae"]
-    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4_ffn_moe_parts_attn"
+    save_path = ("/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4_attn")
     if os.path.exists(f"{save_path}/flow_match.yaml"):
         with open(f"{save_path}/flow_match.yaml", "r") as f:
             config = yaml.safe_load(f)

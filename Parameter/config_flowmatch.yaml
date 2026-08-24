@@ -44,17 +44,19 @@ flow_matching:
     milestones: [ 50,80 ]
     amp: True
     display_step: 100
-    accumulation_steps: 4
-    batch_size: 8
+    accumulation_steps: 1
+    batch_size: 64
     grad_clip_norm: 1.0
     ema: True
     ema_beta: 0.999
     replacement_num_batches: 100
   model:
-    boundary: 1.0
-    d_model: 128
+    boundary: 0.7
+    tau: 0.1
+    alpha_max: 4.0
+    d_model: 256
     n_heads: 8
-    depth_high: 6
+    depth_high: 4
     depth_low: 2
     cond_dim: 768
     cross_attn: True
