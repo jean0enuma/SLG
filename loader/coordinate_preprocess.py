@@ -617,93 +617,115 @@ def coordinate_preprocess(data, data_face,is_face_connect=False,is_sg_filter=Fal
         new_hand_data=apply_savgol_filter(new_hand_data)
         new_body_data=apply_savgol_filter(new_body_data)
     return new_data, new_data_face, new_hand_data, new_body_data
-def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=False,is_delete_nan=True,is_limit_area=True,is_delete_cod=False):
-    if is_limit_area:
-        data = nan_interpolate(data,limit_area="inside")
+def coordinate_preprocess_3d(data, data_face,is_face_connect=False,is_sg_filter=False,is_delete_nan=True,is_limit_area=True,is_delete_cod=False,generated=False):
+    if generated:
+        new_data = np.zeros((3, data.shape[0], data.shape[1] // 3))
+        new_data[0] = data[:, 0::3]  # data:(2,frame,point)
+        new_data[1] = data[:, 1::3]
+        new_data[2] = data[:, 2::3]
+        connection_indexes = connection_to_set(all_connections)
+        hand_indexes = connection_to_set(hand_points)
+        new_hand_data = new_data[:, :, hand_indexes]
+        data_face = nan_interpolate(data_face, limit_area="both")
+        # data_face = average_movint(data_face)
+        new_data_face = np.zeros((3, data_face.shape[0], data_face.shape[1] // 3))
+        new_data_face[0] = data_face[:, 0::3]
+        new_data_face[1] = data_face[:, 1::3]
+        new_data_face[2] = -data_face[:, 2::3]
+        new_body_data = new_data[:, :, body_points]
     else:
-        data = nan_interpolate(data,limit_area="both")
-    #data=nan_interpolate_zero(data)
-    if np.isnan(data).any():
-        print("nan")
-    #data = average_movint(data)
-    new_data = np.zeros((3, data.shape[0], data.shape[1] // 3))
-    new_data[0] = data[:, 0::3]  # data:(2,frame,point)
-    new_data[1] = data[:, 1::3]
-    new_data[2]=-data[:, 2::3]
+        if is_limit_area:
+            data = nan_interpolate(data,limit_area="inside")
+        else:
+            data = nan_interpolate(data,limit_area="both")
+        #data=nan_interpolate_zero(data)
+        if np.isnan(data).any():
+            print("nan")
+        #data = average_movint(data)
+        new_data = np.zeros((3, data.shape[0], data.shape[1] // 3))
+        new_data[0] = data[:, 0::3]  # data:(2,frame,point)
+        new_data[1] = data[:, 1::3]
+        new_data[2]=-data[:, 2::3]
 
-    new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
-    connection_indexes = connection_to_set(all_connections)
-    hand_indexes = connection_to_set(hand_points)
-    # 10番目の点は11,12番目の中間点
-    new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
-    new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
-    new_data[2, :, 10] = (new_data[2, :, 11] + new_data[2, :, 12]) / 2
+        new_data = np.delete(new_data, [i for i in range(17, 23)], axis=2)
+        connection_indexes = connection_to_set(all_connections)
+        hand_indexes = connection_to_set(hand_points)
+        # 10番目の点は11,12番目の中間点
+        new_data[0, :, 10] = (new_data[0, :, 11] + new_data[0, :, 12]) / 2
+        new_data[1, :, 10] = (new_data[1, :, 11] + new_data[1, :, 12]) / 2
+        new_data[2, :, 10] = (new_data[2, :, 11] + new_data[2, :, 12]) / 2
 
-    # ---- body の欠損フレームを SLERP + FK で補間 ----
-    # (BODY_BONES の使用関節 0,10-16 が全ゼロのフレームが対象.
-    #  有効区間の外側は補間しない)
-    new_data, body_valid = slerp_fill_skeleton(new_data, BODY_BONES)
+        # ---- body の欠損フレームを SLERP + FK で補間 ----
+        # (BODY_BONES の使用関節 0,10-16 が全ゼロのフレームが対象.
+        #  有効区間の外側は補間しない)
+        new_data, body_valid = slerp_fill_skeleton(new_data, BODY_BONES)
 
-    new_hand_data = new_data[:, :, hand_indexes]
-    #new_hand_data=np.concatenate(fillna_left_right(new_hand_data),axis=2)
-    # ---- (旧) 座標の線形補間: 中間フレームで指が縮み, 手形が歪む --------
-    #new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1]),nan_interpolate(new_hand_data[2])],axis=0)
-    # ---- SLERP 補間: 回転を球面補間 + 骨長を保って FK 復元 --------------
-    # 左右の手それぞれ「最初に検出されたフレーム 〜 最後に検出されたフレーム」
-    # の内側のみを補間する (画面外の区間は補間せずゼロのまま残す)
-    new_hand_data = np.where(np.isnan(new_hand_data), 0.0, new_hand_data)
-    new_hand_data, hand_valid = slerp_fill_hands(new_hand_data)
-    new_hand_data[:,:,:21]=new_hand_data[:,:,:21]*hand_valid[:,0][np.newaxis,:,np.newaxis]
-    new_hand_data[:,:,21:]=new_hand_data[:,:,21:]*hand_valid[:,1][np.newaxis,:,np.newaxis]
-    # 補間結果を new_data 側 (17:38=左手, 38:59=右手) にも反映
-    new_data[:, :, hand_indexes] = new_hand_data
-    #new_hand_dataの(2,S,F)のうち，すべてが0のSのインデックスを取得
-    zero_mask = np.all(new_hand_data == 0, axis=(0, 2))  # shape: (S,)
-    nan_indexes = np.where(zero_mask)[0]
-    # 全フレーム削除で skeleton_length=0 になりモデルでNaNが発生するため防ぐ
-    if len(nan_indexes) == new_hand_data.shape[1]:
-        nan_indexes = np.array([], dtype=int)
-    left_criterion=new_data[2, :,15]
-    right_criterion=new_data[2, :,16]
-    new_data[2,:,17:38]+=left_criterion[:, np.newaxis]
-    new_data[2,:,38:]+=right_criterion[:, np.newaxis]
-    #new_dataを正規化
+        try:
+            new_hand_data = new_data[:, :, hand_indexes]
+        except:
+            print("hand_indexes error")
+            print(new_data.shape)
+            print(hand_indexes)
+            raise ValueError("hand_indexes error")
+        #new_hand_data=np.concatenate(fillna_left_right(new_hand_data),axis=2)
+        # ---- (旧) 座標の線形補間: 中間フレームで指が縮み, 手形が歪む --------
+        #new_hand_data=np.stack([nan_interpolate(new_hand_data[0]),nan_interpolate(new_hand_data[1]),nan_interpolate(new_hand_data[2])],axis=0)
+        # ---- SLERP 補間: 回転を球面補間 + 骨長を保って FK 復元 --------------
+        # 左右の手それぞれ「最初に検出されたフレーム 〜 最後に検出されたフレーム」
+        # の内側のみを補間する (画面外の区間は補間せずゼロのまま残す)
+        new_hand_data = np.where(np.isnan(new_hand_data), 0.0, new_hand_data)
+        new_hand_data, hand_valid = slerp_fill_hands(new_hand_data)
+        new_hand_data[:,:,:21]=new_hand_data[:,:,:21]*hand_valid[:,0][np.newaxis,:,np.newaxis]
+        new_hand_data[:,:,21:]=new_hand_data[:,:,21:]*hand_valid[:,1][np.newaxis,:,np.newaxis]
+        # 補間結果を new_data 側 (17:38=左手, 38:59=右手) にも反映
+        new_data[:, :, hand_indexes] = new_hand_data
+        #new_hand_dataの(2,S,F)のうち，すべてが0のSのインデックスを取得
+        zero_mask = np.all(new_hand_data == 0, axis=(0, 2))  # shape: (S,)
+        nan_indexes = np.where(zero_mask)[0]
+        # 全フレーム削除で skeleton_length=0 になりモデルでNaNが発生するため防ぐ
+        if len(nan_indexes) == new_hand_data.shape[1]:
+            nan_indexes = np.array([], dtype=int)
+        left_criterion=new_data[2, :,15]
+        right_criterion=new_data[2, :,16]
+        new_data[2,:,17:38]+=left_criterion[:, np.newaxis]
+        new_data[2,:,38:]+=right_criterion[:, np.newaxis]
+        #new_dataを正規化
 
-    #new_hand_data[2, :, :21]+=left_criterion[:, np.newaxis]
-    #new_hand_data[2, :, 21:]+=right_criterion[:, np.newaxis]
-    new_body_data = new_data[:, :, body_points]
-    if is_delete_cod:
-        new_data = new_data[:, :, connection_indexes]
-    face_center=new_data[:, :, 0]
-    data_face = nan_interpolate(data_face, limit_area="both")
-    #data_face = average_movint(data_face)
-    new_data_face = np.zeros((3, data_face.shape[0], data_face.shape[1] // 3))
-    new_data_face[0] = data_face[:, 0::3]
-    new_data_face[1] = data_face[:, 1::3]
-    new_data_face[2] = -data_face[:, 2::3]
-    new_data_face=np.where(new_data_face==0,np.nan,new_data_face)
+        #new_hand_data[2, :, :21]+=left_criterion[:, np.newaxis]
+        #new_hand_data[2, :, 21:]+=right_criterion[:, np.newaxis]
+        new_body_data = new_data[:, :, body_points]
+        if is_delete_cod:
+            new_data = new_data[:, :, connection_indexes]
+        face_center=new_data[:, :, 0]
+        data_face = nan_interpolate(data_face, limit_area="both")
+        #data_face = average_movint(data_face)
+        new_data_face = np.zeros((3, data_face.shape[0], data_face.shape[1] // 3))
+        new_data_face[0] = data_face[:, 0::3]
+        new_data_face[1] = data_face[:, 1::3]
+        new_data_face[2] = -data_face[:, 2::3]
+        new_data_face=np.where(new_data_face==0,np.nan,new_data_face)
 
-    if is_face_connect:
-        connection_indexes=connection_to_set(face_connections)
-        new_data_face=new_data_face[:,:,connection_indexes]
-    #new_data,new_data_face,new_hand_data,new_body_dataのうち，nan_indexesに対応するフレームをすべて削除する
-    if is_delete_nan:
-        new_data = np.delete(new_data, nan_indexes, axis=1)
-        new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
-        new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
-        new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
+        if is_face_connect:
+            connection_indexes=connection_to_set(face_connections)
+            new_data_face=new_data_face[:,:,connection_indexes]
+        #new_data,new_data_face,new_hand_data,new_body_dataのうち，nan_indexesに対応するフレームをすべて削除する
+        if is_delete_nan:
+            new_data = np.delete(new_data, nan_indexes, axis=1)
+            new_data_face = np.delete(new_data_face, nan_indexes, axis=1)
+            new_hand_data = np.delete(new_hand_data, nan_indexes, axis=1)
+            new_body_data = np.delete(new_body_data, nan_indexes, axis=1)
 
-    if is_sg_filter:
-        new_data=apply_savgol_filter(new_data)
-        new_data_face=apply_savgol_filter(new_data_face)
-        new_hand_data=apply_savgol_filter(new_hand_data)
-        new_body_data=apply_savgol_filter(new_body_data)
-    #average_moveint
-    new_data=np.where(np.isnan(new_data),0,new_data)
-    new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
-    new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
-    new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
-    #new_data=average_movint(new_data)
+        if is_sg_filter:
+            new_data=apply_savgol_filter(new_data)
+            new_data_face=apply_savgol_filter(new_data_face)
+            new_hand_data=apply_savgol_filter(new_hand_data)
+            new_body_data=apply_savgol_filter(new_body_data)
+        #average_moveint
+        new_data=np.where(np.isnan(new_data),0,new_data)
+        new_data_face=np.where(np.isnan(new_data_face),0,new_data_face)
+        new_hand_data=np.where(np.isnan(new_hand_data),0,new_hand_data)
+        new_body_data=np.where(np.isnan(new_body_data),0,new_body_data)
+        #new_data=average_movint(new_data)
     return new_data, new_data_face, new_hand_data, new_body_data
 def normalize_hand(data):
     data= np.where(data==0,np.nan,data)

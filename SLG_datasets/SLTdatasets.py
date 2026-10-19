@@ -35,8 +35,10 @@ class SLTDatasets(Dataset):
                  gloss2class=None,
                  is_delete_cod=False,
                  is_norm=True,
+                 is_generated=False,
                  is_openpose=False):
         super().__init__()
+        self.is_generated=is_generated
         self.data_path = data_path
         self.face_data_path_root=face_data_path_root
         self.cod_data_path_root=cod_data_path_root
@@ -166,7 +168,8 @@ class SLTDatasets(Dataset):
                                                                                                              is_face_connect=True,
                                                                                                              is_sg_filter=False,
                                                                                                          is_delete_cod=self.is_delete_cod,
-                                                                                                            )
+                                                                                                         generated=self.is_generated)
+
                     else:
                         B,JC=cod_data.shape
                         BF,JF=face_data.shape
@@ -236,7 +239,7 @@ class SLTDatasets(Dataset):
             cod_data = self.temporal_rescale(cod_data.permute(1, 2, 0).reshape(T, -1)).reshape(-1, J, C).permute(2, 0,
                                                                                                             1)  # (3,T,JC)
         pose_data=cod_data.permute(1,2,0) #(T,JC,2or3)
-        hand_cod_data=pose_data[:,8:, :].permute(2,0,1) #(3,T,JC-8)
+        hand_cod_data=pose_data[:,-42:, :].permute(2,0,1) #(3,T,JC-8)
         left_data=hand_cod_data[:, :, :21].permute(1, 2, 0)#(2,T,21)
         right_data=hand_cod_data[:, :, 21:].permute(1, 2, 0)
         left_valid=torch.sum(torch.abs(left_data[:,:,:2]),dim=(1,2))>0 #(T,)
@@ -302,10 +305,10 @@ class SLTDatasets(Dataset):
         id_list=torch.tensor(id_list)
         if self.tokenizer is not None and self.targets_corpus is not None and self.gloss2class is not None:
             if isinstance(self.tokenizer, dict):
-                pad_tokens=self.tokenizer["pad_token"]
-                eos_token=self.tokenizer["eos_token"]
-                bos_token=self.tokenizer["bos_token"]
-                new_sentence_list=[f"bos_token {sentence} eos_token" for sentence in trans_seq_list]
+                pad_tokens=self.tokenizer["<pad>"]
+                eos_token=self.tokenizer["<s>"]
+                bos_token=self.tokenizer["</s>"]
+                new_sentence_list=[f"<s> {sentence} </s>" for sentence in trans_seq_list]
                 max_tokens_length=max([len(sentence.split(" ")) for sentence in new_sentence_list])
                 input_ids = torch.ones((len(new_sentence_list), max_tokens_length), dtype=torch.long) * pad_tokens
                 attention_mask=torch.zeros((len(new_sentence_list), max_tokens_length), dtype=torch.long)

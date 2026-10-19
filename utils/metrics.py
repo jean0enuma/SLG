@@ -2,17 +2,85 @@ import copy
 import torch
 import jiwer
 import numpy as np
-
+from math import isinf
+from numpy import array, zeros, full, argmin, inf, ndim
+from scipy.spatial.distance import cdist
 from tqdm import tqdm
 from typing import List, Optional, Callable
 from inspect import getfullargspec
 from sacrebleu.metrics import CHRF
-from fastdtw import fastdtw as dtw
+from scipy.spatial.distance import euclidean
 from scipy import linalg  # FID の共分散平方根に使用
 
 from utils.external_metrics.sacrebleu import raw_corpus_bleu
 from utils.external_metrics.rouge import calc_score as rouge_calc_score
+# Apply DTW
+def dtw(x, y, dist, warp=1, w=inf, s=1.0):
+    """
+    Computes Dynamic Time Warping (DTW) of two sequences.
 
+    :param array x: N1*M array
+    :param array y: N2*M array
+    :param func dist: distance used as cost measure
+    :param int warp: how many shifts are computed.
+    :param int w: window size limiting the maximal distance between indices of matched entries |i,j|.
+    :param float s: weight applied on off-diagonal moves of the path. As s gets larger, the warping path is increasingly biased towards the diagonal
+    Returns the minimum distance, the cost matrix, the accumulated cost matrix, and the wrap path.
+    """
+    assert len(x)
+    assert len(y)
+    assert isinf(w) or (w >= abs(len(x) - len(y)))
+    assert s > 0
+    r, c = len(x), len(y)
+    if not isinf(w):
+        D0 = full((r + 1, c + 1), inf)
+        for i in range(1, r + 1):
+            D0[i, max(1, i - w):min(c + 1, i + w + 1)] = 0
+        D0[0, 0] = 0
+    else:
+        D0 = zeros((r + 1, c + 1))
+        D0[0, 1:] = inf
+        D0[1:, 0] = inf
+    D1 = D0[1:, 1:]  # view
+    for i in range(r):
+        for j in range(c):
+            if (isinf(w) or (max(0, i - w) <= j <= min(c, i + w))):
+                D1[i, j] = dist(x[i], y[j])
+    C = D1.copy()
+    jrange = range(c)
+    for i in range(r):
+        if not isinf(w):
+            jrange = range(max(0, i - w), min(c, i + w + 1))
+        for j in jrange:
+            min_list = [D0[i, j]]
+            for k in range(1, warp + 1):
+                i_k = min(i + k, r)
+                j_k = min(j + k, c)
+                min_list += [D0[i_k, j] * s, D0[i, j_k] * s]
+            D1[i, j] += min(min_list)
+    if len(x) == 1:
+        path = zeros(len(y)), range(len(y))
+    elif len(y) == 1:
+        path = range(len(x)), zeros(len(x))
+    else:
+        path = _traceback(D0)
+    return D1[-1, -1], C, D1, path
+
+def _traceback(D):
+    i, j = array(D.shape) - 2
+    p, q = [i], [j]
+    while (i > 0) or (j > 0):
+        tb = argmin((D[i, j], D[i, j + 1], D[i + 1, j]))
+        if tb == 0:
+            i -= 1
+            j -= 1
+        elif tb == 1:
+            i -= 1
+        else:  # (tb == 2):
+            j -= 1
+        p.insert(0, i)
+        q.insert(0, j)
+    return array(p), array(q)
 
 def mse(y_true, y_pred):
     if isinstance(y_true, list) and isinstance(y_pred, list):
@@ -57,7 +125,7 @@ def mpjpe(gt_poses, hypo_poses):
     def cal_mpjpe(a, b):
         # Check if the input tensors have the same shape
         assert (
-            a.shape == b.shape
+                a.shape == b.shape
         ), "Ground truth and hypothesis poses must have the same shape."
 
         # Calculate the Euclidean distance between corresponding joints
@@ -66,12 +134,13 @@ def mpjpe(gt_poses, hypo_poses):
         # Calculate the mean over all joints and samples
         mean_mpjpe = torch.mean(joint_distances)
         return mean_mpjpe
-
-    if isinstance(gt_poses, list) and isinstance(hypo_poses, list):
-        gt_poses = torch.cat(gt_poses)
-        hypo_poses = torch.cat(hypo_poses)
-
-    return cal_mpjpe(gt_poses, hypo_poses).item()
+    mpjpe_list=[]
+    for gt_pose, hypo_pose in zip(gt_poses, hypo_poses):
+        gt_pose=_to_TJ3(gt_pose.detach().cpu())
+        hypo_pose=_to_TJ3(hypo_pose.detach().cpu())
+        mpjpe_dist=cal_mpjpe(gt_pose, hypo_pose)
+        mpjpe_list.append(mpjpe_dist)
+    return torch.mean(torch.tensor(mpjpe_list)).item()
 
 
 def pose_error_align_mje(hyps: list = None, gt_pose: torch.Tensor = None):
@@ -254,14 +323,14 @@ def dtw_mje(
         r_np = r.reshape(r.shape[0], -1).cpu().numpy()
 
         # DTW 整列 (fastdtw は (距離, パス) を返す)
-        _, path = dtw(h_np, r_np, radius=radius, dist=frame_dist)
+        dtw_dist, path = dtw(h_np, r_np, radius=radius, dist=frame_dist)
         h_idx, r_idx = zip(*path)
         h_al = h[list(h_idx)]                 # (L, J, 3)
         r_al = r[list(r_idx)]
 
         # 整列後の関節平均誤差
         je = torch.norm(h_al - r_al, dim=-1).mean().item()
-        errors.append(je)
+        errors.append(dtw_dist)
         lengths.append(len(path))
 
     if reduction == "none":
@@ -429,7 +498,7 @@ def _geodesic_angle_from_matrices(R_pred, R_gt, eps: float = 1e-7):
 def _bone_vectors(pose, bones):
     """座標 (T, J, 3) と bones から各ボーンの単位方向ベクトル (T, Nb, 3) を返す."""
     pose = _to_TJ3(pose)                                # (T, J, 3)
-    idx = torch.as_tensor([b[:2] for b in bones])
+    idx = torch.as_tensor([b[:2] for b in bones]).to(pose.device)  # (Nb, 2)
     vec = pose[:, idx[:, 1], :] - pose[:, idx[:, 0], :]  # (T, Nb, 3)
     return torch.nn.functional.normalize(vec, dim=-1, eps=1e-8)
 
@@ -443,6 +512,7 @@ def mpjae(
     align_dtw: bool = False,
     radius: int = 10,
     reduction: str = "mean",
+    rot6d_fn: Optional[Callable] = None,
 ):
     """Mean Per Joint Angle Error — 関節角度の平均誤差 [degree]. 低いほど良い.
 
@@ -474,7 +544,6 @@ def mpjae(
         reduction="none": list[float]
     """
     if mode == "6d":
-        rot6d_fn = mpjae._rot6d_fn
         if rot6d_fn is None:
             raise ValueError(
                 "mode='6d' には rotation_6d_to_matrix が必要です. "
@@ -492,7 +561,7 @@ def mpjae(
         # 6d: (T, 6, Nb) を (T, Nb, 6) に直してから復元
         if t.dim() == 3 and t.shape[1] == 6 and t.shape[2] != 6:
             t = t.movedim(1, 2)
-        return mpjae._rot6d_fn(t)                       # (T, Nb, 3, 3)
+        return rot6d_fn(t)                       # (T, Nb, 3, 3)
 
     errors = []
     for i, (h, r) in enumerate(
@@ -503,8 +572,10 @@ def mpjae(
 
         if mode == "coord":
             assert bones is not None, "mode='coord' には bones が必要"
-            hv = _bone_vectors(h, bones)                # (T_h, Nb, 3)
-            rv = _bone_vectors(r, bones)                # (T_r, Nb, 3)
+            h=_to_TJ3(h)
+            r=_to_TJ3(r)
+            hv = h                # (T_h, Nb, 3)
+            rv = r               # (T_r, Nb, 3)
         else:
             hv = to_matrices(h)                         # (T_h, Nb, 3, 3)
             rv = to_matrices(r)
@@ -552,6 +623,194 @@ def mpjae(
         return float("nan")
     return float(np.mean(errors))
 
+
+# ======================================================================
+# DTW-6D  (Dynamic Time Warping on 6D rotation representation)
+# ======================================================================
+def _to_TNb6(seq):
+    """任意の 6D 回転系列を (T, Nb, 6) の torch.Tensor(float) に整える.
+    受理形状: (T, Nb, 6) / (T, 6, Nb) / (T, Nb*6).
+    mpjae の 6d 規約 (T,6,Nb -> movedim) と互換."""
+    if not torch.is_tensor(seq):
+        seq = torch.as_tensor(np.asarray(seq))
+    seq = seq.float()
+    if seq.dim() == 2:  # (T, Nb*6)
+        T, Fdim = seq.shape
+        assert Fdim % 6 == 0, f"feature dim {Fdim} is not divisible by 6"
+        seq = seq.reshape(T, Fdim // 6, 6)
+    elif seq.dim() == 3 and seq.shape[1] == 6 and seq.shape[2] != 6:
+        seq = seq.movedim(1, 2)  # (T, 6, Nb) -> (T, Nb, 6)
+    assert seq.dim() == 3 and seq.shape[-1] == 6, \
+        f"expected (T, Nb, 6)-like, got {tuple(seq.shape)}"
+    return seq
+
+
+def dtw_6d(
+        hypotheses: list,
+        references: list,
+        dist: str = "geodesic",
+        bone_mask: Optional[list] = None,
+        radius: int = 10,
+        reduction: str = "mean",
+        rot6d_fn=None,
+):
+    """6D 回転表現の系列を DTW で時間整列し, 回転誤差を測る.
+
+    生成手話は GT と長さ・速度が一致しないため, DTW で最適整列してから
+    誤差を測る (dtw_mje の 6D 回転版). 6D 回転は VAE 潜在の直前表現なので,
+    座標に復元せずボーンの回転そのものの誤りを評価できる.
+
+    整列コストと最終誤差は dist で選ぶ:
+      dist="geodesic" (推奨): 6D を回転行列へ復元し, 測地線角 [degree] で
+          整列・評価. 回転として正しい距離 (6D の冗長表現による歪みがない).
+          rot6d_fn (6D->行列) が必要. 未指定なら mpjae._rot6d_fn を探す.
+      dist="l2": 6D ベクトルの L2 距離で整列・評価 (復元関数不要, 高速).
+          6D 空間の距離は回転角に厳密比例しないが, 目安として使える.
+
+    Args:
+        hypotheses: 生成系列のリスト. 各要素は (T_h, Nb, 6) 等 (_to_TNb6 が受理).
+        references: GT 系列のリスト. 各要素は (T_r, Nb, 6) 等. T_r != T_h でよい.
+        dist:       "geodesic" (角度[deg]) or "l2" (6Dベクトル距離).
+        bone_mask:  省略可. (Nb,) bool の list or 単一. 評価対象ボーンを限定.
+        radius:     fastdtw 探索半径 (大きいほど厳密, 遅い).
+        reduction:  "mean" で全系列平均, "none" で (errors, lengths) を返す.
+        rot6d_fn:   6D(...,6)->行列(...,3,3) の関数. dist="geodesic" で必要.
+                    None なら metrics.mpjae._rot6d_fn を使う.
+
+    Returns:
+        reduction="mean": float
+            dist="geodesic" -> 平均角度誤差 [degree]
+            dist="l2"       -> 平均 6D-L2 誤差
+        reduction="none": (errors: list[float], lengths: list[int])
+    """
+    if dist == "geodesic":
+        if rot6d_fn is None:
+            # metrics モジュール内の注入口を探す (循環 import 回避)
+            import sys
+            m = sys.modules.get("metrics") or sys.modules.get(__name__)
+            rot6d_fn = getattr(getattr(m, "mpjae", None), "_rot6d_fn", None)
+        if rot6d_fn is None:
+           rot6d_fn = mpjae._rot6d_fn
+
+    def geodesic_deg(Ra, Rb):
+        # Ra, Rb: (..., 3, 3) 測地線角 [deg]
+        rel = Ra.transpose(-1, -2) @ Rb
+        tr = rel.diagonal(dim1=-2, dim2=-1).sum(-1)
+        cos = ((tr - 1.0) * 0.5).clamp(-1.0 + 1e-7, 1.0 - 1e-7)
+        return torch.rad2deg(torch.arccos(cos))
+
+    def frame_dist_l2(a, b):
+        # a,b: (Nb*6,) numpy. 6D ベクトルの平均 L2
+        d = (a - b).reshape(-1, 6)
+        return float(np.sqrt((d ** 2).sum(-1)).mean())
+
+    def frame_dist_geo(a, b):
+        # a,b: (Nb*6,) numpy -> 行列復元 -> 平均測地線角[deg]
+        ta = torch.as_tensor(a, dtype=torch.float32).reshape(-1, 6)
+        tb = torch.as_tensor(b, dtype=torch.float32).reshape(-1, 6)
+        Ra = rot6d_fn(ta)  # (Nb, 3, 3)
+        Rb = rot6d_fn(tb)
+        return float(geodesic_deg(Ra, Rb).mean().item())
+
+    frame_dist = frame_dist_geo if dist == "geodesic" else frame_dist_l2
+
+    errors, lengths = [], []
+    for i, (h, r) in enumerate(
+            tqdm(zip(hypotheses, references), total=len(hypotheses),
+                 desc=f"DTW-6D({dist})")
+    ):
+        if h is None or r is None:
+            continue
+        h = _to_TNb6(h)
+        r = _to_TNb6(r)
+        if h.shape[0] == 0 or r.shape[0] == 0:
+            continue
+        assert h.shape[1:] == r.shape[1:], \
+            f"bone/6d mismatch: {tuple(h.shape)} vs {tuple(r.shape)}"
+
+        # ボーンマスク (指定ボーンのみで整列・評価)
+        if bone_mask is not None:
+            m = bone_mask[i] if isinstance(bone_mask, (list, tuple)) \
+                else bone_mask
+            m = torch.as_tensor(m).bool()
+            h, r = h[:, m], r[:, m]
+
+        h_np = h.reshape(h.shape[0], -1).cpu().numpy()
+        r_np = r.reshape(r.shape[0], -1).cpu().numpy()
+
+        # DTW 整列 (フレーム距離は dist に応じて角度 or L2)
+        dtw_dist, path = dtw(h_np, r_np, radius=radius, dist=frame_dist)
+        h_idx, r_idx = zip(*path)
+        h_al = h[list(h_idx)]  # (L, Nb, 6)
+        r_al = r[list(r_idx)]
+
+        # 整列後の誤差
+        if dist == "geodesic":
+            Ra = rot6d_fn(h_al.reshape(-1, 6)).reshape(h_al.shape[0], -1, 3, 3)
+            Rb = rot6d_fn(r_al.reshape(-1, 6)).reshape(r_al.shape[0], -1, 3, 3)
+            err = geodesic_deg(Ra, Rb).mean().item()  # [deg]
+        else:
+            err = torch.norm(h_al - r_al, dim=-1).mean().item()  # 6D-L2
+        errors.append(dtw_dist)
+        lengths.append(len(path))
+
+    if reduction == "none":
+        return errors, lengths
+    if len(errors) == 0:
+        return float("nan")
+    return float(np.mean(errors))
+def calculate_dtw(references, hypotheses):
+    """
+    Calculate the DTW costs between a list of references and hypotheses
+
+    :param references: list of reference sequences to compare against
+    :param hypotheses: list of hypothesis sequences to fit onto the reference
+
+    :return: dtw_scores: list of DTW costs
+    """
+    # Euclidean norm is the cost function, difference of coordinates
+    euclidean_norm = lambda x, y: np.sum(np.abs(x - y))
+
+    dtw_scores = []
+
+
+    # Remove the BOS frame from the hypothesis
+    #hypotheses = hypotheses[:, 1:]
+
+    # For each reference in the references list
+    for i, ref in enumerate(references):
+        # Cut the reference down to the max count value
+        _ , ref_max_idx = torch.max(ref[:, -1], 0)
+        if ref_max_idx == 0: ref_max_idx += 1
+        # Cut down frames by to the max counter value, and chop off counter from joints
+        ref_count = ref[:ref_max_idx,:-1].cpu().numpy()
+
+        # Cut the hypothesis down to the max count value
+        hyp = hypotheses[i]
+        print("hypotheses shape:",hyp.shape)
+        _, hyp_max_idx = torch.max(hyp[:, -1], 0)
+        if hyp_max_idx == 0: hyp_max_idx += 1
+        # Cut down frames by to the max counter value, and chop off counter from joints
+        hyp_count = hyp[:hyp_max_idx,:-1].cpu().numpy()
+
+        # Calculate DTW of the reference and hypothesis, using euclidean norm
+        d, cost_matrix, acc_cost_matrix, path = dtw(ref_count, hyp_count, dist=euclidean_norm)
+
+        # Normalise the dtw cost by sequence length
+        d = d/acc_cost_matrix.shape[0]
+
+        dtw_scores.append(d)
+
+    # Return dtw scores and the hypothesis with altered timing
+    return dtw_scores
+
+def calculate_dtw_nocounter(references, hypotheses):
+  dist = lambda x, y: np.mean(np.abs(x - y))
+  scores = []
+  for ref, hyp in zip(references, hypotheses):
+      d, _, _, path = dtw(ref.cpu().numpy(), hyp.cpu().numpy(), dist=dist)
+      scores.append(d / len(path[0]))
+  return scores
 
 # mode="6d" 用の 6D->行列 変換器の差し込み口 (循環 import 回避のため属性で注入).
 #   例: from models.module.Hand_gcn_vae_6d import rotation_6d_to_matrix

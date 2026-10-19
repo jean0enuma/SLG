@@ -178,7 +178,25 @@ class MaskedBatchNorm(nn.Module):
         else:
             B, T, D = x.shape
             return self.norm(x.reshape(-1, D)).reshape(B, T, D)
+class STBatchNorm(nn.Module):
+    def __init__(self, num_features: int):
+        super().__init__()
+        self.norm = nn.BatchNorm1d(num_features)
+        self.num_features = num_features
 
+    def forward(self, x: Tensor, pad_mask: Tensor) -> Tensor:
+        """x: (B, T, V, D), pad_mask: (B, T) True=pad"""
+        if self.training:
+            B, T, V, D = x.shape
+            reshaped = x.reshape(-1, D)                       # (B*T*V, D)
+            valid = (~pad_mask).reshape(-1, 1).repeat(1,V)                # (B*T*V, 1)
+            selected = torch.masked_select(reshaped, valid).reshape(-1, D)
+            normed = self.norm(selected)
+            out = reshaped.masked_scatter(valid, normed)
+            return out.reshape(B, T, V,D)
+        else:
+            B, T,V,D = x.shape
+            return self.norm(x.reshape(-1, D)).reshape(B,T,V,D)
 
 # ---------------------------------------------------------------------------
 # 埋め込み層 (論文 式 1)
@@ -193,15 +211,36 @@ class SpatialEmbedding(nn.Module):
         super().__init__()
         self.proj = nn.Linear(input_size, d_model)
         self.norm = MaskedBatchNorm(d_model)
-        self.scale_factor = math.sqrt(d_model) if scale else 1.0
+        #self.scale_factor = math.sqrt(d_model) if scale else 1.0
         self.activation=nn.Softsign() if activation=="softsign" else nn.ReLU()
 
     def forward(self, x: Tensor, pad_mask: Tensor) -> Tensor:
         x = self.proj(x)
         x = self.norm(x, pad_mask)
         x = self.activation(x)
-        return x * self.scale_factor
+        return x
+class STSpatialEmbedding(nn.Module):
+    """f_t = SpatialEmbedding(x_t)
+    論文では CNN 特徴 → (BN+ReLU) だが，ここでは骨格特徴 (B,T,150) を
+    Linear で D 次元へ射影し，同じく Masked BN + ReLU を適用する．
+    """
 
+    def __init__(self, input_size: int, d_model: int, scale: bool = True,activation: str = "softsign"):
+        super().__init__()
+        self.proj = nn.Linear(input_size, d_model)
+        #self.norm = STBatchNorm(d_model)
+        #self.scale_factor = math.sqrt(d_model) if scale else 1.0
+        #self.activation=nn.Softsign() if activation=="softsign" else nn.ReLU()
+
+    def forward(self, x: Tensor, pad_mask: Tensor) -> Tensor:
+        #x:(B,T,V,D)
+        #pad_mask:(B,T)
+        B,T,V,_=x.shape
+        x = self.proj(x.reshape(B*T,V,-1)).reshape(B,T,V,-1)
+        D=x.shape[-1]
+        #x = self.norm(x, pad_mask)
+        #x = self.activation(x)
+        return x.reshape(B,T,V,D)
 
 class WordEmbedding(nn.Module):
     """m_u = WordEmbedding(w_u)  (one-hot → Linear は nn.Embedding と等価)"""
@@ -250,7 +289,33 @@ class EncoderLayer(nn.Module):
         x = x + self.dropout(h)
         return self.ff(x)
 
+class STEncoderLayer(nn.Module):
+    """ST_SLRT の 1 層: Self-Attention → FF (残差 + LN 付き，式 2)"""
 
+    def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float):
+        super().__init__()
+        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.leyer_norm2 = nn.LayerNorm(d_model, eps=1e-6)
+        self.self_attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.temp_attn=nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.dropout = nn.Dropout(dropout)
+        self.dropout2=nn.Dropout(dropout)
+        self.ff = PositionwiseFeedForward(d_model, d_ff, dropout)
+
+    def forward(self, x: Tensor, pad_mask: Tensor) -> Tensor:
+        #x:(B,T,V,D)
+        B,T,V,D=x.shape
+        x_norm = self.layer_norm(x).reshape(B*T,V,D)
+        h, _ = self.self_attn(x_norm, x_norm, x_norm,need_weights=False)
+        x = x + self.dropout(h.reshape(B,T,V,D))
+        #x=x.reshape(B,T,V,D)
+        x_norm=self.leyer_norm2(x).permute(0,2,1,3).reshape(B*V,T,D)
+        pad_mask=(pad_mask.unsqueeze(1).expand(B, V, T).reshape(B * V, T)
+         if pad_mask is not None else None)
+
+        h, _ = self.temp_attn(x_norm, x_norm, x_norm, key_padding_mask=pad_mask, need_weights=False)
+        x = x + self.dropout(h.reshape(B,V,T,D).permute(0,2,1,3))
+        return self.ff(x)
 class DecoderLayer(nn.Module):
     """SLTT の 1 層: Masked Self-Attention → Encoder-Decoder Attention → FF (式 5)"""
 
@@ -289,12 +354,56 @@ class DecoderLayer(nn.Module):
         x = x + self.dropout(h)
         return self.ff(x)
 
+class STDecoderLayer(nn.Module):
+    """ST_SLTT の 1 層: Masked Self-Attention → Encoder-Decoder Attention → FF (式 5)"""
 
+    def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float):
+        super().__init__()
+        self.x_layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.x_layer_norm2 = nn.LayerNorm(d_model, eps=1e-6)
+        self.self_attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.temp_attn=nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.dec_layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.cross_attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.dropout = nn.Dropout(dropout)
+        self.ff = PositionwiseFeedForward(d_model, d_ff, dropout)
+
+    def forward(
+        self,
+        x: Tensor,               # (B, T,V,D)  デコーダ入力
+        memory: Tensor,          # (B, T, D)  SLRT 出力 z_{1:T}
+        tgt_causal_mask: Tensor, # (U, U)     True=禁止
+        tgt_pad_mask: Tensor,    # (B, U)     True=pad
+        src_pad_mask: Tensor,    # (B, T)     True=pad
+    ) -> Tensor:
+        B,T,V,D=x.shape
+        x_norm = self.x_layer_norm(x).reshape(B*T,V,D)
+        h, _ = self.self_attn(
+            x_norm, x_norm, x_norm,
+            need_weights=False,
+        )
+        x = x + self.dropout(h.reshape(B,T,V,D))
+        x_norm = self.x_layer_norm2(x).permute(0,2,1,3).reshape(B*V,T,D)
+        h, _ = self.temp_attn(
+            x_norm, x_norm, x_norm,
+            attn_mask=tgt_causal_mask,
+            key_padding_mask=tgt_pad_mask,
+            need_weights=False,
+        )
+        x = x + self.dropout(h.reshape(B,V,T,D).permute(0,2,1,3))
+        x_norm = self.dec_layer_norm(x.reshape(B,T*V,D))
+        h, _ = self.cross_attn(
+            x_norm, memory, memory,
+            key_padding_mask=src_pad_mask,
+            need_weights=False,
+        )
+        x = x + self.dropout(h.reshape(B,T,V,D))
+        return self.ff(x.reshape(B,T*V,D)).reshape(B,T,V,D)
 # ---------------------------------------------------------------------------
 # SLRT: Sign Language Recognition Transformer (論文 Sec.3.2)
 # ---------------------------------------------------------------------------
 class SLRT(nn.Module):
-    def __init__(self, d_model=512, n_heads=8, num_layers=3, d_ff=2048, dropout=0.1):
+    def __init__(self, d_model=512, n_heads=8, num_layers=3, d_ff=2048, dropout=0.1,is_st=False):
         super().__init__()
         self.pe = PositionalEncoding(d_model)
         self.emb_dropout = nn.Dropout(dropout)
@@ -310,7 +419,24 @@ class SLRT(nn.Module):
             x = layer(x, pad_mask)
         return self.layer_norm(x)
 
+class ST_SLRT(nn.Module):
+    def __init__(self, d_model=512, n_heads=8, num_layers=3, d_ff=2048, dropout=0.1,is_6d=False):
+        super().__init__()
+        self.pe = PositionalEncoding(d_model)
+        self.emb_dropout = nn.Dropout(dropout)
+        self.layers = nn.ModuleList(
+            [STEncoderLayer(d_model, n_heads, d_ff, dropout) for _ in range(num_layers)]
+        )
+        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.proj=nn.Linear(d_model*47, d_model) if is_6d else nn.Linear(d_model*50, d_model)
 
+    def forward(self, f: Tensor, pad_mask: Tensor) -> Tensor:
+        """f: (B, T, V, D) SpatialEmbedding 済み特徴 → z: (B, T, V, D)"""
+        B,T,V,D=f.shape
+        x = self.emb_dropout(self.pe(f.reshape(B*T,V,D))).reshape(B,T,V,D)  # f̂_t = f_t + PE(t)
+        for layer in self.layers:
+            x = layer(x, pad_mask)
+        return self.proj(self.layer_norm(x).reshape(B,T,V*D))
 # ---------------------------------------------------------------------------
 # SLTT: Sign Language Translation Transformer (論文 Sec.3.3)
 # ---------------------------------------------------------------------------
@@ -332,7 +458,24 @@ class SLTT(nn.Module):
         for layer in self.layers:
             x = layer(x, memory, causal, tgt_pad_mask, src_pad_mask)
         return self.layer_norm(x)
+class ST_SLTT(nn.Module):
+    def __init__(self, d_model=512, n_heads=8, num_layers=3, d_ff=2048, dropout=0.1):
+        super().__init__()
+        self.pe = PositionalEncoding(d_model)
+        self.emb_dropout = nn.Dropout(dropout)
+        self.layers = nn.ModuleList(
+            [STDecoderLayer(d_model, n_heads, d_ff, dropout) for _ in range(num_layers)]
+        )
+        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
 
+    def forward(self, m: Tensor, memory: Tensor, tgt_pad_mask: Tensor, src_pad_mask: Tensor) -> Tensor:
+        """m: (B, U, D) WordEmbedding 済み系列 → h: (B, U, D)"""
+        U = m.size(1)
+        x = self.emb_dropout(self.pe(m))  # m̂_u = m_u + PE(u)
+        causal = subsequent_mask(U, device=m.device)
+        for layer in self.layers:
+            x = layer(x, memory, causal, tgt_pad_mask, src_pad_mask)
+        return self.layer_norm(x)
 
 # ---------------------------------------------------------------------------
 # 本体: Sign Language Transformer
@@ -353,11 +496,12 @@ class SignLanguageTransformer(nn.Module):
         n_heads: int = 8,
         num_layers: int = 2,
         d_ff: int = 2048,
-        dropout: float = 0.3,
+        dropout: float = 0.1,
         txt_pad_idx: int = 0,
         txt_bos_idx: int = 1,
         txt_eos_idx: int = 2,
         ctc_blank_idx: int = 0,
+        is_6d: bool = False,
     ):
         super().__init__()
         self.txt_pad_idx = txt_pad_idx
@@ -548,6 +692,47 @@ class SignLanguageTransformer(nn.Module):
                 best = best[:-1]
             outputs.append(best)
         return outputs
+class STSignLanguageTransformer(SignLanguageTransformer):
+    def __init__(
+        self,
+        input_size: int = 6,
+        gloss_vocab_size: int = 1066 + 1,   # +1: CTC blank (index 0)
+        text_vocab_size: int = 2887 + 4,    # +4: special tokens
+        d_model: int = 128,
+        n_heads: int = 8,
+        num_layers: int = 2,
+        d_ff: int = 512,
+        dropout: float = 0.3,
+        txt_pad_idx: int = 0,
+        txt_bos_idx: int = 1,
+        txt_eos_idx: int = 2,
+        ctc_blank_idx: int = 0,
+    ):
+        super().__init__(input_size, gloss_vocab_size, text_vocab_size, d_model, n_heads, num_layers, d_ff, dropout, txt_pad_idx, txt_bos_idx, txt_eos_idx, ctc_blank_idx)
+        if input_size==6:
+            is_6d=True
+        elif input_size==3:
+            is_6d=False
+        else:
+            raise ValueError("input_size must be 3 or 6")
+        self.sgn_embed=STSpatialEmbedding(input_size, d_model,scale=False)
+        self.encoder=ST_SLRT(d_model,n_heads,num_layers,d_ff,dropout,is_6d)
+        self.is_6d=is_6d
+
+
+    # ---- encode / decode -------------------------------------------------
+    def encode(self, sgn: Tensor, sgn_lengths: Tensor) -> Tuple[Tensor, Tensor]:
+
+        B,T,VD=sgn.shape
+
+        if self.is_6d:
+            sgn=sgn.reshape(B,T,VD//6,6)
+        else:
+            sgn=sgn.reshape(B,T,VD//3,3)
+        src_pad_mask = make_pad_mask(sgn_lengths, sgn.size(1))  # (B, T)
+        f = self.sgn_embed(sgn, src_pad_mask)  # (B, T, V,D)
+        z = self.encoder(f, src_pad_mask)  # (B, T, D)
+        return z, src_pad_mask
 
 
 # ---------------------------------------------------------------------------
@@ -585,7 +770,7 @@ class JointLoss(nn.Module):
         super().__init__()
         self.lambda_r = lambda_r
         self.lambda_t = lambda_t
-        self.ctc = nn.CTCLoss(blank=blank_idx, zero_infinity=False, reduction="none")
+        self.ctc = nn.CTCLoss(blank=blank_idx, zero_infinity=False)  # (B,) 返すように
         self.xent = XentLoss(pad_idx=txt_pad_idx, smoothing=smoothing)
 
     def forward(
@@ -599,10 +784,11 @@ class JointLoss(nn.Module):
         batch_size: int,
     ) -> Tuple[Tensor, Tensor, Tensor]:
         loss_r_batch = self.ctc(gloss_log_probs, gloss_targets, sgn_lengths, gloss_lengths)#(B,)
-        loss_r=torch.tensor(0.0, device=loss_r_batch.device)
-        for b in range(batch_size):
-            loss_r=loss_r_batch[b]/gloss_lengths[b]+loss_r
-        loss_r/=batch_size
+        loss_r=loss_r_batch
+        #loss_r=torch.tensor(0.0, device=loss_r_batch.device)
+        #for b in range(batch_size):
+        #    loss_r=(loss_r_batch[b]/gloss_lengths[b])+loss_r
+        #loss_r/=batch_size
         loss_t = self.xent(word_logits, txt_targets)/batch_size
         total = self.lambda_r * loss_r + self.lambda_t * loss_t
         return total, loss_r, loss_t

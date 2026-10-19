@@ -7,9 +7,9 @@ from collections import defaultdict, Counter
 from typing import List
 import numpy as np
 
-from torchtext.data import Dataset
+#from torchtext.data import Dataset
 
-from constants import UNK_TOKEN, DEFAULT_UNK_ID, \
+from ProgressiveTransformers.constants import UNK_TOKEN, DEFAULT_UNK_ID, \
     EOS_TOKEN, BOS_TOKEN, PAD_TOKEN
 
 
@@ -127,7 +127,7 @@ class Vocabulary:
         return sentences
 
 
-def build_vocab(field: str, max_size: int, min_freq: int, dataset: Dataset,
+def build_vocab(field: str, max_size: int, min_freq: int, dataset,
                 vocab_file: str = None) -> Vocabulary:
     """
     Builds vocabulary for a torchtext `field` from given`dataset` or

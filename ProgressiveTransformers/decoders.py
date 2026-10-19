@@ -1,8 +1,8 @@
 import torch.nn as nn
 from torch import Tensor
 
-from helpers import freeze_params, ConfigurationError, subsequent_mask, uneven_subsequent_mask
-from transformer_layers import PositionalEncoding, \
+from ProgressiveTransformers.helpers import freeze_params, ConfigurationError, subsequent_mask, uneven_subsequent_mask
+from ProgressiveTransformers.transformer_layers import PositionalEncoding, \
     TransformerDecoderLayer
 
 class Decoder(nn.Module):

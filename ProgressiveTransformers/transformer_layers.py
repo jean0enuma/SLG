@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch import Tensor
 import numpy as np
 import torch.nn.functional as F
-from constants import TARGET_PAD
+from ProgressiveTransformers.constants import TARGET_PAD
 
 
 # pylint: disable=arguments-differ

@@ -1,6 +1,6 @@
 import math
 from torch import nn, Tensor
-from helpers import freeze_params
+from ProgressiveTransformers.helpers import freeze_params
 import torch
 
 class MaskedNorm(nn.Module):

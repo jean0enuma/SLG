@@ -36,10 +36,12 @@ class SLGText2UnitsDatasets(Dataset):
                  gloss2class=None,
                  is_islr=False,
                  is_delete_cod=False,
+                 is_generated=False,
                  is_norm=True,
                  is_openpose=False):
         super().__init__()
         self.data_path = data_path
+        self.is_generated=is_generated
         self.face_data_path_root=face_data_path_root
         self.cod_data_path_root=cod_data_path_root
         self.trainable=trainable
@@ -169,7 +171,8 @@ class SLGText2UnitsDatasets(Dataset):
                                                                                                              face_data,
                                                                                                              is_face_connect=True,
                                                                                                              is_sg_filter=False,
-                                                                                                         is_delete_cod=self.is_delete_cod)
+                                                                                                         is_delete_cod=self.is_delete_cod,
+                                                                                                         generated=self.is_generated)
                     else:
                         B,JC=cod_data.shape
                         B,JF=face_data.shape
@@ -190,7 +193,8 @@ class SLGText2UnitsDatasets(Dataset):
             C,T,J = cod_data.shape
             cod_data = torch.tensor(cod_data)  # (3,T,JC)
             #if self.trainable==False:
-            cod_data = self.temporal_rescale(cod_data.permute(1,2,0).reshape(T,-1)).reshape(-1,J,C).permute(2,0,1) #(3,T,JC)
+            if self.trainable:
+                cod_data = self.temporal_rescale(cod_data.permute(1,2,0).reshape(T,-1)).reshape(-1,J,C).permute(2,0,1) #(3,T,JC)
             if self.is_norm:
                 if self.is_sg_filter:
                     cod_data = cod_data.numpy()
@@ -350,7 +354,7 @@ class SLGText2UnitsDatasets(Dataset):
         id_list=torch.tensor(id_list)
         if self.tokenizer is not None and self.targets_corpus is not None:
             if isinstance(self.tokenizer, dict):
-                pad_tokens=self.tokenizer["pad_token"]
+                pad_tokens=self.tokenizer.get("pad_token",0)
                 if self.is_islr:
                     max_tokens_length=1
                     input_ids = torch.tensor(
@@ -359,9 +363,9 @@ class SLGText2UnitsDatasets(Dataset):
                     )
                     attention_mask=torch.tensor([1] * len(sentence_list),dtype=torch.long)
                 else:
-                    eos_token=self.tokenizer["eos_token"]
-                    bos_token=self.tokenizer["bos_token"]
-                    new_sentence_list=[f"bos_token {sentence} eos_token" for sentence in sentence_list]
+                    eos_token=self.tokenizer.get("</s>",2)
+                    bos_token=self.tokenizer.get("<s>",1)
+                    new_sentence_list=[f"<s> {sentence} </s>" for sentence in sentence_list]
                     max_tokens_length=max([len(sentence.split(" ")) for sentence in new_sentence_list])
                     input_ids = torch.ones((len(new_sentence_list), max_tokens_length), dtype=torch.long) * pad_tokens
                     attention_mask=torch.zeros((len(new_sentence_list), max_tokens_length), dtype=torch.long)

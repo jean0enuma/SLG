@@ -6,11 +6,11 @@ from torch import Tensor
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.nn.functional as F
 
-from helpers import freeze_params
-from transformer_layers import \
+from ProgressiveTransformers.helpers import freeze_params
+from ProgressiveTransformers.transformer_layers import \
     TransformerEncoderLayer, PositionalEncoding
 
-from embeddings import MaskedNorm
+from ProgressiveTransformers.embeddings import MaskedNorm
 
 #pylint: disable=abstract-method
 class Encoder(nn.Module):

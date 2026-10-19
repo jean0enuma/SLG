@@ -660,7 +660,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     dataset = "phoenixT"  # or "CSL-Daily", "how2sign", "phoenix", "AUTSL"
-    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent8_stride4"
+    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent4_stride2"
     main(config, dataset, save_path, parts="body",visualize=False,used_3d=False)
     main(config, dataset, save_path, parts="hands",visualize=False,used_3d=False)
     main(config, dataset, save_path, parts="all",visualize=False,used_3d=False)

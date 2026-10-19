@@ -8,14 +8,14 @@ import torch.nn as nn
 from torch import Tensor
 import torch
 
-from initialization import initialize_model
-from embeddings import Embeddings
-from encoders import Encoder, TransformerEncoder
-from decoders import Decoder, TransformerDecoder
-from constants import PAD_TOKEN, EOS_TOKEN, BOS_TOKEN, TARGET_PAD
-from search import greedy
-from vocabulary import Vocabulary
-from batch import Batch
+from ProgressiveTransformers.initialization import initialize_model
+from ProgressiveTransformers.embeddings import Embeddings
+from ProgressiveTransformers.encoders import Encoder, TransformerEncoder
+from ProgressiveTransformers.decoders import Decoder, TransformerDecoder
+from ProgressiveTransformers.constants import PAD_TOKEN, EOS_TOKEN, BOS_TOKEN, TARGET_PAD
+from ProgressiveTransformers.search import greedy
+from ProgressiveTransformers.vocabulary import Vocabulary
+from ProgressiveTransformers.batch import Batch
 
 class Model(nn.Module):
     """

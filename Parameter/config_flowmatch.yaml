@@ -14,7 +14,7 @@ vae:
     amp: True
     display_step: 100
     accumulation_step: 1
-    batch_size: 32
+    batch_size: 64
     scheduler_timing: "epoch"
     grad_clip_norm: 1.0
     ema: False
@@ -30,7 +30,7 @@ vae:
   model:
     bones: "hand"
     blocks_per_stage: 2
-    n_stages: 3
+    n_stages: 2
     dropout: 0.3
     d_model: 256
     latent_dim: 8
@@ -45,7 +45,7 @@ flow_matching:
     amp: True
     display_step: 100
     accumulation_steps: 1
-    batch_size: 64
+    batch_size: 32
     grad_clip_norm: 1.0
     ema: True
     ema_beta: 0.999
@@ -53,7 +53,7 @@ flow_matching:
   model:
     boundary: 0.7
     tau: 0.1
-    alpha_max: 4.0
+    alpha_max: 2.0
     d_model: 256
     n_heads: 8
     depth_high: 4
@@ -65,9 +65,13 @@ flow_matching:
     is_rope: True
     is_separate: False
     sliding_attn: False
-    window: 5
-    part_heads: 0
+    is_lift_loss: False
+    lift_weights_u: 0.0001
+    lift_weights_p: 0.0001
+    window: 9
+    part_heads: 2
     local_heads: 0
+    c_weight: 0.1
     part_weight:
         body: 1.0
         hand: 2.0

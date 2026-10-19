@@ -7,7 +7,7 @@ Implementation of a mini-batch.
 import torch
 import torch.nn.functional as F
 
-from constants import TARGET_PAD
+from ProgressiveTransformers.constants import TARGET_PAD
 
 class Batch:
     """Object for holding a batch of data with mask during training.

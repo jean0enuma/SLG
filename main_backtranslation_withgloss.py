@@ -1,10 +1,13 @@
 import os,glob,shutil,random
+
+from torchvision.transforms.v2.functional import jpeg_image
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import torch
 import numpy as np
 import yaml
 
-from models.evaluation.sign_language_transformer import SignLanguageTransformer,JointLoss
+from models.evaluation.sign_language_transformer import *
 from utils.metrics import *
 from utils.diagnose import *
 from Parameter.Parameter import *
@@ -12,7 +15,7 @@ from loader.coordinate_preprocess import *
 from loader.data_loader import *
 from SLG_datasets.SLTdatasets import SLTDatasets
 import pandas as pd
-from models.module.Hand_gcn_vae_6d import bones_used_joints, hand_joints_to_6d
+from models.module.Hand_gcn_vae_6d import bones_used_joints, hand_joints_to_6d,reconstruct_joints_from_6d
 from models.module.transformer6d_vae import HandTransformerVAE
 
 torch.autograd.set_detect_anomaly(False)
@@ -57,12 +60,15 @@ def integrate_path(id, path_list):
     for path in path_list:
         integrated_path.append((id, path))
     return integrated_path
-def create_word_tokenizer(corpus,key='annotation'):
+def create_word_tokenizer(corpus,key='annotation',is_lower=True):
     # corpusの中のすべての単語を取得
     all_words = []
     text=corpus[key].values
     for sentence in text:
-        words = sentence.lower().split()
+        if is_lower:
+            words = sentence.lower().split()
+        else:
+            words = sentence.split()
         if "." in words:
             words.remove(".")
         all_words.extend(words)
@@ -77,14 +83,21 @@ def create_word_tokenizer(corpus,key='annotation'):
     # 単語とインデックスの対応表を作成
     word2index = {word: index+3 for index, (word, count) in enumerate(sorted_word_count)}
     index2word = {index+3: word for index, (word, count) in enumerate(sorted_word_count)}
-    word2index['pad_token'] = 0
-    word2index['bos_token'] = 1
-    word2index['eos_token'] = 2
-    index2word[0] = 'pad_token'
-    index2word[1] = 'bos_token'
-    index2word[2] = 'eos_token'
+    word2index['<pad>'] = 0
+    word2index['<s>'] = 1
+    word2index['</s>'] = 2
+    index2word[0] = '<pad>'
+    index2word[1] = '<s>'
+    index2word[2] = '</s>'
     return word2index, index2word
-def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=None,vae_weights=None):
+def rotation_6d_to_matrix(d6):
+    # d6: (..., 6) → (..., 3, 3)
+    a1, a2 = d6[..., :3], d6[..., 3:]
+    b1 = F.normalize(a1, dim=-1)
+    b2 = F.normalize(a2 - (b1 * a2).sum(-1, keepdim=True) * b1, dim=-1)
+    b3 = torch.cross(b1, b2, dim=-1)
+    return torch.stack([b1, b2, b3], dim=-2)  # 行として積む場合。列基底なら dim=-1
+def main(config, dataset, save_path, evaluation=False, is_openpose=False, eval_data=None, vae_weights=None, use_3d=False, only_gloss=False,lr=1e-3):
     print("---Loading datasets---")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -221,24 +234,33 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
     if evaluation==False:
         dl_test=torch.utils.data.DataLoader(ds_test, batch_size=32, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
     else:
-        dl_test=torch.utils.data.DataLoader(ds_test, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
+        dl_test=torch.utils.data.DataLoader(ds_test, batch_size=32, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
     trans_vocab_size=len(tokenizer)
     gloss_vocab_size=len(gloss2class)
     print("translation vocab size:", trans_vocab_size)
     print("gloss vocab size:", gloss_vocab_size)
-    model=SignLanguageTransformer(input_size=282,
+    model=SignLanguageTransformer(input_size=144 if use_3d else 282,
                                   gloss_vocab_size=gloss_vocab_size,
-                                  text_vocab_size=trans_vocab_size,)
-
+                                  text_vocab_size=trans_vocab_size,
+                                  d_model=256,
+                                  d_ff=2048,num_layers=3,n_heads=8)
+    #model=STSignLanguageTransformer(input_size=6,
+    #                                gloss_vocab_size=gloss_vocab_size,
+    #                                text_vocab_size=trans_vocab_size, )
 
     model=model.to(device)
     bones=ALL_BONES if not is_openpose else ALL_BONES_OPENPOSE
 
-    optimizer=torch.optim.AdamW(model.parameters(),lr=2e-4,betas=(0.9,0.998),weight_decay=1e-4)
-    scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.7, patience=3)
+    optimizer=torch.optim.Adam(model.parameters(),lr=lr,betas=(0.9,0.998),weight_decay=1e-3)
+    scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.7, patience=7)
     #scheduler=torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20,30], gamma=0.2)
-    criterion=JointLoss(txt_pad_idx=tokenizer['pad_token'],blank_idx=gloss2class['blank'],lambda_r=1.0,lambda_t=1.0)
-    epochs=80
+    #scheduler=torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=40, eta_min=1e-6)
+    if only_gloss:
+        criterion=JointLoss(txt_pad_idx=tokenizer['<pad>'],blank_idx=gloss2class['blank'],lambda_r=1.0,lambda_t=0.0)
+    else:
+        criterion=JointLoss(txt_pad_idx=tokenizer['<pad>'],blank_idx=gloss2class['blank'],lambda_r=5.0,lambda_t=1.0)
+    epochs=5000
+    last_best_lr=-1
     batch = next(iter(dl_train))
     pd_, _, lens, *_ = batch
     inv_l = inv_r = tot = 0
@@ -249,9 +271,9 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
         tot += int(L)
     print(f"左手欠損率: {inv_l / tot:.1%}  右手欠損率: {inv_r / tot:.1%}")
     min_dev_loss=float("inf")
+    max_dev_metrics=1000.0 if only_gloss else 0.0
     #overfit_test(dl_train,device,normalize_batch,bones,gloss_vocab_size, trans_vocab_size, tokenizer, gloss2class)
     if evaluation==False:
-
         for epoch in range(epochs):
             model.train()
             train_avg_loss=[]
@@ -273,7 +295,10 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
 
                 #new_inputs=all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
-                new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                if not use_3d:
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                else:
+                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
 
                 new_inputs=new_inputs.reshape(new_inputs.shape[0],new_inputs.shape[1],-1)
                 # エポックごとに train の数バッチで測る
@@ -296,6 +321,10 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 train_avg_loss.append(loss)
             print("Epoch {}: Train loss: {:.4f}".format(epoch, np.mean(train_avg_loss)))
             model.eval()
+            ref_list = []
+            ref_gloss_list = []
+            pred_list = []
+            pred_gloss_list = []
             with torch.no_grad():
                 blanks = valid = 0
 
@@ -313,8 +342,10 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
                                                                                                     False,is_openpose=is_openpose)
                     #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
-
-                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                    if not use_3d:
+                        new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                    else:
+                        new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                     z, _ = model.encode(new_inputs, input_length_tensor)
                     pred = model.gloss_output_layer(z).argmax(-1)
@@ -326,9 +357,36 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     total, lr_, lt_ = criterion(gloss_log_probs, input_length_tensor, gls_tokens, gls_lengths,
                                                 word_logits, txt_target, batch_size=B)
                     loss = total.item()
+                    # translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+                    translate_word = model.translate_greedy(new_inputs, input_length_tensor)
+
+                    #gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
+                    gloss_word = model.recognize_greedy(new_inputs, input_length_tensor)
+
+                    for b in range(len(input_length_tensor)):
+                        pred_sentences=" ".join([decoder[token] for token in translate_word[b] if token not in [0, 1, 2]])
+                        ref_sentences=" ".join([decoder[token] for token in txt[b].tolist() if token not in [0, 1, 2]])
+                        pred_glosses=" ".join([class2gloss[token] for token in gloss_word[b] if token not in [0]])
+                        ref_glosses=" ".join([class2gloss[token] for token in gls_tokens[b].tolist() if token not in [0]])
+                        pred_glosses=clean_phoenix_2014_trans(pred_glosses)
+                        ref_glosses=clean_phoenix_2014_trans(ref_glosses)
+                        pred_list.append(pred_sentences)
+                        ref_list.append(ref_sentences)
+                        pred_gloss_list.append(pred_glosses)
+                        ref_gloss_list.append(ref_glosses)
+
 
                     dev_avg_loss.append(loss)
-                print("Epoch {}: Dev loss: {:.4f}".format(epoch, np.mean(dev_avg_loss)))
+                bleu_score = bleu(pred_list, ref_list)
+                rouge_score = rouge(pred_list, ref_list)
+                wer_score = wer(pred_gloss_list, ref_gloss_list)
+                metrics_score=wer_score if only_gloss else bleu_score['bleu1']
+                print(f"Epoch {epoch}: Dev loss: {np.mean(dev_avg_loss):.4f}, BLEU: {bleu_score}, ROUGE: {rouge_score:.4f}, WER: {wer_score:.4f}")
+                print("Metrics score for model selection: {:.4f}".format(metrics_score))
+                ref_list = []
+                ref_gloss_list = []
+                pred_list = []
+                pred_gloss_list = []
                 for batch in dl_test:
                     padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
                     padded_cod_data = padded_cod_data.float().to(device)
@@ -344,18 +402,68 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                                                                                                     False,is_openpose=is_openpose)
                     #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
 
-                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                    if not use_3d:
+                        new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                    else:
+                        new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                     gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
                     total, lr_, lt_ = criterion(gloss_log_probs, input_length_tensor, gls_tokens, gls_lengths,
                                                 word_logits, txt_target, batch_size=B)
                     loss = total.item()
                     test_avg_loss.append(loss)
-                print("Epoch {}: Test loss: {:.4f}".format(epoch, np.mean(test_avg_loss)))
-            scheduler.step(np.mean(dev_avg_loss))
-            if np.mean(dev_avg_loss) < min_dev_loss:
-                min_dev_loss = np.mean(dev_avg_loss)
-            torch.save(model.state_dict(), os.path.join(save_path, "best_model.pth"))
+                    # translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+                    translate_word = model.translate_greedy(new_inputs, input_length_tensor)
+
+                    #gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
+                    gloss_word = model.recognize_greedy(new_inputs, input_length_tensor)
+
+                    for b in range(len(input_length_tensor)):
+                        pred_sentences = " ".join(
+                            [decoder[token] for token in translate_word[b] if token not in [0, 1, 2]])
+                        ref_sentences = " ".join(
+                            [decoder[token] for token in txt[b].tolist() if token not in [0, 1, 2]])
+                        pred_glosses = " ".join([class2gloss[token] for token in gloss_word[b] if token not in [0]])
+                        ref_glosses = " ".join(
+                            [class2gloss[token] for token in gls_tokens[b].tolist() if token not in [0]])
+                        pred_glosses = clean_phoenix_2014_trans(pred_glosses)
+                        ref_glosses = clean_phoenix_2014_trans(ref_glosses)
+                        pred_list.append(pred_sentences)
+                        ref_list.append(ref_sentences)
+                        pred_gloss_list.append(pred_glosses)
+                        ref_gloss_list.append(ref_glosses)
+
+                bleu_score = bleu(pred_list, ref_list)
+                rouge_score = rouge(pred_list, ref_list)
+                wer_score = wer(pred_gloss_list, ref_gloss_list)
+                print(
+                    f"Epoch {epoch}: Test loss: {np.mean(test_avg_loss):.4f}, BLEU1: {bleu_score['bleu1']:.4f},BLEU2: {bleu_score['bleu2']:.4f},BLEU3: {bleu_score['bleu3']:.4f},BLEU4: {bleu_score['bleu4']:.4f}, ROUGE: {rouge_score:.4f}, WER: {wer_score:.4f}")
+                prev_lr=scheduler.optimizer.param_groups[0]['lr']
+                scheduler.step(np.mean(dev_avg_loss))
+                now_lr=scheduler.optimizer.param_groups[0]['lr']
+            for param_group in optimizer.param_groups:
+                current_lr=param_group['lr']
+            if only_gloss:
+                if metrics_score < max_dev_metrics:
+                    max_dev_metrics=metrics_score
+                    print("Best model improved. Current best metrics: {:.4f}".format(max_dev_metrics))
+
+                    print("New best model found. Saving model...")
+                    torch.save(model.state_dict(), os.path.join(save_path, "best_model.pth"))
+                    last_best_lr=current_lr
+            else:
+                if metrics_score>max_dev_metrics:
+                    max_dev_metrics = metrics_score
+                    print("Best model improved. Current best WER: {:.4f}".format(max_dev_metrics))
+                    print("New best model found. Saving model...")
+                    torch.save(model.state_dict(), os.path.join(save_path, "best_model.pth"))
+                    last_best_lr = current_lr
+            #if prev_lr!=now_lr:
+            #    print(f"Learning rate changed from {prev_lr} to {now_lr}.")
+            #    if last_best_lr!=current_lr:
+            #        break
+            if current_lr<1e-7:
+                break
     else:
         if os.path.exists(f"{vae_weights}/config_vae.yaml"):
             with open(f"{vae_weights}/config_vae.yaml", "r") as f:
@@ -380,18 +488,18 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
             test_cod_eval_root={1:eval_data['test']}
             dev_cod_eval_root={1:eval_data['dev']}
 
-            dl_dev = torch.utils.data.DataLoader(ds_dev, batch_size=1, shuffle=False, num_workers=4,
+            dl_dev = torch.utils.data.DataLoader(ds_dev, batch_size=32, shuffle=False, num_workers=4,
                                                  collate_fn=ds_dev.collate_fn)
             ds_dev_eval=SLTDatasets(dev_data_path, dev_cod_eval_root, dev_face_root, trainable=False, is_3d=True,
-                                   is_processed=False, is_sg_filter=False,
+                                   is_processed=False, is_sg_filter=False,is_generated=True,
                                    tokenizer=tokenizer,texts_corpus=dev_corpus,
                                    scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=True)
-            dl_dev_eval=torch.utils.data.DataLoader(ds_dev_eval, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_dev.collate_fn)
+            dl_dev_eval=torch.utils.data.DataLoader(ds_dev_eval, batch_size=32, shuffle=False, num_workers=4, collate_fn=ds_dev.collate_fn)
             ds_test_eval= SLTDatasets(test_data_path, test_cod_eval_root, test_face_root, trainable=False, is_3d=True,
-                                    is_processed=False, is_sg_filter=False,
+                                    is_processed=False, is_sg_filter=False,is_generated=True,
                                     tokenizer=tokenizer,texts_corpus=test_corpus,
                                     scale_ratio=(1.0,1.0),gloss2class=gloss2class,is_delete_cod=False,is_norm=False,is_openpose=True)
-            dl_test_eval=torch.utils.data.DataLoader(ds_test_eval, batch_size=1, shuffle=False, num_workers=4, collate_fn=ds_test.collate_fn)
+            dl_test_eval=torch.utils.data.DataLoader(ds_test_eval, batch_size=32, shuffle=False, num_workers=4, collate_fn=ds_test_eval.collate_fn)
             dev_save_path=f"{os.path.dirname(dev_eval_data)}"
             test_save_path=f"{os.path.dirname(test_eval_data)}"
 
@@ -403,6 +511,12 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
         gt_dict_test={}
         gen_dict_dev = {}
         gen_dict_test={}
+        if use_3d:
+            sfix = "_3d"
+        else:
+            sfix = "_6d"
+        if only_gloss:
+            sfix += "_onlygloss"
         with torch.no_grad():
             for batch in dl_dev:
                 padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
@@ -415,60 +529,57 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
                 gls_tokens = gloss_tokens['input_ids'].to(device)
                 input_length_tensor = input_length_tensor.to(device)
-                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False,is_openpose=is_openpose)
 
                 #new_inputs=all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                if not use_3d:
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                else:
+                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
 
-                new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
-                gt_dict_dev[data_path[0]]= new_inputs[0]
                 new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                 #new_inputs += torch.randn_like(new_inputs)
                 gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
 
 
-                #translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
-                translate_word=model.translate_greedy(new_inputs, input_length_tensor)
+                translate_word=model.translate_beam(new_inputs, input_length_tensor, beam_size=5)
+                #translate_word=model.translate_greedy(new_inputs, input_length_tensor)
 
                 gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
                 #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
-                pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
-                ref_tokens=txt[0].tolist()
-                ref_sentence=" ".join([decoder[token] for token in ref_tokens if token not in [0,1,2]])
+                for b in range(len(input_length_tensor)):
+                    gt_dict_dev[data_path[b]] = new_inputs[b]
 
-                pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
-                ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
-                print("Predicted sentence:", pred_sentence)
-                print("Reference sentence:", ref_sentence)
-                print("Predicted gloss:", pred_gloss)
-                print("Reference gloss:", ref_gloss)
-                pred_list.append(pred_sentence)
-                ref_list.append(ref_sentence)
-                pred_gloss_list.append(pred_gloss)
-                ref_gloss_list.append(ref_gloss)
+                    pred_sentences = " ".join(
+                        [decoder[token] for token in translate_word[b] if token not in [0, 1, 2]])
+                    ref_sentences = " ".join(
+                        [decoder[token] for token in txt[b].tolist() if token not in [0, 1, 2]])
+                    pred_glosses = " ".join([class2gloss[token] for token in gloss_word[b] if token not in [0]])
+                    ref_glosses = " ".join(
+                        [class2gloss[token] for token in gls_tokens[b].tolist() if token not in [0]])
+                    pred_glosses = clean_phoenix_2014_trans(pred_glosses)
+                    ref_glosses = clean_phoenix_2014_trans(ref_glosses)
+                    pred_list.append(pred_sentences)
+                    ref_list.append(ref_sentences)
+                    pred_gloss_list.append(pred_glosses)
+                    ref_gloss_list.append(ref_glosses)
+                    print("Predicted sentence:", pred_sentences)
+                    print("Reference sentence:", ref_sentences)
+                    print("Predicted gloss:", pred_glosses)
+                    print("Reference gloss:", ref_glosses)
 
         bleu_score=bleu(pred_list,ref_list)
         rouge_score=rouge(pred_list,ref_list)
+        chrf_score = chrf(pred_list, ref_list)
         wer_score=wer(pred_gloss_list,ref_gloss_list)
         print("BLEU score:", bleu_score)
         print("ROUGE score:", rouge_score)
+        print("CHRF score:", chrf_score)
         print("WER score:", wer_score)
-        with open(os.path.join(dev_save_path, "evaluation_dev_results_gt.txt"), "w") as f:
-            """
-            f.write("Predicted sentences:\n")
-            for pred in pred_list:
-                f.write(pred + "\n")
-            f.write("\nReference sentences:\n")
-            for ref in ref_list:
-                f.write(ref + "\n")
-            f.write("\nPredicted glosses:\n")
-            for pred_gloss in pred_gloss_list:
-                f.write(pred_gloss + "\n")
-            f.write("\nReference glosses:\n")
-            for ref_gloss in ref_gloss_list:
-                f.write(ref_gloss + "\n")
-            """
+        with open(os.path.join(dev_save_path, f"evaluation_dev_results_gt{sfix}.txt"), "w") as f:
             f.write(f"\nBLEU score: {bleu_score}\n")
             f.write(f"ROUGE score: {rouge_score}\n")
+            f.write(f"CHRF score: {chrf_score}\n")
             f.write(f"WER score: {wer_score}\n")
         ref_list=[]
         pred_list=[]
@@ -486,12 +597,15 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
                 gls_tokens = gloss_tokens['input_ids'].to(device)
                 input_length_tensor = input_length_tensor.to(device)
-                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+                all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False,is_openpose=is_openpose)
 
                 #new_inputs=all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
 
-                new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
-                gt_dict_test[data_path[0]] = new_inputs[0]
+                if not use_3d:
+                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
+                else:
+                    new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+
                 new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                 #new_inputs += torch.randn_like(new_inputs)
                 gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
@@ -500,50 +614,53 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 translate_word=model.translate_greedy(new_inputs, input_length_tensor)
                 gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
                 #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
-                pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
-                ref_tokens=txt[0].tolist()
-                ref_sentence=" ".join([decoder[token] for token in ref_tokens if token not in [0,1,2]])
+                for b in range(len(input_length_tensor)):
+                    gt_dict_test[data_path[b]] = new_inputs[b]
 
-                pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
-                ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
-                #print("Predicted sentence:", pred_sentence)
-                #print("Reference sentence:", ref_sentence)
-                #print("Predicted gloss:", pred_gloss)
-                #print("Reference gloss:", ref_gloss)
-                pred_list.append(pred_sentence)
-                ref_list.append(ref_sentence)
-                pred_gloss_list.append(pred_gloss)
-                ref_gloss_list.append(ref_gloss)
-
+                    pred_sentences = " ".join(
+                        [decoder[token] for token in translate_word[b] if token not in [0, 1, 2]])
+                    ref_sentences = " ".join(
+                        [decoder[token] for token in txt[b].tolist() if token not in [0, 1, 2]])
+                    pred_glosses = " ".join([class2gloss[token] for token in gloss_word[b] if token not in [0]])
+                    ref_glosses = " ".join(
+                        [class2gloss[token] for token in gls_tokens[b].tolist() if token not in [0]])
+                    pred_glosses = clean_phoenix_2014_trans(pred_glosses)
+                    ref_glosses = clean_phoenix_2014_trans(ref_glosses)
+                    pred_list.append(pred_sentences)
+                    ref_list.append(ref_sentences)
+                    pred_gloss_list.append(pred_glosses)
+                    ref_gloss_list.append(ref_glosses)
+                    print("Predicted sentence:", pred_sentences)
+                    print("Reference sentence:", ref_sentences)
+                    print("Predicted gloss:", pred_glosses)
+                    print("Reference gloss:", ref_glosses)
         bleu_score=bleu(pred_list,ref_list)
         rouge_score=rouge(pred_list,ref_list)
+        chrf_score = chrf(pred_list, ref_list)
         wer_score=wer(pred_gloss_list,ref_gloss_list)
         print("BLEU score:", bleu_score)
         print("ROUGE score:", rouge_score)
+        print("CHRF score:", chrf_score)
         print("WER score:", wer_score)
-        with open(os.path.join(test_save_path, "evaluation_test_results_gt.txt"), "w") as f:
-            """
-            f.write("Predicted sentences:\n")
-            for pred in pred_list:
-                f.write(pred + "\n")
-            f.write("\nReference sentences:\n")
-            for ref in ref_list:
-                f.write(ref + "\n")
-            f.write("\nPredicted glosses:\n")
-            for pred_gloss in pred_gloss_list:
-                f.write(pred_gloss + "\n")
-            f.write("\nReference glosses:\n")
-            for ref_gloss in ref_gloss_list:
-                f.write(ref_gloss + "\n")
-            """
+        with open(os.path.join(test_save_path, f"evaluation_test_results_gt{sfix}.txt"), "w") as f:
             f.write(f"\nBLEU score: {bleu_score}\n")
             f.write(f"ROUGE score: {rouge_score}\n")
+            f.write(f"CHRF score: {chrf_score}\n")
             f.write(f"WER score: {wer_score}\n")
         if eval_data!=None:
+            all_dtw_dev_scores=[]
+            all_dtw_test_scores=[]
+            jpe_dev_list=[]
+            jpe_test_list=[]
+            ref_list = []
+            pred_list = []
+            pred_gloss_list = []
+            ref_gloss_list = []
             with torch.no_grad():
                 for batch in dl_dev_eval:
                     padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
-                    padded_cod_data = padded_cod_data.float().to(device)
+                    # 生成CSVは前処理(nan補間/0埋め)を通らないため，GT側と同様に欠損(NaN)を0にする
+                    padded_cod_data = torch.nan_to_num(padded_cod_data.float(), nan=0.0).to(device)
                     txt = text_tokens['input_ids']
                     B, _ = txt.shape
                     txt_input = txt[:, :-1].to(device)
@@ -552,12 +669,22 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
                     gls_tokens = gloss_tokens['input_ids'].to(device)
                     input_length_tensor = input_length_tensor.to(device)
-                    all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+                    all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
+                                                                                                    False,
+                                                                                                    is_openpose=is_openpose)
 
                     #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                    used_jts = bones_used_joints(bones=bones, include_aux=True)
+                    o2c = {o: i for i, o in enumerate(used_jts)}
+                    #mapped_bones = [(o2c[p], o2c[c], o2c[a]) for p, c, a in bones]
+                    mapped_bones=bones
+                    if not use_3d:
 
-                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
-                    gen_dict_dev[data_path[0]] = new_inputs[0]
+                        new_inputs = hand_joints_to_6d(all_inputs, bones=mapped_bones).float()
+                    else:
+                        new_inputs = all_inputs[:, :, :, bones_used_joints(bones=mapped_bones, include_aux=True)]
+
+
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                     #new_inputs += torch.randn_like(new_inputs)
                     gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
@@ -567,28 +694,48 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
 
                     gloss_word=model.recognize_beam(new_inputs, input_length_tensor, beam_size=5,prune_topk=len(class2gloss))
                     #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
-                    pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
-                    ref_tokens=txt[0].tolist()
-                    ref_sentence=" ".join([decoder[token] for token in ref_tokens if token not in [0,1,2]])
+                    for b in range(len(input_length_tensor)):
+                        gen_dict_dev[data_path[b]] = new_inputs[b,:input_length_tensor[b].int()]
+                        ref_inputs = gt_dict_dev[data_path[b]]
 
-                    pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
-                    ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
-                    print("Predicted sentence:", pred_sentence)
-                    print("Reference sentence:", ref_sentence)
-                    print("Predicted gloss:", pred_gloss)
-                    print("Reference gloss:", ref_gloss)
-                    pred_list.append(pred_sentence)
-                    ref_list.append(ref_sentence)
-                    pred_gloss_list.append(pred_gloss)
-                    ref_gloss_list.append(ref_gloss)
+                        dtw_ref = ref_inputs.unsqueeze(0).reshape(1, ref_inputs.shape[0], -1)[:, :input_length_tensor[b].int(), :]
+                        dtw_hyp = new_inputs[b,:input_length_tensor[b].int()]
+                        dtw_hyp=dtw_hyp.unsqueeze(0).reshape(1, dtw_hyp.shape[0], -1)
+                        assert dtw_ref.shape[-1] == dtw_hyp.shape[
+                            -1], f"DTW計算のために、参照と生成の次元が一致する必要があります。参照の次元: {dtw_ref.shape[-1]}, 生成の次元: {dtw_hyp.shape[-1]}"
+                        dtw_dev = calculate_dtw_nocounter(dtw_ref, dtw_hyp)
+                        jpe_dev=mpjpe(dtw_hyp, dtw_ref)
+                        all_dtw_dev_scores.extend(dtw_dev)
+                        jpe_dev_list.append(jpe_dev)
+                        pred_sentences = " ".join(
+                            [decoder[token] for token in translate_word[b] if token not in [0, 1, 2]])
+                        ref_sentences = " ".join(
+                            [decoder[token] for token in txt[b].tolist() if token not in [0, 1, 2]])
+                        pred_glosses = " ".join([class2gloss[token] for token in gloss_word[b] if token not in [0]])
+                        ref_glosses = " ".join(
+                            [class2gloss[token] for token in gls_tokens[b].tolist() if token not in [0]])
+                        pred_glosses = clean_phoenix_2014_trans(pred_glosses)
+                        ref_glosses = clean_phoenix_2014_trans(ref_glosses)
+                        pred_list.append(pred_sentences)
+                        ref_list.append(ref_sentences)
+                        pred_gloss_list.append(pred_glosses)
+                        ref_gloss_list.append(ref_glosses)
+                        print("Predicted sentence:", pred_sentences)
+                        print("Reference sentence:", ref_sentences)
+                        print("Predicted gloss:", pred_glosses)
+                        print("Reference gloss:", ref_glosses)
 
             bleu_score=bleu(pred_list,ref_list)
             rouge_score=rouge(pred_list,ref_list)
+            chrf_score=chrf(pred_list,ref_list)
             wer_score=wer(pred_gloss_list,ref_gloss_list)
+            jpe_score=np.mean(jpe_dev_list)
             print("BLEU score:", bleu_score)
             print("ROUGE score:", rouge_score)
+            print("CHRF score:", chrf_score)
             print("WER score:", wer_score)
-            with open(os.path.join(dev_save_path, "evaluation_dev_results.txt"), "w") as f:
+            print("MPJPE score:", jpe_score)
+            with open(os.path.join(dev_save_path, f"evaluation_dev_results{sfix}.txt"), "w") as f:
                 """
                 f.write("Predicted sentences:\n")
                 for pred in pred_list:
@@ -605,7 +752,10 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 """
                 f.write(f"\nBLEU score: {bleu_score}\n")
                 f.write(f"ROUGE score: {rouge_score}\n")
+                f.write(f"CHRF score: {chrf_score}\n")
                 f.write(f"WER score: {wer_score}\n")
+                f.write(f"MPJPE score: {jpe_score}\n")
+
             ref_list=[]
             pred_list=[]
             pred_gloss_list=[]
@@ -613,7 +763,8 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
             with torch.no_grad():
                 for batch in dl_test_eval:
                     padded_cod_data, padded_mask, input_length_tensor, id_list, data_path, text_tokens, gloss_tokens = batch
-                    padded_cod_data = padded_cod_data.float().to(device)
+                    # 生成CSVは前処理(nan補間/0埋め)を通らないため，GT側と同様に欠損(NaN)を0にする
+                    padded_cod_data = torch.nan_to_num(padded_cod_data.float(), nan=0.0).to(device)
                     txt = text_tokens['input_ids']
                     B, _ = txt.shape
                     txt_input = txt[:, :-1].to(device)
@@ -622,12 +773,21 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     gls_lengths = gls_attn_mask.sum(dim=1).long().to(device)
                     gls_tokens = gloss_tokens['input_ids'].to(device)
                     input_length_tensor = input_length_tensor.to(device)
-                    all_inputs,body_inputs,left_inputs,right_inputs,norm_info=normalize_batch(padded_cod_data,False)
+                    all_inputs, body_inputs, left_inputs, right_inputs, norm_info = normalize_batch(padded_cod_data,
+                                                                                                    False,
+                                                                                                    is_openpose=is_openpose)
 
                     #new_inputs = all_inputs[:, :, :, bones_used_joints(bones=bones, include_aux=True)]
+                    used_jts = bones_used_joints(bones=bones, include_aux=True)
+                    o2c = {o: i for i, o in enumerate(used_jts)}
+                    #mapped_bones = [(o2c[p], o2c[c], o2c[a]) for p, c, a in bones]
+                    mapped_bones=bones
+                    if not use_3d:
 
-                    new_inputs = hand_joints_to_6d(all_inputs, bones=bones).float()
-                    gen_dict_test[data_path[0]] = new_inputs[0]
+                        new_inputs = hand_joints_to_6d(all_inputs, bones=mapped_bones).float()
+                    else:
+                        new_inputs = all_inputs[:, :, :, bones_used_joints(bones=mapped_bones, include_aux=True)]
+
                     new_inputs = new_inputs.reshape(new_inputs.shape[0], new_inputs.shape[1], -1)
                     #new_inputs += torch.randn_like(new_inputs)
                     gloss_log_probs, word_logits = model(new_inputs, input_length_tensor, txt_input)
@@ -637,28 +797,47 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                     translate_word = model.translate_greedy(new_inputs, input_length_tensor)
 
                     #gloss_word=model.recognize_greedy(new_inputs, input_length_tensor)
-                    pred_sentence = " ".join([decoder[token] for token in translate_word[0] if token not in [0,1,2]])
-                    ref_tokens=txt[0].tolist()
-                    ref_sentence=" ".join([decoder[token] for token in ref_tokens if token not in [0,1,2]])
-
-                    pred_gloss=" ".join([class2gloss[token] for token in gloss_word[0] if token not in [0]])
-                    ref_gloss=" ".join([class2gloss[token] for token in gls_tokens[0].tolist() if token not in [0]])
-                    print("Predicted sentence:", pred_sentence)
-                    print("Reference sentence:", ref_sentence)
-                    print("Predicted gloss:", pred_gloss)
-                    print("Reference gloss:", ref_gloss)
-                    pred_list.append(pred_sentence)
-                    ref_list.append(ref_sentence)
-                    pred_gloss_list.append(pred_gloss)
-                    ref_gloss_list.append(ref_gloss)
+                    for b in range(len(input_length_tensor)):
+                        gen_dict_test[data_path[b]] = new_inputs[b:,:input_length_tensor[b].int()]
+                        ref_inputs = gt_dict_test[data_path[b]]
+                        dtw_ref = ref_inputs.reshape(1, ref_inputs.shape[0], -1)[:, :input_length_tensor[b].int(), :]
+                        dtw_hyp = new_inputs[b,:input_length_tensor[b].int()]
+                        dtw_hyp=dtw_hyp.reshape(1, dtw_hyp.shape[0], -1)
+                        assert dtw_ref.shape[-1] == dtw_hyp.shape[
+                            -1], f"DTW計算のために、参照と生成の次元が一致する必要があります。参照の次元: {dtw_ref.shape[-1]}, 生成の次元: {dtw_hyp.shape[-1]}"
+                        dtw_test = calculate_dtw_nocounter(dtw_ref, dtw_hyp)
+                        jpe_test=mpjpe(dtw_hyp,dtw_ref)
+                        all_dtw_test_scores.extend(dtw_test)
+                        jpe_test_list.append(jpe_test)
+                        pred_sentences = " ".join(
+                            [decoder[token] for token in translate_word[b] if token not in [0, 1, 2]])
+                        ref_sentences = " ".join(
+                            [decoder[token] for token in txt[b].tolist() if token not in [0, 1, 2]])
+                        pred_glosses = " ".join([class2gloss[token] for token in gloss_word[b] if token not in [0]])
+                        ref_glosses = " ".join(
+                            [class2gloss[token] for token in gls_tokens[b].tolist() if token not in [0]])
+                        pred_glosses = clean_phoenix_2014_trans(pred_glosses)
+                        ref_glosses = clean_phoenix_2014_trans(ref_glosses)
+                        pred_list.append(pred_sentences)
+                        ref_list.append(ref_sentences)
+                        pred_gloss_list.append(pred_glosses)
+                        ref_gloss_list.append(ref_glosses)
+                        print("Predicted sentence:", pred_sentences)
+                        print("Reference sentence:", ref_sentences)
+                        print("Predicted gloss:", pred_glosses)
+                        print("Reference gloss:", ref_glosses)
 
             bleu_score=bleu(pred_list,ref_list)
+            chrf_score=chrf(pred_list,ref_list)
             rouge_score=rouge(pred_list,ref_list)
             wer_score=wer(pred_gloss_list,ref_gloss_list)
+            jpe_score=np.mean(jpe_test_list)
             print("BLEU score:", bleu_score)
             print("ROUGE score:", rouge_score)
+            print("CHRF score:", chrf_score)
             print("WER score:", wer_score)
-            with open(os.path.join(test_save_path, "evaluation_test_results.txt"), "w") as f:
+            print("MPJPE score:", jpe_score)
+            with open(os.path.join(test_save_path, f"evaluation_test_results{sfix}.txt"), "w") as f:
                 """
                 f.write("Predicted sentences:\n")
                 for pred in pred_list:
@@ -675,32 +854,48 @@ def main(config, dataset,save_path,evaluation=False,is_openpose=False,eval_data=
                 """
                 f.write(f"\nBLEU score: {bleu_score}\n")
                 f.write(f"ROUGE score: {rouge_score}\n")
+                f.write(f"CHRF score: {chrf_score}\n")
                 f.write(f"WER score: {wer_score}\n")
+                f.write(f"MPJPE score: {jpe_score}\n")
             def sort_dict_by_path(gt_dict,gen_dict):
-                gt_mu_list=[]
-                gt_logvar_list=[]
-                gen_mu_list=[]
-                gen_logvar_list=[]
+                gt_list=[]
+                gen_list=[]
+
                 for path in sorted(gt_dict.keys()):
-                    gt_mu_list.append(gt_dict[path]['mu'])
-                    gen_mu_list.append(gen_dict[path]['mu'])
-                    gt_logvar_list.append(gt_dict[path]['logvar'])
-                    gen_logvar_list.append(gen_dict[path]['logvar'])
-                return gt_mu_list,gen_mu_list,gt_logvar_list,gen_logvar_list
+                    gt_list.append(gt_dict[path])
+                    gen_list.append(gen_dict[path])
+                return gt_list,gen_list
+
+
+
+            gt_dev_list,gen_dev_list=sort_dict_by_path(gt_dict_dev,gen_dict_dev)
+            gt_test_list,gen_test_list=sort_dict_by_path(gt_dict_test,gen_dict_test)
+            print(f"Dev DTW: {np.mean(all_dtw_dev_scores):.4f}")
+            print(f"Test DTW: {np.mean(all_dtw_test_scores):.4f}")
+            #参考:GT同士のDTW
+            print("GT座標範囲:", gt_test_list[0].min().item(), gt_test_list[0].max().item(),
+                  "平均絶対値:", gt_test_list[0].abs().mean().item())
+            print("生成座標範囲:", gen_test_list[0].min().item(), gen_test_list[0].max().item(),
+                  "平均絶対値:", gen_test_list[0].abs().mean().item())
+            ### MPJAE
             """
-            gt_mu_list_dev,gen_mu_list_dev,gt_logvar_list_dev,gen_logvar_list_dev=sort_dict_by_path(gt_dict_dev,gen_dict_dev)
-            gt_mu_list_test,gen_mu_list_test,gt_logvar_list_test,gen_logvar_list_test=sort_dict_by_path(gt_dict_test,gen_dict_test)
-            fid_lower=fid_noextract(gt_mu_list_test[:200],gt_logvar_list_test[:200],gt_mu_list_test[200:400],gt_logvar_list_test[200:400])
-            fid_dev=fid_noextract(gen_mu_list_dev,gen_logvar_list_dev,gt_mu_list_dev,gt_logvar_list_dev)
-            fid_test=fid_noextract(gen_mu_list_test,gen_logvar_list_test,gt_mu_list_test,gt_logvar_list_test)
-            print("FID score lower:", fid_lower)
-            print("FID score dev:", fid_dev)
-            print("FID score test:", fid_test)
-            with open(os.path.join(dev_save_path, "evaluation_dev_results.txt"), "a") as f:
-                f.write(f"\nFID score: {fid_dev}\n")
-            with open(os.path.join(test_save_path, "evaluation_test_results.txt"), "a") as f:
-                f.write(f"\nFID score: {fid_test}\n")
+            mpjae_dev=mpjae(gen_dev_list,gt_dev_list,mode="coord",rot6d_fn=rotation_6d_to_matrix,bones=bones)
+            mpjae_test=mpjae(gen_test_list,gt_test_list,mode="coord",rot6d_fn=rotation_6d_to_matrix,bones=bones)
+            print(f"Dev MPJAE: {mpjae_dev:.4f}")
+            print(f"Test MPJAE: {mpjae_test:.4f}")
+            mpjpe_dev=mpjpe(gen_dev_list,gt_dev_list)
+            mpjpe_test=mpjpe(gen_test_list,gt_test_list)
+            print(f"Dev MPJPE: {mpjpe_dev:.4f}")
+            print(f"Test MPJPE: {mpjpe_test:.4f}")
             """
+            with open(os.path.join(dev_save_path, f"evaluation_dev_results_gen{sfix}.txt"), "w") as f:
+                f.write(f"\nDev DTW: {np.mean(all_dtw_dev_scores):.4f}\n")
+                f.write(f"Dev MPJAE: {np.mean(jpe_dev_list):.4f}\n")
+                #f.write(f"Dev MPJPE: {mpjpe_dev:.4f}\n")
+            with open(os.path.join(test_save_path, f"evaluation_test_results_gen{sfix}.txt"), "w") as f:
+                f.write(f"\nTest DTW: {np.mean(all_dtw_test_scores):.4f}\n")
+                f.write(f"Test MPJAE: {np.mean(jpe_test_list):.4f}\n")
+                #f.write(f"Test MPJPE: {mpjpe_test:.4f}\n")
 
 
 
@@ -711,10 +906,24 @@ if __name__=="__main__":
             "is_processed": False
         }
     }
+
+
+
     dataset = "phoenixT"
-    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_3d"
-    eval_data={"dev":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4__attn_raw/visualize_dev/csv",
-                "test":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4__attn_raw/visualize_test/csv"}
-    vae_weights="/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent8_stride2"
-    #main(config, dataset, save_path, evaluation=False,is_openpose=False)
-    main(config, dataset, save_path, evaluation=True,is_openpose=False,eval_data=eval_data,vae_weights=vae_weights)
+    save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_6d_onlygloss2"
+    eval_data={"dev":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4_latent16_ffnmoe_boundary0.3/visualize_dev/csv",
+                "test":"/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_flow_cross_slerp_stride4_latent16_ffnmoe_boundary0.3/visualize_test/csv"}
+    vae_weights="/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_slerp_inside_latent8_stride4"
+    #main(config, dataset, save_path, evaluation=False,is_openpose=False,use_3d=False,only_gloss=False,lr=1e-3)
+    main(config, dataset, save_path, evaluation=True, is_openpose=False, eval_data=eval_data, vae_weights=vae_weights, use_3d=False,
+         only_gloss=False)
+    #save_path = "/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_3d_onlygloss"
+
+    #main(config, dataset, save_path, evaluation=False,is_openpose=False,use_3d=True,only_gloss=False)
+    #main(config, dataset, save_path, evaluation=True,is_openpose=False,eval_data=eval_data,vae_weights=vae_weights,use_3d=True,only_gloss=True)
+    #save_path="/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_6d"
+    #main(config, dataset, save_path, evaluation=False,is_openpose=False,use_3d=False,only_gloss=False)
+    #main(config, dataset, save_path, evaluation=True,is_openpose=False,eval_data=eval_data,vae_weights=vae_weights,use_3d=False,only_gloss=False)
+    #save_path="/media/caffe/data_storage/CSLR/keyword_models/FlowMatching/results_sgnt_3d"
+    #main(config, dataset, save_path, evaluation=False,is_openpose=False,use_3d=True,only_gloss=False)
+    #main(config, dataset, save_path, evaluation=True,is_openpose=False,eval_data=eval_data,vae_weights=vae_weights,use_3d=True,only_gloss=False)

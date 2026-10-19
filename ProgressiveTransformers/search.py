@@ -4,8 +4,8 @@ import torch.nn.functional as F
 from torch import Tensor
 import numpy as np
 
-from decoders import Decoder, TransformerDecoder
-from embeddings import Embeddings
+from ProgressiveTransformers.decoders import Decoder, TransformerDecoder
+from ProgressiveTransformers.embeddings import Embeddings
 
 # pylint: disable=unused-argument
 def greedy(
